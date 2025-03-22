@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vector Field Visualizer</title>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .control-panel {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+        .visualization {
+            flex: 2;
+            min-width: 500px;
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: white;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
+        }
+        .tab-content {
+            display: none;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .info-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .preset-button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .preset-button:hover {
+            background-color: #0b7dda;
+        }
+        .vector-settings {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .vector-settings > div {
+            flex: 1;
+            min-width: 120px;
+        }
+        .color-legend {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .color-gradient {
+            width: 200px;
+            height: 20px;
+            background: linear-gradient(to right, blue, cyan, green, yellow, red);
+            margin-right: 10px;
+        }
+        .legend-labels {
+            display: flex;
+            justify-content: space-between;
+            width: 200px;
+        }
+        .coordinate-system {
+            margin-bottom: 15px;
+        }
+        .field-type {
+            margin-bottom: 15px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .equation-display {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 18px;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .info-section {
+            margin-bottom: 20px;
+        }
+        .info-section h3 {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Vector Field Visualizer</h1>
+        <p>Explore vector fields and their properties in different coordinate systems. This interactive tool helps visualize gradient, curl, and divergence concepts from vector calculus with applications in astronomy.</p>
+        
+        <div class="main-content">
+            <div class="control-panel">
+                <div class="form-group coordinate-system">
+                    <label for="coordinate-system">Coordinate System:</label>
+                    <select id="coordinate-system">
+                        <option value="cartesian">Cartesian (x, y, z)</option>
+                        <option value="cylindrical">Cylindrical (ρ, φ, z)</option>
+                        <option value="spherical">Spherical (r, θ, φ)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group field-type">
+                    <label for="field-type">Field Type:</label>
+                    <select id="field-type">
+                        <option value="vector">Vector Field</option>
+                        <option value="scalar">Scalar Field</option>
+                    </select>
+                </div>
+                
+                <div class="preset-buttons">
+                    <button class="preset-button" id="gravitational-field">Gravitational Field</button>
+                    <button class="preset-button" id="electric-field">Electric Field</button>
+                    <button class="preset-button" id="magnetic-field">Magnetic Field</button>
+                    <button class="preset-button" id="fluid-flow">Fluid Flow</button>
+                    <button class="preset-button" id="heat-diffusion">Heat Diffusion</button>
+                </div>
+                
+                <div id="vector-field-inputs" class="form-group">
+                    <label>Vector Field Components:</label>
+                    <div class="vector-settings">
+                        <div class="form-group">
+                            <label for="x-component">X Component:</label>
+                            <input type="text" id="x-component" value="y" placeholder="e.g., y">
+                        </div>
+                        <div class="form-group">
+                            <label for="y-component">Y Component:</label>
+                            <input type="text" id="y-component" value="-x" placeholder="e.g., -x">
+                        </div>
+                        <div class="form-group">
+                            <label for="z-component">Z Component:</label>
+                            <input type="text" id="z-component" value="0" placeholder="e.g., 0">
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="scalar-field-inputs" class="form-group" style="display: none;">
+                    <label for="scalar-function">Scalar Function:</label>
+                    <input type="text" id="scalar-function" value="x^2 + y^2 + z^2" placeholder="e.g., x^2 + y^2 + z^2">
+                </div>
+                
+                <div class="form-group">
+                    <label for="grid-density">Grid Density:</label>
+                    <input type="range" id="grid-density" min="3" max="20" value="8">
+                </div>
+                
+                <div class="form-group">
+                    <label for="vector-scale">Vector Scale:</label>
+                    <input type="range" id="vector-scale" min="0.1" max="2" step="0.1" value="1">
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="show-gradient" checked>
+                        Show Gradient (for scalar fields)
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="show-curl" checked>
+                        Show Curl (for vector fields)
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="show-divergence" checked>
+                        Show Divergence (for vector fields)
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="show-field-lines" checked>
+                        Show Field Lines
+                    </label>
+                </div>
+                
+                <button id="update-visualization">Update Visualization</button>
+                
+                <div class="color-legend">
+                    <div>
+                        <p>Vector Magnitude:</p>
+                        <div class="color-gradient"></div>
+                        <div class="legend-labels">
+                            <span>Low</span>
+                            <span>High</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="visualization" id="visualization-container"></div>
+        </div>
+        
+        <div class="info-panel">
+            <div class="tabs">
+                <div class="tab active" data-tab="vector-calculus">Vector Calculus Concepts</div>
+                <div class="tab" data-tab="operations">Vector Operations</div>
+                <div class="tab" data-tab="astronomy">Astronomical Applications</div>
+                <div class="tab" data-tab="equations">Mathematical Formulations</div>
+            </div>
+            
+            <div class="tab-content active" id="vector-calculus">
+                <div class="info-section">
+                    <h3>Vector Fields and Scalar Fields</h3>
+                    <p>A <strong>scalar field</strong> assigns a scalar value to each point in space. Examples include temperature distribution, gravitational potential, and pressure fields.</p>
+                    <p>A <strong>vector field</strong> assigns a vector (magnitude and direction) to each point in space. Examples include gravitational fields, electric fields, magnetic fields, and fluid velocity fields.</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Gradient</h3>
+                    <p>The <strong>gradient</strong> of a scalar field is a vector field that points in the direction of the greatest rate of increase of the scalar field, with magnitude equal to that rate of increase.</p>
+                    <p>The gradient is perpendicular to level surfaces of the scalar field. In this visualizer, gradients are shown as arrows pointing from lower to higher values of the scalar field.</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Divergence</h3>
+                    <p>The <strong>divergence</strong> of a vector field measures the "outflowing" or "source density" of the field at each point. Positive divergence indicates a source, negative divergence indicates a sink, and zero divergence indicates incompressibility.</p>
+                    <p>In this visualizer, divergence is represented by color intensity, with red indicating positive divergence (sources) and blue indicating negative divergence (sinks).</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Curl</h3>
+                    <p>The <strong>curl</strong> of a vector field measures the "rotation" or "vorticity" of the field at each point. A non-zero curl indicates rotational behavior, while zero curl indicates an irrotational (conservative) field.</p>
+                    <p>In this visualizer, curl is represented by small circular arrows, with the size and color indicating the magnitude and direction of rotation.</p>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="operations">
+                <div class="info-section">
+                    <h3>Coordinate Systems</h3>
+                    <p><strong>Cartesian coordinates (x, y, z)</strong>: The standard coordinate system with three perpendicular axes. Simple for rectangular geometries.</p>
+                    <p><strong>Cylindrical coordinates (ρ, φ, z)</strong>: Uses distance from the z-axis (ρ), angle in the xy-plane (φ), and height (z). Useful for systems with cylindrical symmetry, like accretion disks.</p>
+                    <p><strong>Spherical coordinates (r, θ, φ)</strong>: Uses distance from origin (r), polar angle from z-axis (θ), and azimuthal angle in xy-plane (φ). Natural for spherically symmetric systems, like stars and planetary atmospheres.</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Vector Calculus Operations</h3>
+                    <p><strong>Gradient</strong> (∇f): For a scalar field f, the gradient is:</p>
+                    <div class="equation-display">
+                        ∇f = (∂f/∂x)i + (∂f/∂y)j + (∂f/∂z)k (Cartesian)
+                    </div>
+                    
+                    <p><strong>Divergence</strong> (∇·F): For a vector field F = (Fx, Fy, Fz), the divergence is:</p>
+                    <div class="equation-display">
+                        ∇·F = ∂Fx/∂x + ∂Fy/∂y + ∂Fz/∂z (Cartesian)
+                    </div>
+                    
+                    <p><strong>Curl</strong> (∇×F): For a vector field F = (Fx, Fy, Fz), the curl is:</p>
+                    <div class="equation-display">
+                        ∇×F = (∂Fz/∂y - ∂Fy/∂z)i + (∂Fx/∂z - ∂Fz/∂x)j + (∂Fy/∂x - ∂Fx/∂y)k (Cartesian)
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Field Line Tracing</h3>
+                    <p>Field lines are curves that are tangent to the vector field at each point. They show the direction of the field throughout space and help visualize the field's structure.</p>
+                    <p>For a vector field F, a field line satisfies the differential equation dr/dt = F(r), where r is the position vector.</p>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="astronomy">
+                <div class="info-section">
+                    <h3>Gravitational Fields</h3>
+                    <p>The gravitational field g around a point mass M is:</p>
+                    <div class="equation-display">
+                        g = -GM r/|r|³
+                    </div>
+                    <p>where G is the gravitational constant and r is the position vector from the mass.</p>
+                    <p>This vector field points toward the mass and decreases with the square of the distance. The corresponding gravitational potential Φ is:</p>
+                    <div class="equation-display">
+                        Φ = -GM/|r|
+                    </div>
+                    <p>The relationship between the potential and the field is: g = -∇Φ</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Electromagnetic Fields in Astrophysics</h3>
+                    <p>Magnetic fields B are always divergence-free: ∇·B = 0 (no magnetic monopoles)</p>
+                    <p>The curl of a magnetic field B is related to the current density j by Ampère's law:</p>
+                    <div class="equation-display">
+                        ∇×B = μ₀j + μ₀ε₀(∂E/∂t)
+                    </div>
+                    <p>Magnetic fields play crucial roles in stellar interiors, solar activity, accretion disks, and interstellar medium.</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Fluid Dynamics in Astrophysics</h3>
+                    <p>The velocity field v of a fluid satisfies the continuity equation (mass conservation):</p>
+                    <div class="equation-display">
+                        ∂ρ/∂t + ∇·(ρv) = 0
+                    </div>
+                    <p>For an incompressible fluid: ∇·v = 0</p>
+                    <p>The vorticity ω = ∇×v measures the local rotation of fluid elements and is important for understanding turbulence in stellar atmospheres, accretion disks, and planetary atmospheres.</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Radiation Transport</h3>
+                    <p>The flux of radiation F is a vector field representing the flow of energy per unit area per unit time.</p>
+                    <p>The divergence of the flux is related to energy sources and sinks:</p>
+                    <div class="equation-display">
+                        ∇·F = -∂u/∂t - P∇·v
+                    </div>
+                    <p>where u is the energy density and P is the pressure.</p>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="equations">
+                <div class="info-section">
+                    <h3>Gradient in Different Coordinate Systems</h3>
+                    <p><strong>Cartesian</strong> (x, y, z):</p>
+                    <div class="equation-display">
+                        ∇f = (∂f/∂x)i + (∂f/∂y)j + (∂f/∂z)k
+                    </div>
+                    
+                    <p><strong>Cylindrical</strong> (ρ, φ, z):</p>
+                    <div class="equation-display">
+                        ∇f = (∂f/∂ρ)eρ + (1/ρ)(∂f/∂φ)eφ + (∂f/∂z)ez
+                    </div>
+                    
+                    <p><strong>Spherical</strong> (r, θ, φ):</p>
+                    <div class="equation-display">
+                        ∇f = (∂f/∂r)er + (1/r)(∂f/∂θ)eθ + (1/(r sin θ))(∂f/∂φ)eφ
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Divergence in Different Coordinate Systems</h3>
+                    <p><strong>Cartesian</strong> (x, y, z):</p>
+                    <div class="equation-display">
+                        ∇·F = ∂Fx/∂x + ∂Fy/∂y + ∂Fz/∂z
+                    </div>
+                    
+                    <p><strong>Cylindrical</strong> (ρ, φ, z):</p>
+                    <div class="equation-display">
+                        ∇·F = (1/ρ)(∂(ρFρ)/∂ρ) + (1/ρ)(∂Fφ/∂φ) + ∂Fz/∂z
+                    </div>
+                    
+                    <p><strong>Spherical</strong> (r, θ, φ):</p>
+                    <div class="equation-display">
+                        ∇·F = (1/r²)(∂(r²Fr)/∂r) + (1/(r sin θ))(∂(sin θ·Fθ)/∂θ) + (1/(r sin θ))(∂Fφ/∂φ)
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Curl in Different Coordinate Systems</h3>
+                    <p><strong>Cartesian</strong> (x, y, z):</p>
+                    <div class="equation-display">
+                        ∇×F = (∂Fz/∂y - ∂Fy/∂z)i + (∂Fx/∂z - ∂Fz/∂x)j + (∂Fy/∂x - ∂Fx/∂y)k
+                    </div>
+                    
+                    <p>The expressions for curl in cylindrical and spherical coordinates are more complex and involve the basis vectors.</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Important Vector Identities</h3>
+                    <div class="equation-display">
+                        ∇×(∇f) = 0 (Curl of a gradient is zero)
+                    </div>
+                    <div class="equation-display">
+                        ∇·(∇×F) = 0 (Divergence of a curl is zero)
+                    </div>
+                    <div class="equation-display">
+                        ∇·(∇f) = ∇²f (Divergence of a gradient is the Laplacian)
+                    </div>
+                    <div class="equation-display">
+                        ∇×(∇×F) = ∇(∇·F) - ∇²F
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const visualizationContainer = document.getElementById('visualization-container');
+        const coordinateSystemSelect = document.getElementById('coordinate-system');
+        const fieldTypeSelect = document.getElementById('field-type');
+        const vectorFieldInputs = document.getElementById('vector-field-inputs');
+        const scalarFieldInputs = document.getElementById('scalar-field-inputs');
+        const xComponentInput = document.getElementById('x-component');
+        const yComponentInput = document.getElementById('y-component');
+        const zComponentInput = document.getElementById('z-component');
+        const scalarFunctionInput = document.getElementById('scalar-function');
+        const gridDensityInput = document.getElementById('grid-density');
+        const vectorScaleInput = document.getElementById('vector-scale');
+        const showGradientCheckbox = document.getElementById('show-gradient');
+        const showCurlCheckbox = document.getElementById('show-curl');
+        const showDivergenceCheckbox = document.getElementById('show-divergence');
+        const showFieldLinesCheckbox = document.getElementById('show-field-lines');
+        const updateButton = document.getElementById('update-visualization');
+        
+        // Preset buttons
+        const gravitationalFieldButton = document.getElementById('gravitational-field');
+        const electricFieldButton = document.getElementById('electric-field');
+        const magneticFieldButton = document.getElementById('magnetic-field');
+        const fluidFlowButton = document.getElementById('fluid-flow');
+        const heatDiffusionButton = document.getElementById('heat-diffusion');
+        
+        // Tab navigation
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                // Remove active class from all tabs and contents
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Toggle between vector and scalar field inputs
+        fieldTypeSelect.addEventListener('change', () => {
+            if (fieldTypeSelect.value === 'vector') {
+                vectorFieldInputs.style.display = 'block';
+                scalarFieldInputs.style.display = 'none';
+                showCurlCheckbox.disabled = false;
+                showDivergenceCheckbox.disabled = false;
+                showGradientCheckbox.disabled = true;
+            } else {
+                vectorFieldInputs.style.display = 'none';
+                scalarFieldInputs.style.display = 'block';
+                showCurlCheckbox.disabled = true;
+                showDivergenceCheckbox.disabled = true;
+                showGradientCheckbox.disabled = false;
+            }
+        });
+        
+        // Preset field configurations
+        gravitationalFieldButton.addEventListener('click', () => {
+            fieldTypeSelect.value = 'vector';
+            coordinateSystemSelect.value = 'spherical';
+            xComponentInput.value = '-1/(x^2+y^2+z^2)^(3/2) * x';
+            yComponentInput.value = '-1/(x^2+y^2+z^2)^(3/2) * y';
+            zComponentInput.value = '-1/(x^2+y^2+z^2)^(3/2) * z';
+            scalarFunctionInput.value = '-1/sqrt(x^2+y^2+z^2)';
+            vectorFieldInputs.style.display = 'block';
+            scalarFieldInputs.style.display = 'none';
+            showCurlCheckbox.disabled = false;
+            showDivergenceCheckbox.disabled = false;
+            showGradientCheckbox.disabled = true;
+            updateVisualization();
+        });
+        
+        electricFieldButton.addEventListener('click', () => {
+            fieldTypeSelect.value = 'vector';
+            coordinateSystemSelect.value = 'cartesian';
+            xComponentInput.value = 'x/(x^2+y^2+z^2)^(3/2)';
+            yComponentInput.value = 'y/(x^2+y^2+z^2)^(3/2)';
+            zComponentInput.value = 'z/(x^2+y^2+z^2)^(3/2)';
+            scalarFunctionInput.value = '1/sqrt(x^2+y^2+z^2)';
+            vectorFieldInputs.style.display = 'block';
+            scalarFieldInputs.style.display = 'none';
+            showCurlCheckbox.disabled = false;
+            showDivergenceCheckbox.disabled = false;
+            showGradientCheckbox.disabled = true;
+            updateVisualization();
+        });
+        
+        magneticFieldButton.addEventListener('click', () => {
+            fieldTypeSelect.value = 'vector';
+            coordinateSystemSelect.value = 'cylindrical';
+            xComponentInput.value = '-y/(x^2+y^2)';
+            yComponentInput.value = 'x/(x^2+y^2)';
+            zComponentInput.value = '0';
+            scalarFunctionInput.value = 'atan2(y, x)';
+            vectorFieldInputs.style.display = 'block';
+            scalarFieldInputs.style.display = 'none';
+            showCurlCheckbox.disabled = false;
+            showDivergenceCheckbox.disabled = false;
+            showGradientCheckbox.disabled = true;
+            updateVisualization();
+        });
+        
+        fluidFlowButton.addEventListener('click', () => {
+            fieldTypeSelect.value = 'vector';
+            coordinateSystemSelect.value = 'cartesian';
+            xComponentInput.value = '-y';
+            yComponentInput.value = 'x';
+            zComponentInput.value = 'sin(x+y)';
+            scalarFunctionInput.value = 'x^2 + y^2';
+            vectorFieldInputs.style.display = 'block';
+            scalarFieldInputs.style.display = 'none';
+            showCurlCheckbox.disabled = false;
+            showDivergenceCheckbox.disabled = false;
+            showGradientCheckbox.disabled = true;
+            updateVisualization();
+        });
+        
+        heatDiffusionButton.addEventListener('click', () => {
+            fieldTypeSelect.value = 'scalar';
+            coordinateSystemSelect.value = 'spherical';
+            scalarFunctionInput.value = 'exp(-(x^2+y^2+z^2)/5)';
+            xComponentInput.value = '-2*x*exp(-(x^2+y^2+z^2)/5)/5';
+            yComponentInput.value = '-2*y*exp(-(x^2+y^2+z^2)/5)/5';
+            zComponentInput.value = '-2*z*exp(-(x^2+y^2+z^2)/5)/5';
+            vectorFieldInputs.style.display = 'none';
+            scalarFieldInputs.style.display = 'block';
+            showCurlCheckbox.disabled = true;
+            showDivergenceCheckbox.disabled = true;
+            showGradientCheckbox.disabled = false;
+            updateVisualization();
+        });
+        
+        // Three.js setup
+        let scene, camera, renderer, controls;
+        let vectorField = [];
+        let fieldLines = [];
+        
+        function initThreeJS() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f0f0);
+            
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, visualizationContainer.clientWidth / visualizationContainer.clientHeight, 0.1, 1000);
+            camera.position.set(5, 5, 5);
+            camera.lookAt(0, 0, 0);
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(visualizationContainer.clientWidth, visualizationContainer.clientHeight);
+            visualizationContainer.appendChild(renderer.domElement);
+            
+            // Add orbit controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.25;
+            
+            // Add coordinate axes
+            const axesHelper = new THREE.AxesHelper(5);
+            scene.add(axesHelper);
+            
+            // Add grid
+            const gridHelper = new THREE.GridHelper(10, 10);
+            scene.add(gridHelper);
+            
+            // Add ambient light
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            // Add directional light
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            directionalLight.position.set(5, 5, 5);
+            scene.add(directionalLight);
+            
+            // Start animation loop
+            animate();
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        function updateVisualization() {
+            // Clear previous vector field
+            vectorField.forEach(arrow => scene.remove(arrow));
+            vectorField = [];
+            
+            // Clear previous field lines
+            fieldLines.forEach(line => scene.remove(line));
+            fieldLines = [];
+            
+            const gridDensity = parseInt(gridDensityInput.value);
+            const vectorScale = parseFloat(vectorScaleInput.value);
+            const isVectorField = fieldTypeSelect.value === 'vector';
+            const coordinateSystem = coordinateSystemSelect.value;
+            
+            // Create vector field
+            const gridSize = 10;
+            const step = gridSize / gridDensity;
+            
+            // Parse vector field functions
+            let xFunc, yFunc, zFunc, scalarFunc;
+            try {
+                if (isVectorField) {
+                    xFunc = math.compile(xComponentInput.value);
+                    yFunc = math.compile(yComponentInput.value);
+                    zFunc = math.compile(zComponentInput.value);
+                } else {
+                    scalarFunc = math.compile(scalarFunctionInput.value);
+                }
+            } catch (error) {
+                console.error("Error compiling functions:", error);
+                alert("Error in function expression. Please check your input.");
+                return;
+            }
+            
+            // Create vector arrows
+            for (let i = -gridDensity/2; i <= gridDensity/2; i++) {
+                for (let j = -gridDensity/2; j <= gridDensity/2; j++) {
+                    for (let k = -gridDensity/2; k <= gridDensity/2; k++) {
+                        // Skip some points in 3D to avoid overcrowding
+                        if (Math.abs(i) % 2 !== 0 && Math.abs(j) % 2 !== 0 && Math.abs(k) % 2 !== 0) continue;
+                        
+                        const x = i * step;
+                        const y = j * step;
+                        const z = k * step;
+                        
+                        let vx, vy, vz;
+                        
+                        try {
+                            if (isVectorField) {
+                                // Calculate vector components
+                                vx = xFunc.evaluate({x: x, y: y, z: z});
+                                vy = yFunc.evaluate({x: x, y: y, z: z});
+                                vz = zFunc.evaluate({x: x, y: y, z: z});
+                            } else {
+                                // Calculate gradient for scalar field
+                                const h = 0.01;
+                                const f = scalarFunc.evaluate({x: x, y: y, z: z});
+                                const fx = scalarFunc.evaluate({x: x + h, y: y, z: z});
+                                const fy = scalarFunc.evaluate({x: x, y: y + h, z: z});
+                                const fz = scalarFunc.evaluate({x: x, y: y, z: z + h});
+                                
+                                vx = (fx - f) / h;
+                                vy = (fy - f) / h;
+                                vz = (fz - f) / h;
+                            }
+                            
+                            // Skip if vector is too small or NaN
+                            const magnitude = Math.sqrt(vx*vx + vy*vy + vz*vz);
+                            if (isNaN(magnitude) || magnitude < 0.01) continue;
+                            
+                            // Normalize and scale
+                            const scale = vectorScale * step * 0.8;
+                            vx = vx / magnitude * scale;
+                            vy = vy / magnitude * scale;
+                            vz = vz / magnitude * scale;
+                            
+                            // Create arrow
+                            const arrowHelper = new THREE.ArrowHelper(
+                                new THREE.Vector3(vx, vy, vz).normalize(),
+                                new THREE.Vector3(x, y, z),
+                                Math.min(magnitude * scale, step * 1.5),
+                                getColorFromMagnitude(magnitude)
+                            );
+                            
+                            scene.add(arrowHelper);
+                            vectorField.push(arrowHelper);
+                        } catch (error) {
+                            console.error("Error evaluating functions at point:", {x, y, z}, error);
+                        }
+                    }
+                }
+            }
+            
+            // Create field lines if enabled
+            if (showFieldLinesCheckbox.checked && isVectorField) {
+                createFieldLines(xFunc, yFunc, zFunc, gridSize, step);
+            }
+        }
+        
+        function createFieldLines(xFunc, yFunc, zFunc, gridSize, step) {
+            const numLines = 10;
+            const lineLength = 20;
+            const lineSteps = 100;
+            const dt = lineLength / lineSteps;
+            
+            for (let i = 0; i < numLines; i++) {
+                // Random starting point
+                let x = (Math.random() - 0.5) * gridSize * 0.8;
+                let y = (Math.random() - 0.5) * gridSize * 0.8;
+                let z = (Math.random() - 0.5) * gridSize * 0.8;
+                
+                const points = [];
+                points.push(new THREE.Vector3(x, y, z));
+                
+                // Trace field line
+                for (let step = 0; step < lineSteps; step++) {
+                    try {
+                        // Calculate vector at current point
+                        const vx = xFunc.evaluate({x: x, y: y, z: z});
+                        const vy = yFunc.evaluate({x: x, y: y, z: z});
+                        const vz = zFunc.evaluate({x: x, y: y, z: z});
+                        
+                        // Skip if vector is too small or NaN
+                        const magnitude = Math.sqrt(vx*vx + vy*vy + vz*vz);
+                        if (isNaN(magnitude) || magnitude < 0.01) break;
+                        
+                        // Normalize and scale
+                        const scale = dt / magnitude;
+                        x += vx * scale;
+                        y += vy * scale;
+                        z += vz * scale;
+                        
+                        // Check if point is out of bounds
+                        if (Math.abs(x) > gridSize/2 || Math.abs(y) > gridSize/2 || Math.abs(z) > gridSize/2) break;
+                        
+                        points.push(new THREE.Vector3(x, y, z));
+                    } catch (error) {
+                        console.error("Error tracing field line:", error);
+                        break;
+                    }
+                }
+                
+                // Create line
+                if (points.length > 1) {
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const material = new THREE.LineBasicMaterial({
+                        color: 0x0088ff,
+                        linewidth: 1
+                    });
+                    const line = new THREE.Line(geometry, material);
+                    scene.add(line);
+                    fieldLines.push(line);
+                }
+            }
+        }
+        
+        function getColorFromMagnitude(magnitude) {
+            // Color gradient from blue (low) to red (high)
+            const hue = (1 - Math.min(magnitude, 2) / 2) * 240 / 360;
+            return new THREE.Color().setHSL(hue, 1, 0.5);
+        }
+        
+        // Initialize visualization
+        initThreeJS();
+        updateVisualization();
+        
+        // Event listeners
+        updateButton.addEventListener('click', updateVisualization);
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (renderer && camera) {
+                camera.aspect = visualizationContainer.clientWidth / visualizationContainer.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(visualizationContainer.clientWidth, visualizationContainer.clientHeight);
+            }
+        });
+    </script>
+</body>
+</html>

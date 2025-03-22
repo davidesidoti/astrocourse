@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Series Approximation Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/function-plot@1.23.2/dist/function-plot.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .control-panel {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+        .visualization {
+            flex: 2;
+            min-width: 500px;
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: white;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
+        }
+        .tab-content {
+            display: none;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .info-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .preset-button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .preset-button:hover {
+            background-color: #0b7dda;
+        }
+        .series-terms {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .error-display {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #ffebee;
+            border-radius: 4px;
+            border-left: 4px solid #f44336;
+            display: none;
+        }
+        .results-panel {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .equation-display {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 18px;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .info-section {
+            margin-bottom: 20px;
+        }
+        .info-section h3 {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .term-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .slider-value {
+            min-width: 30px;
+            text-align: center;
+        }
+        .convergence-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+        .convergence-good {
+            background-color: #4CAF50;
+        }
+        .convergence-warning {
+            background-color: #FFC107;
+        }
+        .convergence-bad {
+            background-color: #F44336;
+        }
+        .series-type-info {
+            margin-top: 10px;
+            font-style: italic;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Series Approximation Tool</h1>
+        <p>Explore series approximations of functions and their applications in astronomy. This interactive tool helps visualize Taylor series, Fourier series, and asymptotic approximations.</p>
+        
+        <div class="main-content">
+            <div class="control-panel">
+                <div class="form-group">
+                    <label for="series-type">Series Type:</label>
+                    <select id="series-type">
+                        <option value="taylor">Taylor Series</option>
+                        <option value="fourier">Fourier Series</option>
+                        <option value="asymptotic">Asymptotic Series</option>
+                    </select>
+                    <div id="taylor-info" class="series-type-info">Approximates a function near a point using derivatives</div>
+                    <div id="fourier-info" class="series-type-info" style="display: none;">Represents a periodic function as a sum of sines and cosines</div>
+                    <div id="asymptotic-info" class="series-type-info" style="display: none;">Approximates a function in a limiting case</div>
+                </div>
+                
+                <div class="preset-buttons">
+                    <button class="preset-button" id="exp-button">Exponential</button>
+                    <button class="preset-button" id="sin-button">Sine</button>
+                    <button class="preset-button" id="bessel-button">Bessel Function</button>
+                    <button class="preset-button" id="kepler-button">Kepler's Equation</button>
+                    <button class="preset-button" id="blackbody-button">Blackbody Radiation</button>
+                </div>
+                
+                <div class="form-group">
+                    <label for="function-input">Function to Approximate:</label>
+                    <input type="text" id="function-input" value="exp(x)" placeholder="e.g., exp(x), sin(x)">
+                </div>
+                
+                <div id="taylor-options">
+                    <div class="form-group">
+                        <label for="expansion-point">Expansion Point:</label>
+                        <input type="number" id="expansion-point" value="0" step="0.1">
+                    </div>
+                </div>
+                
+                <div id="fourier-options" style="display: none;">
+                    <div class="form-group">
+                        <label for="period">Period:</label>
+                        <input type="number" id="period" value="2*pi" step="0.1">
+                    </div>
+                </div>
+                
+                <div id="asymptotic-options" style="display: none;">
+                    <div class="form-group">
+                        <label for="limit-point">Limit Point:</label>
+                        <select id="limit-point">
+                            <option value="infinity">Infinity</option>
+                            <option value="zero">Zero</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="x-min">X Minimum:</label>
+                    <input type="number" id="x-min" value="-5" step="0.5">
+                </div>
+                
+                <div class="form-group">
+                    <label for="x-max">X Maximum:</label>
+                    <input type="number" id="x-max" value="5" step="0.5">
+                </div>
+                
+                <div class="form-group">
+                    <label for="num-terms-slider">Number of Terms: <span id="num-terms-value">5</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="num-terms-slider" class="term-slider" min="1" max="20" value="5">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="show-error" checked>
+                        Show Error
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="show-individual-terms">
+                        Show Individual Terms
+                    </label>
+                </div>
+                
+                <button id="calculate-button">Calculate Approximation</button>
+                
+                <div id="error-display" class="error-display"></div>
+                
+                <div id="results-panel" class="results-panel">
+                    <h3>Approximation Results</h3>
+                    <div>
+                        <strong>Convergence Status:</strong> 
+                        <span id="convergence-status">Good</span>
+                        <span id="convergence-indicator" class="convergence-indicator convergence-good"></span>
+                    </div>
+                    <div id="error-estimate">
+                        <strong>Maximum Error:</strong> <span id="max-error-value">0.0001</span>
+                    </div>
+                    <div id="radius-of-convergence">
+                        <strong>Radius of Convergence:</strong> <span id="convergence-radius">Infinity</span>
+                    </div>
+                </div>
+                
+                <div id="series-terms" class="series-terms"></div>
+            </div>
+            
+            <div class="visualization" id="plot-container"></div>
+        </div>
+        
+        <div class="info-panel">
+            <div class="tabs">
+                <div class="tab active" data-tab="series-concepts">Series Concepts</div>
+                <div class="tab" data-tab="taylor-series">Taylor Series</div>
+                <div class="tab" data-tab="fourier-series">Fourier Series</div>
+                <div class="tab" data-tab="astronomy-applications">Astronomical Applications</div>
+            </div>
+            
+            <div class="tab-content active" id="series-concepts">
+                <div class="info-section">
+                    <h3>What are Series Approximations?</h3>
+                    <p>Series approximations represent functions as infinite sums of simpler terms. They allow us to:</p>
+                    <ul>
+                        <li>Approximate complex functions with simpler expressions</li>
+                        <li>Evaluate functions that lack closed-form expressions</li>
+                        <li>Analyze function behavior near specific points</li>
+                        <li>Solve differential equations that don't have exact solutions</li>
+                        <li>Perform calculations with controllable accuracy</li>
+                    </ul>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Types of Series</h3>
+                    <p><strong>Taylor Series</strong> approximate functions near a specific point using derivatives:</p>
+                    <div class="equation-display">
+                        f(x) = f(a) + f'(a)(x-a) + f''(a)(x-a)²/2! + f'''(a)(x-a)³/3! + ...
+                    </div>
+                    
+                    <p><strong>Fourier Series</strong> represent periodic functions as sums of sines and cosines:</p>
+                    <div class="equation-display">
+                        f(x) = a₀/2 + Σ[aₙcos(nπx/L) + bₙsin(nπx/L)]
+                    </div>
+                    
+                    <p><strong>Asymptotic Series</strong> approximate functions in limiting cases (e.g., as x approaches infinity):</p>
+                    <div class="equation-display">
+                        f(x) ~ Σ aₙx^(-n) as x → ∞
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Convergence and Accuracy</h3>
+                    <p>A series converges if the sum approaches a finite limit as more terms are added. The accuracy of a series approximation depends on:</p>
+                    <ul>
+                        <li>The number of terms used</li>
+                        <li>The distance from the expansion point (for Taylor series)</li>
+                        <li>The smoothness of the function being approximated</li>
+                        <li>The type of series used</li>
+                    </ul>
+                    <p>For Taylor series, the <strong>radius of convergence</strong> defines the region where the series converges absolutely.</p>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="taylor-series">
+                <div class="info-section">
+                    <h3>Taylor Series Fundamentals</h3>
+                    <p>A Taylor series represents a function as an infinite sum of terms calculated from the function's derivatives at a single point.</p>
+                    <div class="equation-display">
+                        f(x) = Σ[f^(n)(a)/n!](x-a)^n = f(a) + f'(a)(x-a) + f''(a)(x-a)²/2! + ...
+                    </div>
+                    <p>When a = 0, this is called a Maclaurin series.</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Common Taylor Series</h3>
+                    <table>
+                        <tr>
+                            <th>Function</th>
+                            <th>Taylor Series (around x = 0)</th>
+                            <th>Radius of Convergence</th>
+                        </tr>
+                        <tr>
+                            <td>e^x</td>
+                            <td>1 + x + x²/2! + x³/3! + ...</td>
+                            <td>Infinity</td>
+                        </tr>
+                        <tr>
+                            <td>sin(x)</td>
+                            <td>x - x³/3! + x⁵/5! - ...</td>
+                            <td>Infinity</td>
+                        </tr>
+                        <tr>
+                            <td>cos(x)</td>
+                            <td>1 - x²/2! + x⁴/4! - ...</td>
+                            <td>Infinity</td>
+                        </tr>
+                        <tr>
+                            <td>ln(1+x)</td>
+                            <td>x - x²/2 + x³/3 - ...</td>
+                            <td>1</td>
+                        </tr>
+                        <tr>
+                            <td>(1+x)^α</td>
+                            <td>1 + αx + α(α-1)x²/2! + ...</td>
+                            <td>1</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Error Estimation</h3>
+                    <p>The error when approximating f(x) with the first n terms of its Taylor series is given by:</p>
+                    <div class="equation-display">
+                        R_n(x) = f^(n+1)(ξ)/(n+1)! · (x-a)^(n+1)
+                    </div>
+                    <p>where ξ is some value between a and x.</p>
+                    <p>This error term helps determine how many terms are needed to achieve a desired accuracy.</p>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="fourier-series">
+                <div class="info-section">
+                    <h3>Fourier Series Fundamentals</h3>
+                    <p>A Fourier series represents a periodic function as a sum of sine and cosine terms.</p>
+                    <p>For a function with period 2L, the Fourier series is:</p>
+                    <div class="equation-display">
+                        f(x) = a₀/2 + Σ[aₙcos(nπx/L) + bₙsin(nπx/L)]
+                    </div>
+                    <p>where the coefficients are:</p>
+                    <div class="equation-display">
+                        a₀ = (1/L)∫₍₋ₗ₎^L f(x) dx
+                    </div>
+                    <div class="equation-display">
+                        aₙ = (1/L)∫₍₋ₗ₎^L f(x)cos(nπx/L) dx
+                    </div>
+                    <div class="equation-display">
+                        bₙ = (1/L)∫₍₋ₗ₎^L f(x)sin(nπx/L) dx
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Complex Form</h3>
+                    <p>The Fourier series can also be written in complex form:</p>
+                    <div class="equation-display">
+                        f(x) = Σ cₙe^(inπx/L)
+                    </div>
+                    <p>where cₙ = (1/2L)∫₍₋ₗ₎^L f(x)e^(-inπx/L) dx</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Convergence Properties</h3>
+                    <p>The Fourier series of a piecewise continuous function converges to:</p>
+                    <ul>
+                        <li>f(x) at points of continuity</li>
+                        <li>[f(x⁺) + f(x⁻)]/2 at points of discontinuity</li>
+                    </ul>
+                    <p>The rate of convergence depends on the smoothness of the function:</p>
+                    <ul>
+                        <li>For discontinuous functions, coefficients decay as 1/n</li>
+                        <li>For continuous functions with discontinuous derivatives, coefficients decay as 1/n²</li>
+                        <li>For infinitely differentiable functions, coefficients decay faster than any power of 1/n</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="astronomy-applications">
+                <div class="info-section">
+                    <h3>Kepler's Equation</h3>
+                    <p>Kepler's equation relates the eccentric anomaly E to the mean anomaly M in an elliptical orbit:</p>
+                    <div class="equation-display">
+                        M = E - e sin E
+                    </div>
+                    <p>where e is the eccentricity. This equation cannot be solved analytically for E given M, but can be solved using series approximations:</p>
+                    <div class="equation-display">
+                        E = M + e sin M + (e²/2) sin 2M + (e³/8)(3 sin 3M - sin M) + ...
+                    </div>
+                    <p>This series converges rapidly for small eccentricities, making it useful for calculating planetary positions.</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Bessel Functions</h3>
+                    <p>Bessel functions appear in many astronomical problems, including:</p>
+                    <ul>
+                        <li>Wave propagation in cylindrical coordinates</li>
+                        <li>Gravitational potential of disk galaxies</li>
+                        <li>Resonances in planetary rings</li>
+                        <li>Stellar oscillations</li>
+                    </ul>
+                    <p>The Bessel function of the first kind J₀(x) can be represented as a series:</p>
+                    <div class="equation-display">
+                        J₀(x) = Σ[(-1)^k/(k!)²](x/2)^(2k) = 1 - (x/2)² + (x/2)⁴/(2!)² - ...
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Blackbody Radiation</h3>
+                    <p>The Planck function describing blackbody radiation can be approximated using series in different regimes:</p>
+                    <p>For low frequencies (Rayleigh-Jeans law):</p>
+                    <div class="equation-display">
+                        B_ν(T) ≈ 2ν²kT/c² as ν → 0
+                    </div>
+                    <p>For high frequencies (Wien approximation):</p>
+                    <div class="equation-display">
+                        B_ν(T) ≈ 2hν³/c² · e^(-hν/kT) as ν → ∞
+                    </div>
+                    <p>These approximations are useful for analyzing stellar spectra and cosmic microwave background radiation.</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Perturbation Theory</h3>
+                    <p>In celestial mechanics, perturbation theory uses series expansions to analyze the effects of small disturbances on orbital motion.</p>
+                    <p>The perturbed motion is expressed as a series:</p>
+                    <div class="equation-display">
+                        r = r₀ + εr₁ + ε²r₂ + ...
+                    </div>
+                    <p>where r₀ is the unperturbed orbit, ε is a small parameter, and r₁, r₂, ... are successive corrections.</p>
+                    <p>This approach is essential for understanding planetary orbits, satellite motion, and the three-body problem.</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Cosmological Models</h3>
+                    <p>Series expansions are used to solve the Friedmann equations in cosmology:</p>
+                    <div class="equation-display">
+                        a(t) = a₀[1 + H₀(t-t₀) - q₀H₀²(t-t₀)²/2 + ...]
+                    </div>
+                    <p>where a(t) is the scale factor, H₀ is the Hubble constant, and q₀ is the deceleration parameter.</p>
+                    <p>This series describes the expansion of the universe and is used to analyze cosmic distances, ages, and the evolution of large-scale structure.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const seriesTypeSelect = document.getElementById('series-type');
+        const taylorInfo = document.getElementById('taylor-info');
+        const fourierInfo = document.getElementById('fourier-info');
+        const asymptoticInfo = document.getElementById('asymptotic-info');
+        const taylorOptions = document.getElementById('taylor-options');
+        const fourierOptions = document.getElementById('fourier-options');
+        const asymptoticOptions = document.getElementById('asymptotic-options');
+        const functionInput = document.getElementById('function-input');
+        const expansionPointInput = document.getElementById('expansion-point');
+        const periodInput = document.getElementById('period');
+        const limitPointSelect = document.getElementById('limit-point');
+        const xMinInput = document.getElementById('x-min');
+        const xMaxInput = document.getElementById('x-max');
+        const numTermsSlider = document.getElementById('num-terms-slider');
+        const numTermsValue = document.getElementById('num-terms-value');
+        const showErrorCheckbox = document.getElementById('show-error');
+        const showIndividualTermsCheckbox = document.getElementById('show-individual-terms');
+        const calculateButton = document.getElementById('calculate-button');
+        const errorDisplay = document.getElementById('error-display');
+        const seriesTermsDisplay = document.getElementById('series-terms');
+        const plotContainer = document.getElementById('plot-container');
+        const convergenceStatus = document.getElementById('convergence-status');
+        const convergenceIndicator = document.getElementById('convergence-indicator');
+        const maxErrorValue = document.getElementById('max-error-value');
+        const convergenceRadius = document.getElementById('convergence-radius');
+        
+        // Preset buttons
+        const expButton = document.getElementById('exp-button');
+        const sinButton = document.getElementById('sin-button');
+        const besselButton = document.getElementById('bessel-button');
+        const keplerButton = document.getElementById('kepler-button');
+        const blackbodyButton = document.getElementById('blackbody-button');
+        
+        // Tab navigation
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                // Remove active class from all tabs and contents
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Update number of terms display
+        numTermsSlider.addEventListener('input', () => {
+            numTermsValue.textContent = numTermsSlider.value;
+        });
+        
+        // Toggle series type options
+        seriesTypeSelect.addEventListener('change', () => {
+            const seriesType = seriesTypeSelect.value;
+            
+            // Hide all options and info
+            taylorOptions.style.display = 'none';
+            fourierOptions.style.display = 'none';
+            asymptoticOptions.style.display = 'none';
+            taylorInfo.style.display = 'none';
+            fourierInfo.style.display = 'none';
+            asymptoticInfo.style.display = 'none';
+            
+            // Show selected options and info
+            if (seriesType === 'taylor') {
+                taylorOptions.style.display = 'block';
+                taylorInfo.style.display = 'block';
+            } else if (seriesType === 'fourier') {
+                fourierOptions.style.display = 'block';
+                fourierInfo.style.display = 'block';
+            } else if (seriesType === 'asymptotic') {
+                asymptoticOptions.style.display = 'block';
+                asymptoticInfo.style.display = 'block';
+            }
+        });
+        
+        // Preset configurations
+        expButton.addEventListener('click', () => {
+            seriesTypeSelect.value = 'taylor';
+            taylorOptions.style.display = 'block';
+            fourierOptions.style.display = 'none';
+            asymptoticOptions.style.display = 'none';
+            taylorInfo.style.display = 'block';
+            fourierInfo.style.display = 'none';
+            asymptoticInfo.style.display = 'none';
+            
+            functionInput.value = 'exp(x)';
+            expansionPointInput.value = '0';
+            xMinInput.value = '-2';
+            xMaxInput.value = '2';
+            numTermsSlider.value = '5';
+            numTermsValue.textContent = '5';
+            
+            calculateApproximation();
+        });
+        
+        sinButton.addEventListener('click', () => {
+            seriesTypeSelect.value = 'taylor';
+            taylorOptions.style.display = 'block';
+            fourierOptions.style.display = 'none';
+            asymptoticOptions.style.display = 'none';
+            taylorInfo.style.display = 'block';
+            fourierInfo.style.display = 'none';
+            asymptoticInfo.style.display = 'none';
+            
+            functionInput.value = 'sin(x)';
+            expansionPointInput.value = '0';
+            xMinInput.value = '-6';
+            xMaxInput.value = '6';
+            numTermsSlider.value = '7';
+            numTermsValue.textContent = '7';
+            
+            calculateApproximation();
+        });
+        
+        besselButton.addEventListener('click', () => {
+            seriesTypeSelect.value = 'taylor';
+            taylorOptions.style.display = 'block';
+            fourierOptions.style.display = 'none';
+            asymptoticOptions.style.display = 'none';
+            taylorInfo.style.display = 'block';
+            fourierInfo.style.display = 'none';
+            asymptoticInfo.style.display = 'none';
+            
+            // Using the series representation of J0(x)
+            functionInput.value = 'besselj(0, x)';
+            expansionPointInput.value = '0';
+            xMinInput.value = '0';
+            xMaxInput.value = '10';
+            numTermsSlider.value = '10';
+            numTermsValue.textContent = '10';
+            
+            calculateApproximation();
+        });
+        
+        keplerButton.addEventListener('click', () => {
+            seriesTypeSelect.value = 'taylor';
+            taylorOptions.style.display = 'block';
+            fourierOptions.style.display = 'none';
+            asymptoticOptions.style.display = 'none';
+            taylorInfo.style.display = 'block';
+            fourierInfo.style.display = 'none';
+            asymptoticInfo.style.display = 'none';
+            
+            // For Kepler's equation, we'll use a custom function
+            functionInput.value = 'x + 0.1 * sin(x)'; // M = E - e*sin(E), solving for E with e=0.1
+            expansionPointInput.value = '0';
+            xMinInput.value = '0';
+            xMaxInput.value = '6.28';
+            numTermsSlider.value = '4';
+            numTermsValue.textContent = '4';
+            
+            calculateApproximation();
+        });
+        
+        blackbodyButton.addEventListener('click', () => {
+            seriesTypeSelect.value = 'asymptotic';
+            taylorOptions.style.display = 'none';
+            fourierOptions.style.display = 'none';
+            asymptoticOptions.style.display = 'block';
+            taylorInfo.style.display = 'none';
+            fourierInfo.style.display = 'none';
+            asymptoticInfo.style.display = 'block';
+            
+            // Simplified Planck function (normalized)
+            functionInput.value = 'x^3 / (exp(x) - 1)';
+            limitPointSelect.value = 'zero';
+            xMinInput.value = '0.1';
+            xMaxInput.value = '10';
+            numTermsSlider.value = '3';
+            numTermsValue.textContent = '3';
+            
+            calculateApproximation();
+        });
+        
+        // Calculate button event
+        calculateButton.addEventListener('click', calculateApproximation);
+        
+        // Main calculation function
+        function calculateApproximation() {
+            try {
+                errorDisplay.style.display = 'none';
+                
+                const seriesType = seriesTypeSelect.value;
+                const func = functionInput.value;
+                const numTerms = parseInt(numTermsSlider.value);
+                const xMin = parseFloat(xMinInput.value);
+                const xMax = parseFloat(xMaxInput.value);
+                
+                // Validate inputs
+                if (!func) {
+                    throw new Error('Please enter a function to approximate.');
+                }
+                
+                if (isNaN(xMin) || isNaN(xMax) || xMin >= xMax) {
+                    throw new Error('Invalid x range. Ensure xMin < xMax.');
+                }
+                
+                // Generate series approximation based on type
+                let seriesTerms = [];
+                let seriesExpression = '';
+                let originalFunc = '';
+                
+                if (seriesType === 'taylor') {
+                    const a = parseFloat(expansionPointInput.value);
+                    if (isNaN(a)) {
+                        throw new Error('Invalid expansion point.');
+                    }
+                    
+                    [seriesTerms, seriesExpression] = generateTaylorSeries(func, a, numTerms);
+                    originalFunc = func;
+                    
+                    // Update convergence information
+                    updateConvergenceInfo(func, a, xMin, xMax, numTerms);
+                } else if (seriesType === 'fourier') {
+                    const period = evaluateExpression(periodInput.value);
+                    if (isNaN(period) || period <= 0) {
+                        throw new Error('Invalid period. Must be a positive number.');
+                    }
+                    
+                    [seriesTerms, seriesExpression] = generateFourierSeries(func, period, numTerms);
+                    originalFunc = func;
+                    
+                    // Update convergence information for Fourier series
+                    convergenceStatus.textContent = 'Depends on function smoothness';
+                    convergenceIndicator.className = 'convergence-indicator convergence-warning';
+                    maxErrorValue.textContent = 'Varies with number of terms';
+                    convergenceRadius.textContent = 'Infinite (periodic)';
+                } else if (seriesType === 'asymptotic') {
+                    const limitPoint = limitPointSelect.value;
+                    
+                    [seriesTerms, seriesExpression] = generateAsymptoticSeries(func, limitPoint, numTerms);
+                    originalFunc = func;
+                    
+                    // Update convergence information for asymptotic series
+                    convergenceStatus.textContent = 'Divergent but useful';
+                    convergenceIndicator.className = 'convergence-indicator convergence-warning';
+                    maxErrorValue.textContent = 'Decreases then increases';
+                    convergenceRadius.textContent = 'N/A (asymptotic)';
+                }
+                
+                // Display series terms
+                displaySeriesTerms(seriesTerms);
+                
+                // Plot the function and its approximation
+                plotFunctionAndApproximation(originalFunc, seriesExpression, xMin, xMax, showErrorCheckbox.checked, showIndividualTermsCheckbox.checked, seriesTerms);
+                
+            } catch (error) {
+                errorDisplay.textContent = `Error: ${error.message}`;
+                errorDisplay.style.display = 'block';
+                console.error(error);
+            }
+        }
+        
+        // Generate Taylor series
+        function generateTaylorSeries(func, a, numTerms) {
+            const terms = [];
+            let seriesExpression = '';
+            
+            try {
+                // Compile the function
+                const f = math.compile(func);
+                
+                // Calculate derivatives numerically
+                const derivatives = [f.evaluate({x: a})];
+                const h = 0.0001;
+                
+                for (let i = 1; i <= numTerms; i++) {
+                    // Use central difference approximation for derivatives
+                    let derivative = 0;
+                    
+                    if (i === 1) {
+                        // First derivative
+                        derivative = (f.evaluate({x: a + h}) - f.evaluate({x: a - h})) / (2 * h);
+                    } else if (i === 2) {
+                        // Second derivative
+                        derivative = (f.evaluate({x: a + h}) - 2 * f.evaluate({x: a}) + f.evaluate({x: a - h})) / (h * h);
+                    } else {
+                        // Higher derivatives (approximate)
+                        const prevDerivFunc = x => {
+                            const dx = 0.001;
+                            const prevDeriv = (math.derivative(math.parse(func), 'x', {n: i-1})).evaluate({x: x + dx}) - 
+                                             (math.derivative(math.parse(func), 'x', {n: i-1})).evaluate({x: x});
+                            return prevDeriv / dx;
+                        };
+                        derivative = prevDerivFunc(a);
+                    }
+                    
+                    derivatives.push(derivative);
+                }
+                
+                // Generate terms
+                for (let i = 0; i < numTerms; i++) {
+                    const coefficient = derivatives[i] / math.factorial(i);
+                    
+                    if (i === 0) {
+                        terms.push({
+                            term: `${coefficient.toFixed(6)}`,
+                            expression: `${coefficient.toFixed(6)}`
+                        });
+                    } else if (i === 1) {
+                        terms.push({
+                            term: `${coefficient.toFixed(6)} * (x - ${a})`,
+                            expression: `${coefficient.toFixed(6)} * (x - ${a})`
+                        });
+                    } else {
+                        terms.push({
+                            term: `${coefficient.toFixed(6)} * (x - ${a})^${i}`,
+                            expression: `${coefficient.toFixed(6)} * (x - ${a})^${i}`
+                        });
+                    }
+                }
+                
+                // Build series expression
+                seriesExpression = terms.map(t => t.expression).join(' + ');
+                
+            } catch (error) {
+                console.error('Error generating Taylor series:', error);
+                throw new Error(`Failed to generate Taylor series: ${error.message}`);
+            }
+            
+            return [terms, seriesExpression];
+        }
+        
+        // Generate Fourier series (simplified approximation)
+        function generateFourierSeries(func, period, numTerms) {
+            const terms = [];
+            let seriesExpression = '';
+            
+            try {
+                // Compile the function
+                const f = math.compile(func);
+                
+                // Calculate Fourier coefficients numerically
+                const L = period / 2;
+                const numPoints = 1000;
+                const dx = period / numPoints;
+                
+                // Calculate a0 (constant term)
+                let a0 = 0;
+                for (let i = 0; i < numPoints; i++) {
+                    const x = -L + i * dx;
+                    a0 += f.evaluate({x: x}) * dx;
+                }
+                a0 = a0 / (2 * L);
+                
+                terms.push({
+                    term: `${a0.toFixed(6)}`,
+                    expression: `${a0.toFixed(6)}`
+                });
+                
+                // Calculate an and bn coefficients
+                for (let n = 1; n < numTerms; n++) {
+                    let an = 0;
+                    let bn = 0;
+                    
+                    for (let i = 0; i < numPoints; i++) {
+                        const x = -L + i * dx;
+                        an += f.evaluate({x: x}) * Math.cos(n * Math.PI * x / L) * dx;
+                        bn += f.evaluate({x: x}) * Math.sin(n * Math.PI * x / L) * dx;
+                    }
+                    
+                    an = an / L;
+                    bn = bn / L;
+                    
+                    if (Math.abs(an) > 1e-10) {
+                        terms.push({
+                            term: `${an.toFixed(6)} * cos(${n} * pi * x / ${L})`,
+                            expression: `${an.toFixed(6)} * cos(${n} * pi * x / ${L})`
+                        });
+                    }
+                    
+                    if (Math.abs(bn) > 1e-10) {
+                        terms.push({
+                            term: `${bn.toFixed(6)} * sin(${n} * pi * x / ${L})`,
+                            expression: `${bn.toFixed(6)} * sin(${n} * pi * x / ${L})`
+                        });
+                    }
+                }
+                
+                // Build series expression
+                seriesExpression = terms.map(t => t.expression).join(' + ');
+                
+            } catch (error) {
+                console.error('Error generating Fourier series:', error);
+                throw new Error(`Failed to generate Fourier series: ${error.message}`);
+            }
+            
+            return [terms, seriesExpression];
+        }
+        
+        // Generate asymptotic series (simplified approximation)
+        function generateAsymptoticSeries(func, limitPoint, numTerms) {
+            const terms = [];
+            let seriesExpression = '';
+            
+            try {
+                // Compile the function
+                const f = math.compile(func);
+                
+                // Different approaches based on limit point
+                if (limitPoint === 'infinity') {
+                    // Series for x → ∞
+                    // Use point sampling and fitting
+                    const points = [];
+                    const xValues = [];
+                    
+                    // Sample function at large x values
+                    for (let i = 1; i <= 20; i++) {
+                        const x = i * 5;
+                        xValues.push(x);
+                        try {
+                            points.push(f.evaluate({x: x}));
+                        } catch (e) {
+                            points.push(NaN);
+                        }
+                    }
+                    
+                    // Fit asymptotic series a0 + a1/x + a2/x^2 + ...
+                    const coefficients = [];
+                    
+                    // Estimate leading coefficient (limit as x → ∞)
+                    coefficients.push(points[points.length - 1]);
+                    
+                    // Estimate remaining coefficients by successive subtraction
+                    let residuals = points.slice();
+                    
+                    for (let i = 0; i < numTerms - 1; i++) {
+                        // Subtract current approximation
+                        for (let j = 0; j < residuals.length; j++) {
+                            let approx = coefficients[0];
+                            for (let k = 1; k <= i; k++) {
+                                approx += coefficients[k] / Math.pow(xValues[j], k);
+                            }
+                            residuals[j] -= approx;
+                        }
+                        
+                        // Estimate next coefficient
+                        const nextCoef = residuals[residuals.length - 1] * Math.pow(xValues[xValues.length - 1], i + 1);
+                        coefficients.push(nextCoef);
+                    }
+                    
+                    // Generate terms
+                    for (let i = 0; i < numTerms; i++) {
+                        if (i === 0) {
+                            terms.push({
+                                term: `${coefficients[i].toFixed(6)}`,
+                                expression: `${coefficients[i].toFixed(6)}`
+                            });
+                        } else {
+                            terms.push({
+                                term: `${coefficients[i].toFixed(6)} / x^${i}`,
+                                expression: `${coefficients[i].toFixed(6)} / x^${i}`
+                            });
+                        }
+                    }
+                } else {
+                    // Series for x → 0
+                    // Use Taylor series but interpret as asymptotic
+                    const [taylorTerms, taylorExpression] = generateTaylorSeries(func, 0, numTerms);
+                    terms.push(...taylorTerms);
+                    seriesExpression = taylorExpression;
+                    return [terms, seriesExpression];
+                }
+                
+                // Build series expression
+                seriesExpression = terms.map(t => t.expression).join(' + ');
+                
+            } catch (error) {
+                console.error('Error generating asymptotic series:', error);
+                throw new Error(`Failed to generate asymptotic series: ${error.message}`);
+            }
+            
+            return [terms, seriesExpression];
+        }
+        
+        // Display series terms
+        function displaySeriesTerms(terms) {
+            seriesTermsDisplay.innerHTML = '';
+            
+            if (terms.length === 0) {
+                seriesTermsDisplay.textContent = 'No terms generated.';
+                return;
+            }
+            
+            let termsText = 'Series Terms:\n';
+            terms.forEach((term, index) => {
+                termsText += `Term ${index}: ${term.term}\n`;
+            });
+            
+            seriesTermsDisplay.textContent = termsText;
+        }
+        
+        // Plot function and approximation
+        function plotFunctionAndApproximation(originalFunc, seriesExpression, xMin, xMax, showError, showIndividualTerms, seriesTerms) {
+            try {
+                const data = [{
+                    fn: originalFunc,
+                    graphType: 'polyline',
+                    color: '#2196F3',
+                    title: 'Original Function'
+                }, {
+                    fn: seriesExpression,
+                    graphType: 'polyline',
+                    color: '#4CAF50',
+                    title: 'Series Approximation'
+                }];
+                
+                // Add error function if requested
+                if (showError) {
+                    data.push({
+                        fn: `abs(${originalFunc} - (${seriesExpression}))`,
+                        graphType: 'polyline',
+                        color: '#F44336',
+                        title: 'Error',
+                        nSamples: 1000
+                    });
+                }
+                
+                // Add individual terms if requested
+                if (showIndividualTerms) {
+                    let partialSum = '';
+                    
+                    seriesTerms.forEach((term, index) => {
+                        if (index === 0) {
+                            partialSum = term.expression;
+                        } else {
+                            partialSum += ` + ${term.expression}`;
+                        }
+                        
+                        // Add every other term to avoid cluttering
+                        if (index % 2 === 0 || index === seriesTerms.length - 1) {
+                            data.push({
+                                fn: term.expression,
+                                graphType: 'polyline',
+                                color: `hsl(${index * 30}, 70%, 60%)`,
+                                title: `Term ${index}`,
+                                nSamples: 500,
+                                opacity: 0.5
+                            });
+                        }
+                    });
+                }
+                
+                // Create plot
+                functionPlot({
+                    target: '#plot-container',
+                    width: plotContainer.clientWidth,
+                    height: plotContainer.clientHeight,
+                    xAxis: {
+                        domain: [xMin, xMax]
+                    },
+                    yAxis: {
+                        domain: calculateYDomain(originalFunc, seriesExpression, xMin, xMax)
+                    },
+                    grid: true,
+                    data: data
+                });
+                
+            } catch (error) {
+                console.error('Error plotting function:', error);
+                errorDisplay.textContent = `Error plotting function: ${error.message}`;
+                errorDisplay.style.display = 'block';
+            }
+        }
+        
+        // Calculate appropriate y-axis domain
+        function calculateYDomain(originalFunc, seriesExpression, xMin, xMax) {
+            try {
+                const originalF = math.compile(originalFunc);
+                const seriesF = math.compile(seriesExpression);
+                
+                let minY = Infinity;
+                let maxY = -Infinity;
+                
+                const numPoints = 100;
+                const dx = (xMax - xMin) / numPoints;
+                
+                for (let i = 0; i <= numPoints; i++) {
+                    const x = xMin + i * dx;
+                    
+                    try {
+                        const originalY = originalF.evaluate({x: x});
+                        const seriesY = seriesF.evaluate({x: x});
+                        
+                        if (!isNaN(originalY)) {
+                            minY = Math.min(minY, originalY);
+                            maxY = Math.max(maxY, originalY);
+                        }
+                        
+                        if (!isNaN(seriesY)) {
+                            minY = Math.min(minY, seriesY);
+                            maxY = Math.max(maxY, seriesY);
+                        }
+                    } catch (e) {
+                        // Skip points where evaluation fails
+                    }
+                }
+                
+                // Add padding
+                const padding = (maxY - minY) * 0.1;
+                return [minY - padding, maxY + padding];
+                
+            } catch (error) {
+                console.error('Error calculating y domain:', error);
+                return [-10, 10]; // Default domain
+            }
+        }
+        
+        // Update convergence information for Taylor series
+        function updateConvergenceInfo(func, a, xMin, xMax, numTerms) {
+            try {
+                // Estimate radius of convergence
+                let radius = 'Unknown';
+                let status = 'Unknown';
+                let maxError = 'Unknown';
+                
+                // For common functions, use known values
+                if (func === 'exp(x)' || func === 'sin(x)' || func === 'cos(x)') {
+                    radius = 'Infinity';
+                    status = 'Excellent';
+                    convergenceIndicator.className = 'convergence-indicator convergence-good';
+                    
+                    // Estimate error
+                    const maxDistance = Math.max(Math.abs(xMax - a), Math.abs(xMin - a));
+                    if (maxDistance > 10) {
+                        maxError = '> 1.0';
+                        status = 'Poor (too far from expansion point)';
+                        convergenceIndicator.className = 'convergence-indicator convergence-bad';
+                    } else if (maxDistance > 5) {
+                        maxError = '~0.1';
+                        status = 'Fair';
+                        convergenceIndicator.className = 'convergence-indicator convergence-warning';
+                    } else {
+                        const errorEstimate = Math.pow(maxDistance, numTerms) / math.factorial(numTerms);
+                        maxError = errorEstimate.toExponential(2);
+                    }
+                } else if (func === 'ln(1+x)' || func.includes('ln(1+x)')) {
+                    radius = '1';
+                    
+                    // Check if range is within radius
+                    if (xMin < -1 + 1e-10 || xMax > 1 - 1e-10) {
+                        status = 'Poor (outside radius of convergence)';
+                        convergenceIndicator.className = 'convergence-indicator convergence-bad';
+                        maxError = '> 1.0';
+                    } else {
+                        const maxDistance = Math.max(Math.abs(xMax - a), Math.abs(xMin - a));
+                        if (maxDistance > 0.8) {
+                            status = 'Fair (near radius of convergence)';
+                            convergenceIndicator.className = 'convergence-indicator convergence-warning';
+                            maxError = '~0.1';
+                        } else {
+                            status = 'Good';
+                            convergenceIndicator.className = 'convergence-indicator convergence-good';
+                            const errorEstimate = Math.pow(maxDistance, numTerms) / math.factorial(numTerms);
+                            maxError = errorEstimate.toExponential(2);
+                        }
+                    }
+                } else {
+                    // Generic estimate
+                    const maxDistance = Math.max(Math.abs(xMax - a), Math.abs(xMin - a));
+                    if (maxDistance > 5) {
+                        status = 'Potentially poor (far from expansion point)';
+                        convergenceIndicator.className = 'convergence-indicator convergence-warning';
+                        maxError = 'Potentially large';
+                    } else {
+                        status = 'Likely good near expansion point';
+                        convergenceIndicator.className = 'convergence-indicator convergence-good';
+                        maxError = 'Varies with distance';
+                    }
+                }
+                
+                convergenceStatus.textContent = status;
+                maxErrorValue.textContent = maxError;
+                convergenceRadius.textContent = radius;
+                
+            } catch (error) {
+                console.error('Error updating convergence info:', error);
+                convergenceStatus.textContent = 'Could not determine';
+                convergenceIndicator.className = 'convergence-indicator';
+                maxErrorValue.textContent = 'Unknown';
+                convergenceRadius.textContent = 'Unknown';
+            }
+        }
+        
+        // Helper function to evaluate expressions
+        function evaluateExpression(expr) {
+            try {
+                return math.evaluate(expr);
+            } catch (error) {
+                console.error('Error evaluating expression:', error);
+                throw new Error(`Invalid expression: ${expr}`);
+            }
+        }
+        
+        // Initialize with default values
+        window.addEventListener('load', () => {
+            // Set default values
+            numTermsValue.textContent = numTermsSlider.value;
+            
+            // Calculate initial approximation
+            calculateApproximation();
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                if (plotContainer.innerHTML !== '') {
+                    calculateApproximation();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
