@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integral Visualizer</title>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/function-plot@1.23.2/dist/function-plot.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .control-panel {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+        .visualization {
+            flex: 2;
+            min-width: 500px;
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result-panel {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .tab-container {
+            margin-top: 20px;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .tab-button {
+            padding: 10px 15px;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 0 4px 4px 4px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .info-box {
+            background-color: #e8f4f8;
+            padding: 10px 15px;
+            border-left: 4px solid #007bff;
+            margin-bottom: 15px;
+        }
+        .formula {
+            font-family: monospace;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .preset-button {
+            padding: 5px 10px;
+            background-color: #e0e0e0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .preset-button:hover {
+            background-color: #d0d0d0;
+        }
+        .error-message {
+            color: #d9534f;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .function-display {
+            margin: 15px 0;
+            font-size: 18px;
+        }
+        .integral-display {
+            margin: 15px 0;
+            font-size: 18px;
+            color: #007bff;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .slider-container input[type="range"] {
+            flex: 1;
+        }
+        .slider-value {
+            width: 50px;
+            text-align: right;
+        }
+        .riemann-controls {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+        .riemann-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .riemann-type-selector label {
+            display: inline-flex;
+            align-items: center;
+            font-weight: normal;
+            margin-right: 10px;
+        }
+        .riemann-type-selector input {
+            width: auto;
+            margin-right: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .astronomical-example {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border-radius: 8px;
+            border-left: 4px solid #0077cc;
+        }
+        .astronomical-example h3 {
+            margin-top: 0;
+            color: #0077cc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Integral Visualizer</h1>
+    
+    <div class="container">
+        <div class="info-box">
+            <p>This interactive tool allows you to explore integrals and their geometric interpretation as the area under a curve. You can visualize Riemann sums with different numbers of rectangles and see how they approximate the exact integral as the number of rectangles increases.</p>
+        </div>
+        
+        <div class="preset-buttons">
+            <button class="preset-button" data-function="x^2" data-lower="0" data-upper="2">∫₀² x² dx</button>
+            <button class="preset-button" data-function="sin(x)" data-lower="0" data-upper="pi">∫₀ᵗ sin(x) dx</button>
+            <button class="preset-button" data-function="e^x" data-lower="0" data-upper="1">∫₀¹ e^x dx</button>
+            <button class="preset-button" data-function="1/x" data-lower="1" data-upper="2">∫₁² 1/x dx</button>
+            <button class="preset-button" data-function="sqrt(x)" data-lower="0" data-upper="4">∫₀⁴ √x dx</button>
+            <button class="preset-button" data-function="x^3-3*x" data-lower="-2" data-upper="2">∫₋₂² (x³-3x) dx</button>
+            <button class="preset-button" data-function="4/(1+x^2)" data-lower="0" data-upper="1">∫₀¹ 4/(1+x²) dx</button>
+            <button class="preset-button" data-function="x*e^(-x)" data-lower="0" data-upper="5">∫₀⁵ xe^(-x) dx</button>
+            <button class="preset-button" data-function="cos(x)^2" data-lower="0" data-upper="pi/2">∫₀ᵗ/² cos²(x) dx</button>
+        </div>
+        
+        <div class="main-content">
+            <div class="control-panel">
+                <h2>Integral Controls</h2>
+                
+                <div class="form-group">
+                    <label for="function-input">Enter a function f(x):</label>
+                    <input type="text" id="function-input" value="x^2" placeholder="e.g., x^2, sin(x), e^x">
+                    <div class="error-message" id="function-error"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="lower-bound">Lower bound (a):</label>
+                    <input type="number" id="lower-bound" value="0" step="0.1">
+                </div>
+                
+                <div class="form-group">
+                    <label for="upper-bound">Upper bound (b):</label>
+                    <input type="number" id="upper-bound" value="2" step="0.1">
+                </div>
+                
+                <div class="function-display" id="function-display">
+                    f(x) = x²
+                </div>
+                
+                <div class="integral-display" id="integral-display">
+                    ∫₀² x² dx = 8/3 ≈ 2.667
+                </div>
+                
+                <div class="riemann-controls">
+                    <h3>Riemann Sum Controls</h3>
+                    
+                    <div class="riemann-type-selector">
+                        <label>
+                            <input type="radio" name="riemann-type" value="left" checked>
+                            Left Riemann Sum
+                        </label>
+                        <label>
+                            <input type="radio" name="riemann-type" value="right">
+                            Right Riemann Sum
+                        </label>
+                        <label>
+                            <input type="radio" name="riemann-type" value="midpoint">
+                            Midpoint Riemann Sum
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="num-rectangles">Number of rectangles:</label>
+                        <div class="slider-container">
+                            <input type="range" id="num-rectangles" min="1" max="100" step="1" value="10">
+                            <span class="slider-value" id="num-rectangles-display">10</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-panel" id="riemann-result">
+                        <p>Left Riemann sum with 10 rectangles: 2.420</p>
+                        <p>Error: 0.247 (9.26%)</p>
+                    </div>
+                </div>
+                
+                <h3>Graph Settings</h3>
+                
+                <div class="form-group">
+                    <label for="x-min">x-axis range:</label>
+                    <div class="slider-container">
+                        <span>Min:</span>
+                        <input type="number" id="x-min" value="-1" min="-100" max="0" step="1">
+                        <span>Max:</span>
+                        <input type="number" id="x-max" value="3" min="0" max="100" step="1">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="y-min">y-axis range:</label>
+                    <div class="slider-container">
+                        <span>Min:</span>
+                        <input type="number" id="y-min" value="-1" min="-100" max="0" step="1">
+                        <span>Max:</span>
+                        <input type="number" id="y-max" value="5" min="0" max="100" step="1">
+                    </div>
+                </div>
+                
+                <button id="update-button">Update Graph</button>
+            </div>
+            
+            <div class="visualization" id="visualization">
+                <!-- Graph will be rendered here -->
+            </div>
+        </div>
+        
+        <div class="astronomical-example" id="astronomical-example">
+            <h3>Astronomical Application: Total Energy from a Supernova</h3>
+            <p>When a supernova occurs, its luminosity L(t) varies over time, typically following an exponential decay: L(t) = L₀·e^(-t/τ)</p>
+            <p>The total energy released by the supernova is given by the integral:</p>
+            <div class="formula">E = ∫₀^∞ L₀·e^(-t/τ) dt = L₀·τ</div>
+            <p>This calculation helps astronomers determine the explosion mechanism and the mass of the progenitor star.</p>
+            <p>Try changing the function to <code>L0*e^(-x/tau)</code> with appropriate values to explore this astronomical application!</p>
+        </div>
+        
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="concept">Integral Concept</button>
+                <button class="tab-button" data-tab="applications">Astronomical Applications</button>
+                <button class="tab-button" data-tab="techniques">Integration Techniques</button>
+                <button class="tab-button" data-tab="help">Help</button>
+            </div>
+            
+            <div class="tab-content active" id="concept-tab">
+                <h3>Understanding Integrals</h3>
+                
+                <p>The definite integral represents the accumulated change or the area under a curve between two points. It is defined as:</p>
+                
+                <div class="formula">
+                    ∫[a,b] f(x) dx = lim(n→∞) Σ f(x₍i₎*) · Δx
+                </div>
+                
+                <p>Where:</p>
+                <ul>
+                    <li>a and b are the lower and upper bounds</li>
+                    <li>Δx = (b-a)/n is the width of each subinterval</li>
+                    <li>x₍i₎* is a point in the i-th subinterval</li>
+                    <li>n is the number of subintervals</li>
+                </ul>
+                
+                <h4>Riemann Sums</h4>
+                <p>Riemann sums approximate the definite integral by dividing the area into rectangles:</p>
+                
+                <ul>
+                    <li><strong>Left Riemann Sum</strong>: Uses the left endpoint of each subinterval</li>
+                    <li><strong>Right Riemann Sum</strong>: Uses the right endpoint of each subinterval</li>
+                    <li><strong>Midpoint Riemann Sum</strong>: Uses the midpoint of each subinterval</li>
+                </ul>
+                
+                <p>As the number of rectangles increases, the Riemann sum approaches the exact value of the definite integral.</p>
+                
+                <h4>Fundamental Theorem of Calculus</h4>
+                <p>The Fundamental Theorem of Calculus connects differentiation and integration:</p>
+                
+                <div class="formula">
+                    ∫[a,b] f(x) dx = F(b) - F(a)
+                </div>
+                
+                <p>Where F(x) is an antiderivative of f(x), meaning F'(x) = f(x).</p>
+                
+                <p>This theorem allows us to evaluate definite integrals by finding antiderivatives rather than computing limits of sums.</p>
+            </div>
+            
+            <div class="tab-content" id="applications-tab">
+                <h3>Integrals in Astronomy</h3>
+                
+                <h4>Calculating Stellar Mass</h4>
+                <p>The mass of a star can be determined by integrating its density profile:</p>
+                <div class="formula">
+                    M = ∫[0,R] 4πr² · ρ(r) dr
+                </div>
+                <p>Where ρ(r) is the density at radius r and R is the star's radius.</p>
+                
+                <h4>Total Energy Output</h4>
+                <p>The total energy radiated by a star over its lifetime is:</p>
+                <div class="formula">
+                    E = ∫[0,∞] L(t) dt
+                </div>
+                <p>Where L(t) is the luminosity as a function of time.</p>
+                
+                <h4>Gravitational Potential</h4>
+                <p>The gravitational potential at a distance r from the center of a spherically symmetric mass distribution:</p>
+                <div class="formula">
+                    Φ(r) = -G · [M(r)/r + 4π · ∫[r,R] ρ(r') · r' dr']
+                </div>
+                
+                <h4>Light Curve Analysis</h4>
+                <p>When a planet transits its star, the total light blocked is:</p>
+                <div class="formula">
+                    ΔF = ∫[t₁,t₂] [F₀ - F(t)] dt
+                </div>
+                <p>This helps determine the planet's size and orbital parameters.</p>
+                
+                <h4>Cosmic Expansion</h4>
+                <p>The proper distance to a galaxy at redshift z is:</p>
+                <div class="formula">
+                    d = c · ∫[0,z] dz'/H(z')
+                </div>
+                <p>Where H(z) is the Hubble parameter as a function of redshift.</p>
+                
+                <h4>Orbital Mechanics</h4>
+                <p>The time for an object in an elliptical orbit to move from one position to another:</p>
+                <div class="formula">
+                    Δt = ∫[θ₁,θ₂] (r²/h) dθ
+                </div>
+                <p>Where r is the radial distance and h is the specific angular momentum.</p>
+            </div>
+            
+            <div class="tab-content" id="techniques-tab">
+                <h3>Integration Techniques</h3>
+                
+                <h4>Basic Integration Rules</h4>
+                <table>
+                    <tr>
+                        <th>Function</th>
+                        <th>Integral</th>
+                    </tr>
+                    <tr>
+                        <td>x^n</td>
+                        <td>x^(n+1)/(n+1) + C, for n ≠ -1</td>
+                    </tr>
+                    <tr>
+                        <td>1/x</td>
+                        <td>ln|x| + C</td>
+                    </tr>
+                    <tr>
+                        <td>e^x</td>
+                        <td>e^x + C</td>
+                    </tr>
+                    <tr>
+                        <td>sin(x)</td>
+                        <td>-cos(x) + C</td>
+                    </tr>
+                    <tr>
+                        <td>cos(x)</td>
+                        <td>sin(x) + C</td>
+                    </tr>
+                    <tr>
+                        <td>tan(x)</td>
+                        <td>-ln|cos(x)| + C</td>
+                    </tr>
+                    <tr>
+                        <td>1/√(a²-x²)</td>
+                        <td>arcsin(x/a) + C</td>
+                    </tr>
+                    <tr>
+                        <td>1/(a²+x²)</td>
+                        <td>(1/a)arctan(x/a) + C</td>
+                    </tr>
+                </table>
+                
+                <h4>Integration by Substitution</h4>
+                <p>Used when an integral contains a composite function:</p>
+                <div class="formula">
+                    ∫ f(g(x)) · g'(x) dx = ∫ f(u) du
+                </div>
+                <p>Where u = g(x) and du = g'(x) dx.</p>
+                
+                <h4>Integration by Parts</h4>
+                <p>Based on the product rule for differentiation:</p>
+                <div class="formula">
+                    ∫ u(x) · v'(x) dx = u(x) · v(x) - ∫ u'(x) · v(x) dx
+                </div>
+                
+                <h4>Trigonometric Substitution</h4>
+                <p>Useful for integrals involving expressions like √(a² - x²), √(a² + x²), or √(x² - a²).</p>
+                
+                <h4>Partial Fractions</h4>
+                <p>Used to integrate rational functions by decomposing them into simpler fractions.</p>
+                
+                <h4>Improper Integrals</h4>
+                <p>Integrals with infinite limits or discontinuous integrands, defined as limits of proper integrals.</p>
+            </div>
+            
+            <div class="tab-content" id="help-tab">
+                <h3>How to Use This Tool</h3>
+                
+                <h4>Basic Usage</h4>
+                <ol>
+                    <li>Enter a function in the input field or select a preset integral</li>
+                    <li>Set the lower and upper bounds of integration</li>
+                    <li>Adjust the number of rectangles to see how Riemann sums approximate the integral</li>
+                    <li>Choose between left, right, or midpoint Riemann sums</li>
+                    <li>Observe how the approximation improves as the number of rectangles increases</li>
+                </ol>
+                
+                <h4>Function Input Syntax</h4>
+                <ul>
+                    <li>Basic operations: +, -, *, /, ^ (for exponents)</li>
+                    <li>Functions: sin(), cos(), tan(), exp(), ln(), log(), sqrt()</li>
+                    <li>Constants: pi, e</li>
+                    <li>Examples: x^2, sin(x), e^(-x), ln(1+x^2)</li>
+                </ul>
+                
+                <h4>Astronomical Examples</h4>
+                <p>The tool includes astronomical examples that demonstrate how integrals are used in astrophysics. Try these functions to explore real astronomical applications:</p>
+                <ul>
+                    <li><code>L0*e^(-x/tau)</code> - Supernova energy output</li>
+                    <li><code>4*pi*x^2*rho0*(1-x/R)^n</code> - Stellar mass calculation</li>
+                    <li><code>2*pi*(1-cos(x))</code> - Solid angle calculation</li>
+                </ul>
+                
+                <h4>Tips</h4>
+                <ul>
+                    <li>Use the preset buttons for quick access to common integrals</li>
+                    <li>Adjust the axis ranges to zoom in or out on specific regions</li>
+                    <li>Compare different types of Riemann sums to see which gives better approximations</li>
+                    <li>Watch how the error decreases as the number of rectangles increases</li>
+                    <li>Try functions that are sometimes positive and sometimes negative to see how the integral represents net area</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentFunction = "x^2";
+        let lowerBound = 0;
+        let upperBound = 2;
+        let numRectangles = 10;
+        let riemannType = "left";
+        let xMin = -1;
+        let xMax = 3;
+        let yMin = -1;
+        let yMax = 5;
+        let functionPlot;
+        
+        // Initialize the application
+        function init() {
+            // Set up event listeners
+            document.getElementById('function-input').addEventListener('input', validateFunction);
+            document.getElementById('lower-bound').addEventListener('input', validateBounds);
+            document.getElementById('upper-bound').addEventListener('input', validateBounds);
+            document.getElementById('update-button').addEventListener('click', updateGraph);
+            document.getElementById('num-rectangles').addEventListener('input', updateNumRectangles);
+            
+            // Set up Riemann type radio buttons
+            document.querySelectorAll('input[name="riemann-type"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    riemannType = this.value;
+                    updateGraph();
+                });
+            });
+            
+            // Set up preset buttons
+            document.querySelectorAll('.preset-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const functionStr = this.getAttribute('data-function');
+                    const lower = this.getAttribute('data-lower');
+                    const upper = this.getAttribute('data-upper');
+                    
+                    document.getElementById('function-input').value = functionStr;
+                    document.getElementById('lower-bound').value = eval(lower);
+                    document.getElementById('upper-bound').value = eval(upper);
+                    
+                    validateFunction();
+                    validateBounds();
+                    updateGraph();
+                    
+                    // Update astronomical example based on selected preset
+                    updateAstronomicalExample(functionStr);
+                });
+            });
+            
+            // Set up tab switching
+            setupTabs();
+            
+            // Initial graph rendering
+            updateGraph();
+        }
+        
+        // Update astronomical example based on function
+        function updateAstronomicalExample(functionStr) {
+            const exampleDiv = document.getElementById('astronomical-example');
+            
+            // Default example
+            let title = "Astronomical Application: Total Energy from a Supernova";
+            let description = `
+                <p>When a supernova occurs, its luminosity L(t) varies over time, typically following an exponential decay: L(t) = L₀·e^(-t/τ)</p>
+                <p>The total energy released by the supernova is given by the integral:</p>
+                <div class="formula">E = ∫₀^∞ L₀·e^(-t/τ) dt = L₀·τ</div>
+                <p>This calculation helps astronomers determine the explosion mechanism and the mass of the progenitor star.</p>
+            `;
+            
+            // Customize based on function
+            if (functionStr.includes('x^2')) {
+                title = "Astronomical Application: Stellar Mass Distribution";
+                description = `
+                    <p>For a spherical star with density profile ρ(r) = ρ₀·(1-r/R)², the mass contained within radius r is:</p>
+                    <div class="formula">M(r) = ∫₀ʳ 4πr'² · ρ₀·(1-r'/R)² dr'</div>
+                    <p>This integral helps astronomers understand the internal structure of stars and calculate their gravitational fields.</p>
+                `;
+            } else if (functionStr.includes('sin')) {
+                title = "Astronomical Application: Radiation Flux on a Planet";
+                description = `
+                    <p>The average solar flux on a planet over one rotation period depends on the integral of sin(θ) over the daylight hours:</p>
+                    <div class="formula">F_avg = (F₀/π) · ∫₀ᵗ sin(θ) dθ = (2F₀/π)</div>
+                    <p>This calculation is crucial for understanding planetary climate and habitability.</p>
+                `;
+            } else if (functionStr.includes('1/x')) {
+                title = "Astronomical Application: Gravitational Potential Energy";
+                description = `
+                    <p>The gravitational potential energy between two masses separated by distance r is related to the integral:</p>
+                    <div class="formula">U = -G·m₁m₂ · ∫ 1/r² dr = G·m₁m₂/r</div>
+                    <p>This fundamental relationship governs orbital dynamics and structure formation in the universe.</p>
+                `;
+            } else if (functionStr.includes('sqrt')) {
+                title = "Astronomical Application: Escape Velocity";
+                description = `
+                    <p>The work needed to escape a gravitational field is calculated using an integral involving √x:</p>
+                    <div class="formula">W = ∫ F·dr = ∫ G·M·m/r² dr = G·M·m/R</div>
+                    <p>Setting this equal to kinetic energy (½mv²) gives the escape velocity: v = √(2GM/R)</p>
+                `;
+            } else if (functionStr.includes('e^(-x)')) {
+                title = "Astronomical Application: Stellar Atmosphere Density";
+                description = `
+                    <p>The density of a stellar atmosphere decreases exponentially with height: ρ(h) = ρ₀·e^(-h/H)</p>
+                    <div class="formula">M_atm = ∫₀^∞ 4πR² · ρ₀·e^(-h/H) dh = 4πR²·ρ₀·H</div>
+                    <p>Where H is the scale height. This integral gives the total mass of the atmosphere.</p>
+                `;
+            }
+            
+            exampleDiv.innerHTML = `<h3>${title}</h3>${description}`;
+        }
+        
+        // Validate the function input
+        function validateFunction() {
+            const functionInput = document.getElementById('function-input').value;
+            const errorElement = document.getElementById('function-error');
+            
+            try {
+                // Try to parse the function
+                const expr = math.parse(functionInput);
+                const compiled = expr.compile();
+                compiled.evaluate({ x: 1 }); // Test with a sample value
+                
+                // If successful, clear error and update function display
+                errorElement.textContent = '';
+                currentFunction = functionInput;
+                
+                document.getElementById('function-display').textContent = `f(x) = ${formatMathExpression(functionInput)}`;
+                return true;
+            } catch (err) {
+                // If parsing fails, show error
+                errorElement.textContent = 'Invalid function: ' + err.message;
+                return false;
+            }
+        }
+        
+        // Validate the bounds
+        function validateBounds() {
+            const lowerInput = document.getElementById('lower-bound').value;
+            const upperInput = document.getElementById('upper-bound').value;
+            
+            lowerBound = parseFloat(lowerInput);
+            upperBound = parseFloat(upperInput);
+            
+            // Ensure upper bound is greater than lower bound
+            if (lowerBound >= upperBound) {
+                upperBound = lowerBound + 1;
+                document.getElementById('upper-bound').value = upperBound;
+            }
+            
+            return true;
+        }
+        
+        // Format mathematical expressions for display
+        function formatMathExpression(expr) {
+            // Replace some common patterns for better display
+            return expr
+                .replace(/\*\*/g, '^')
+                .replace(/\*/g, '·')
+                .replace(/sqrt/g, '√')
+                .replace(/pi/g, 'π')
+                .replace(/\^2/g, '²')
+                .replace(/\^3/g, '³');
+        }
+        
+        // Update the number of rectangles from the slider
+        function updateNumRectangles() {
+            numRectangles = parseInt(document.getElementById('num-rectangles').value);
+            document.getElementById('num-rectangles-display').textContent = numRectangles;
+            updateGraph();
+        }
+        
+        // Calculate the exact integral value using numerical integration
+        function calculateExactIntegral() {
+            try {
+                // Define the function
+                const f = math.parse(currentFunction).compile();
+                
+                // Use numerical integration (Simpson's rule)
+                const numPoints = 1000;
+                const h = (upperBound - lowerBound) / numPoints;
+                let sum = f.evaluate({ x: lowerBound }) + f.evaluate({ x: upperBound });
+                
+                for (let i = 1; i < numPoints; i++) {
+                    const x = lowerBound + i * h;
+                    const coefficient = (i % 2 === 0) ? 2 : 4;
+                    sum += coefficient * f.evaluate({ x: x });
+                }
+                
+                const integral = (h / 3) * sum;
+                
+                // Try to get symbolic result for simple functions
+                let symbolicResult = "";
+                try {
+                    // This is a simplified approach and won't work for all functions
+                    if (currentFunction === "x^2") {
+                        const a = lowerBound;
+                        const b = upperBound;
+                        symbolicResult = `(${b}³ - ${a}³)/3 = ${(Math.pow(b, 3) - Math.pow(a, 3))/3}`;
+                    } else if (currentFunction === "x") {
+                        const a = lowerBound;
+                        const b = upperBound;
+                        symbolicResult = `(${b}² - ${a}²)/2 = ${(Math.pow(b, 2) - Math.pow(a, 2))/2}`;
+                    } else if (currentFunction === "sin(x)") {
+                        const a = lowerBound;
+                        const b = upperBound;
+                        symbolicResult = `[-cos(${b}) - (-cos(${a}))] = ${-Math.cos(b) - (-Math.cos(a))}`;
+                    }
+                } catch (err) {
+                    // If symbolic integration fails, just use numerical result
+                    symbolicResult = "";
+                }
+                
+                // Update the integral display
+                const integralDisplay = document.getElementById('integral-display');
+                const lowerStr = lowerBound.toString().replace('-', '₋');
+                const upperStr = upperBound.toString().replace('-', '₋');
+                
+                if (symbolicResult) {
+                    integralDisplay.textContent = `∫${lowerStr}${upperStr} ${formatMathExpression(currentFunction)} dx = ${symbolicResult}`;
+                } else {
+                    integralDisplay.textContent = `∫${lowerStr}${upperStr} ${formatMathExpression(currentFunction)} dx ≈ ${integral.toFixed(4)}`;
+                }
+                
+                return integral;
+            } catch (err) {
+                console.error('Error calculating exact integral:', err);
+                return 0;
+            }
+        }
+        
+        // Calculate Riemann sum
+        function calculateRiemannSum() {
+            try {
+                // Define the function
+                const f = math.parse(currentFunction).compile();
+                
+                // Calculate width of each rectangle
+                const dx = (upperBound - lowerBound) / numRectangles;
+                
+                // Calculate Riemann sum based on selected type
+                let sum = 0;
+                
+                for (let i = 0; i < numRectangles; i++) {
+                    let x;
+                    
+                    if (riemannType === "left") {
+                        x = lowerBound + i * dx;
+                    } else if (riemannType === "right") {
+                        x = lowerBound + (i + 1) * dx;
+                    } else { // midpoint
+                        x = lowerBound + (i + 0.5) * dx;
+                    }
+                    
+                    const y = f.evaluate({ x: x });
+                    sum += y * dx;
+                }
+                
+                return sum;
+            } catch (err) {
+                console.error('Error calculating Riemann sum:', err);
+                return 0;
+            }
+        }
+        
+        // Update the graph based on current settings
+        function updateGraph() {
+            if (!validateFunction() || !validateBounds()) return;
+            
+            // Get axis ranges
+            xMin = parseFloat(document.getElementById('x-min').value);
+            xMax = parseFloat(document.getElementById('x-max').value);
+            yMin = parseFloat(document.getElementById('y-min').value);
+            yMax = parseFloat(document.getElementById('y-max').value);
+            
+            // Calculate exact integral and Riemann sum
+            const exactIntegral = calculateExactIntegral();
+            const riemannSum = calculateRiemannSum();
+            
+            // Update Riemann sum result display
+            const riemannResult = document.getElementById('riemann-result');
+            const error = Math.abs(exactIntegral - riemannSum);
+            const errorPercent = (exactIntegral !== 0) ? (error / Math.abs(exactIntegral) * 100) : 0;
+            
+            riemannResult.innerHTML = `
+                <p>${riemannType.charAt(0).toUpperCase() + riemannType.slice(1)} Riemann sum with ${numRectangles} rectangles: ${riemannSum.toFixed(4)}</p>
+                <p>Error: ${error.toFixed(4)} (${errorPercent.toFixed(2)}%)</p>
+            `;
+            
+            // Prepare data for plotting
+            const data = [];
+            
+            // Add function curve
+            data.push({
+                fn: currentFunction,
+                color: 'blue',
+                graphType: 'polyline',
+                title: 'f(x)'
+            });
+            
+            // Add shaded area for the integral
+            data.push({
+                fn: currentFunction,
+                color: 'rgba(0, 0, 255, 0.2)',
+                closed: true,
+                graphType: 'polyline',
+                title: 'Integral Area',
+                range: [lowerBound, upperBound],
+                nSamples: 100,
+                skipTip: true
+            });
+            
+            // Add Riemann sum rectangles
+            const dx = (upperBound - lowerBound) / numRectangles;
+            
+            for (let i = 0; i < numRectangles; i++) {
+                let x, y;
+                
+                if (riemannType === "left") {
+                    x = lowerBound + i * dx;
+                    y = math.evaluate(currentFunction, { x: x });
+                } else if (riemannType === "right") {
+                    x = lowerBound + (i + 1) * dx;
+                    y = math.evaluate(currentFunction, { x: x });
+                } else { // midpoint
+                    x = lowerBound + (i + 0.5) * dx;
+                    y = math.evaluate(currentFunction, { x: x });
+                }
+                
+                // Add rectangle
+                data.push({
+                    points: [
+                        [lowerBound + i * dx, 0],
+                        [lowerBound + i * dx, y],
+                        [lowerBound + (i + 1) * dx, y],
+                        [lowerBound + (i + 1) * dx, 0]
+                    ],
+                    fnType: 'points',
+                    graphType: 'polyline',
+                    color: 'rgba(255, 0, 0, 0.5)',
+                    skipTip: true
+                });
+                
+                // Add point where function is evaluated
+                data.push({
+                    points: [[x, y]],
+                    fnType: 'points',
+                    graphType: 'scatter',
+                    color: 'red',
+                    pointSize: 3,
+                    skipTip: true
+                });
+            }
+            
+            // Add vertical lines at bounds
+            data.push({
+                points: [[lowerBound, 0], [lowerBound, math.evaluate(currentFunction, { x: lowerBound })]],
+                fnType: 'points',
+                graphType: 'polyline',
+                color: 'green',
+                skipTip: true
+            });
+            
+            data.push({
+                points: [[upperBound, 0], [upperBound, math.evaluate(currentFunction, { x: upperBound })]],
+                fnType: 'points',
+                graphType: 'polyline',
+                color: 'green',
+                skipTip: true
+            });
+            
+            // Create or update the plot
+            const plotOptions = {
+                target: '#visualization',
+                width: document.getElementById('visualization').clientWidth,
+                height: document.getElementById('visualization').clientHeight,
+                grid: true,
+                xAxis: { domain: [xMin, xMax] },
+                yAxis: { domain: [yMin, yMax] },
+                data: data,
+                disableZoom: false,
+                tip: {
+                    xLine: true,
+                    yLine: true
+                }
+            };
+            
+            try {
+                functionPlot(plotOptions);
+            } catch (err) {
+                console.error('Error plotting functions:', err);
+            }
+        }
+        
+        // Tab switching functionality
+        function setupTabs() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons and content
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding content
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab') + '-tab';
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (functionPlot) {
+                updateGraph();
+            }
+        });
+        
+        // Initialize when the page loads
+        window.onload = init;
+    </script>
+</body>
+</html>
