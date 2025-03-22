@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coordinate System Transformer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .controls-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .control-panel {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+        .visualization {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result-panel {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .tab-container {
+            margin-top: 20px;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .tab-button {
+            padding: 10px 15px;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 0 4px 4px 4px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .axis {
+            stroke: #000;
+            stroke-width: 1;
+        }
+        .grid line {
+            stroke: #ddd;
+            stroke-width: 0.5;
+        }
+        .point {
+            fill: #ff4500;
+            stroke: #000;
+            stroke-width: 1;
+        }
+        .point-label {
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .coordinate-display {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .info-box {
+            background-color: #e8f4f8;
+            padding: 10px 15px;
+            border-left: 4px solid #007bff;
+            margin-bottom: 15px;
+        }
+        .formula {
+            font-family: monospace;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Coordinate System Transformer</h1>
+    
+    <div class="container">
+        <div class="info-box">
+            <p>This interactive tool demonstrates conversions between different coordinate systems used in astronomy. You can input coordinates in one system and see the equivalent coordinates in other systems, along with a visual representation.</p>
+        </div>
+        
+        <div class="controls-container">
+            <div class="control-panel">
+                <h2>Input Coordinates</h2>
+                
+                <div class="form-group">
+                    <label for="coordinate-system">Coordinate System:</label>
+                    <select id="coordinate-system">
+                        <option value="cartesian">Cartesian (x, y, z)</option>
+                        <option value="polar">Polar (r, θ)</option>
+                        <option value="spherical">Spherical (r, θ, φ)</option>
+                        <option value="celestial-equatorial">Celestial Equatorial (RA, Dec)</option>
+                        <option value="celestial-horizontal">Celestial Horizontal (Alt, Az)</option>
+                        <option value="celestial-ecliptic">Celestial Ecliptic (λ, β)</option>
+                        <option value="celestial-galactic">Celestial Galactic (l, b)</option>
+                    </select>
+                </div>
+                
+                <!-- Cartesian Inputs -->
+                <div id="cartesian-inputs">
+                    <div class="form-group">
+                        <label for="cartesian-x">X:</label>
+                        <input type="number" id="cartesian-x" value="1" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="cartesian-y">Y:</label>
+                        <input type="number" id="cartesian-y" value="1" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="cartesian-z">Z:</label>
+                        <input type="number" id="cartesian-z" value="1" step="0.1">
+                    </div>
+                </div>
+                
+                <!-- Polar Inputs -->
+                <div id="polar-inputs" style="display: none;">
+                    <div class="form-group">
+                        <label for="polar-r">Radius (r):</label>
+                        <input type="number" id="polar-r" value="1" min="0" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="polar-theta">Angle (θ) in degrees:</label>
+                        <input type="number" id="polar-theta" value="45" min="0" max="360" step="1">
+                    </div>
+                </div>
+                
+                <!-- Spherical Inputs -->
+                <div id="spherical-inputs" style="display: none;">
+                    <div class="form-group">
+                        <label for="spherical-r">Radius (r):</label>
+                        <input type="number" id="spherical-r" value="1" min="0" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="spherical-theta">Polar Angle (θ) in degrees:</label>
+                        <input type="number" id="spherical-theta" value="45" min="0" max="180" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="spherical-phi">Azimuthal Angle (φ) in degrees:</label>
+                        <input type="number" id="spherical-phi" value="45" min="0" max="360" step="1">
+                    </div>
+                </div>
+                
+                <!-- Celestial Equatorial Inputs -->
+                <div id="celestial-equatorial-inputs" style="display: none;">
+                    <div class="form-group">
+                        <label for="ra-hours">Right Ascension (hours):</label>
+                        <input type="number" id="ra-hours" value="6" min="0" max="24" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="dec-degrees">Declination (degrees):</label>
+                        <input type="number" id="dec-degrees" value="30" min="-90" max="90" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="equatorial-distance">Distance (parsecs):</label>
+                        <input type="number" id="equatorial-distance" value="10" min="0" step="0.1">
+                    </div>
+                </div>
+                
+                <!-- Celestial Horizontal Inputs -->
+                <div id="celestial-horizontal-inputs" style="display: none;">
+                    <div class="form-group">
+                        <label for="altitude">Altitude (degrees):</label>
+                        <input type="number" id="altitude" value="30" min="-90" max="90" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="azimuth">Azimuth (degrees):</label>
+                        <input type="number" id="azimuth" value="120" min="0" max="360" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="horizontal-distance">Distance (parsecs):</label>
+                        <input type="number" id="horizontal-distance" value="10" min="0" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="observer-latitude">Observer's Latitude (degrees):</label>
+                        <input type="number" id="observer-latitude" value="40" min="-90" max="90" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="local-sidereal-time">Local Sidereal Time (hours):</label>
+                        <input type="number" id="local-sidereal-time" value="18" min="0" max="24" step="0.1">
+                    </div>
+                </div>
+                
+                <!-- Celestial Ecliptic Inputs -->
+                <div id="celestial-ecliptic-inputs" style="display: none;">
+                    <div class="form-group">
+                        <label for="ecliptic-longitude">Ecliptic Longitude (λ) in degrees:</label>
+                        <input type="number" id="ecliptic-longitude" value="45" min="0" max="360" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="ecliptic-latitude">Ecliptic Latitude (β) in degrees:</label>
+                        <input type="number" id="ecliptic-latitude" value="30" min="-90" max="90" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="ecliptic-distance">Distance (parsecs):</label>
+                        <input type="number" id="ecliptic-distance" value="10" min="0" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="obliquity">Obliquity of Ecliptic (degrees):</label>
+                        <input type="number" id="obliquity" value="23.44" step="0.01">
+                    </div>
+                </div>
+                
+                <!-- Celestial Galactic Inputs -->
+                <div id="celestial-galactic-inputs" style="display: none;">
+                    <div class="form-group">
+                        <label for="galactic-longitude">Galactic Longitude (l) in degrees:</label>
+                        <input type="number" id="galactic-longitude" value="120" min="0" max="360" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="galactic-latitude">Galactic Latitude (b) in degrees:</label>
+                        <input type="number" id="galactic-latitude" value="30" min="-90" max="90" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="galactic-distance">Distance (parsecs):</label>
+                        <input type="number" id="galactic-distance" value="10" min="0" step="0.1">
+                    </div>
+                </div>
+                
+                <button id="transform-button">Transform Coordinates</button>
+            </div>
+            
+            <div class="control-panel">
+                <h2>Transformation Results</h2>
+                <div id="results">
+                    <p>Enter coordinates and click "Transform Coordinates" to see the results.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="visualization" id="visualization">
+            <div class="coordinate-display" id="coordinate-display"></div>
+        </div>
+        
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="formulas">Transformation Formulas</button>
+                <button class="tab-button" data-tab="applications">Astronomical Applications</button>
+                <button class="tab-button" data-tab="help">Help</button>
+            </div>
+            
+            <div class="tab-content active" id="formulas-tab">
+                <h3>Coordinate Transformation Formulas</h3>
+                
+                <h4>Cartesian ↔ Polar</h4>
+                <div class="formula">
+                    x = r × cos(θ)<br>
+                    y = r × sin(θ)<br>
+                    <br>
+                    r = √(x² + y²)<br>
+                    θ = arctan(y/x)
+                </div>
+                
+                <h4>Cartesian ↔ Spherical</h4>
+                <div class="formula">
+                    x = r × sin(θ) × cos(φ)<br>
+                    y = r × sin(θ) × sin(φ)<br>
+                    z = r × cos(θ)<br>
+                    <br>
+                    r = √(x² + y² + z²)<br>
+                    θ = arccos(z/r)<br>
+                    φ = arctan(y/x)
+                </div>
+                
+                <h4>Equatorial ↔ Horizontal</h4>
+                <div class="formula">
+                    sin(Alt) = sin(Dec)×sin(Lat) + cos(Dec)×cos(Lat)×cos(HA)<br>
+                    sin(Az) = -cos(Dec)×sin(HA) / cos(Alt)<br>
+                    <br>
+                    sin(Dec) = sin(Alt)×sin(Lat) + cos(Alt)×cos(Lat)×cos(Az)<br>
+                    sin(HA) = -cos(Alt)×sin(Az) / cos(Dec)<br>
+                    <br>
+                    Where HA = LST - RA (Hour Angle)
+                </div>
+                
+                <h4>Equatorial ↔ Ecliptic</h4>
+                <div class="formula">
+                    sin(β) = sin(Dec)×cos(ε) - cos(Dec)×sin(ε)×sin(RA)<br>
+                    tan(λ) = [sin(RA)×cos(ε) + tan(Dec)×sin(ε)] / cos(RA)<br>
+                    <br>
+                    sin(Dec) = sin(β)×cos(ε) + cos(β)×sin(ε)×sin(λ)<br>
+                    tan(RA) = [sin(λ)×cos(ε) - tan(β)×sin(ε)] / cos(λ)<br>
+                    <br>
+                    Where ε is the obliquity of the ecliptic
+                </div>
+                
+                <h4>Equatorial ↔ Galactic</h4>
+                <div class="formula">
+                    sin(b) = sin(Dec)×sin(δNGP) + cos(Dec)×cos(δNGP)×cos(RA-αNGP)<br>
+                    sin(l-lNCP) = cos(Dec)×sin(RA-αNGP) / cos(b)<br>
+                    <br>
+                    Where:<br>
+                    αNGP = 192.85° (RA of North Galactic Pole)<br>
+                    δNGP = 27.13° (Dec of North Galactic Pole)<br>
+                    lNCP = 123.93° (Galactic longitude of North Celestial Pole)
+                </div>
+            </div>
+            
+            <div class="tab-content" id="applications-tab">
+                <h3>Astronomical Applications of Coordinate Transformations</h3>
+                
+                <h4>Observational Planning</h4>
+                <p>Astronomers use coordinate transformations to plan observations:</p>
+                <ul>
+                    <li>Converting from equatorial coordinates (RA, Dec) to horizontal coordinates (Alt, Az) to determine when and where an object will be visible from a specific location</li>
+                    <li>Calculating rise, transit, and set times for celestial objects</li>
+                    <li>Determining the best observing times when an object is highest in the sky</li>
+                </ul>
+                
+                <h4>Telescope Control</h4>
+                <p>Different telescope mounts use different coordinate systems:</p>
+                <ul>
+                    <li>Equatorial mounts track objects using right ascension and declination</li>
+                    <li>Alt-azimuth mounts use altitude and azimuth coordinates</li>
+                    <li>Coordinate transformations are necessary to convert between these systems for telescope pointing and tracking</li>
+                </ul>
+                
+                <h4>Data Analysis</h4>
+                <p>Astronomical data is often collected and analyzed in different coordinate systems:</p>
+                <ul>
+                    <li>Galactic coordinates are used for studying the structure of the Milky Way</li>
+                    <li>Ecliptic coordinates are useful for solar system studies</li>
+                    <li>Equatorial coordinates provide a standard reference frame for catalogs</li>
+                    <li>Transformations allow astronomers to work in the most convenient system for a particular analysis</li>
+                </ul>
+                
+                <h4>Spacecraft Navigation</h4>
+                <p>Space missions require precise coordinate transformations:</p>
+                <ul>
+                    <li>Converting between Earth-centered and spacecraft-centered reference frames</li>
+                    <li>Transforming between celestial coordinates and spacecraft attitude</li>
+                    <li>Planning trajectory corrections and pointing maneuvers</li>
+                </ul>
+            </div>
+            
+            <div class="tab-content" id="help-tab">
+                <h3>How to Use This Tool</h3>
+                <p>This interactive tool allows you to convert between different coordinate systems used in astronomy:</p>
+                <ol>
+                    <li>Select the input coordinate system from the dropdown menu</li>
+                    <li>Enter the coordinate values in the appropriate fields</li>
+                    <li>Click "Transform Coordinates" to see the equivalent coordinates in all other systems</li>
+                    <li>The visualization will update to show the position in 3D space</li>
+                </ol>
+                
+                <h4>Coordinate Systems Explained</h4>
+                <ul>
+                    <li><strong>Cartesian (x, y, z):</strong> Standard 3D coordinates with perpendicular axes</li>
+                    <li><strong>Polar (r, θ):</strong> 2D coordinates with distance from origin and angle from x-axis</li>
+                    <li><strong>Spherical (r, θ, φ):</strong> 3D coordinates with distance from origin, polar angle from z-axis, and azimuthal angle in xy-plane</li>
+                    <li><strong>Celestial Equatorial (RA, Dec):</strong> System aligned with Earth's equator and poles, with right ascension measured eastward from the vernal equinox</li>
+                    <li><strong>Celestial Horizontal (Alt, Az):</strong> Local system based on observer's horizon and zenith</li>
+                    <li><strong>Celestial Ecliptic (λ, β):</strong> System aligned with Earth's orbital plane around the Sun</li>
+                    <li><strong>Celestial Galactic (l, b):</strong> System aligned with the Milky Way's disk and center</li>
+                </ul>
+                
+                <h4>Tips</h4>
+                <ul>
+                    <li>You can rotate the 3D visualization by clicking and dragging</li>
+                    <li>Hover over points to see their coordinates</li>
+                    <li>For horizontal coordinates, you need to specify the observer's latitude and local sidereal time</li>
+                    <li>The "Transformation Formulas" tab shows the mathematical equations used for conversions</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        // Initialize variables
+        let scene, camera, renderer, controls;
+        let point, axes;
+        
+        // Set up the 3D visualization
+        function initVisualization() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f0f0);
+            
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, document.getElementById('visualization').clientWidth / document.getElementById('visualization').clientHeight, 0.1, 1000);
+            camera.position.set(3, 3, 3);
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(document.getElementById('visualization').clientWidth, document.getElementById('visualization').clientHeight);
+            document.getElementById('visualization').appendChild(renderer.domElement);
+            
+            // Add orbit controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.25;
+            
+            // Add axes
+            addAxes();
+            
+            // Add grid
+            addGrid();
+            
+            // Add initial point
+            addPoint(1, 1, 1);
+            
+            // Animation loop
+            animate();
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+        }
+        
+        function addAxes() {
+            // X axis (red)
+            const xAxisGeometry = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(2, 0, 0)
+            ]);
+            const xAxisMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+            const xAxis = new THREE.Line(xAxisGeometry, xAxisMaterial);
+            scene.add(xAxis);
+            
+            // X axis label
+            const xLabel = createTextSprite("X");
+            xLabel.position.set(2.2, 0, 0);
+            scene.add(xLabel);
+            
+            // Y axis (green)
+            const yAxisGeometry = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, 2, 0)
+            ]);
+            const yAxisMaterial = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+            const yAxis = new THREE.Line(yAxisGeometry, yAxisMaterial);
+            scene.add(yAxis);
+            
+            // Y axis label
+            const yLabel = createTextSprite("Y");
+            yLabel.position.set(0, 2.2, 0);
+            scene.add(yLabel);
+            
+            // Z axis (blue)
+            const zAxisGeometry = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, 0, 2)
+            ]);
+            const zAxisMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });
+            const zAxis = new THREE.Line(zAxisGeometry, zAxisMaterial);
+            scene.add(zAxis);
+            
+            // Z axis label
+            const zLabel = createTextSprite("Z");
+            zLabel.position.set(0, 0, 2.2);
+            scene.add(zLabel);
+        }
+        
+        function addGrid() {
+            // XY grid
+            const gridXY = new THREE.GridHelper(4, 10);
+            gridXY.rotation.x = Math.PI / 2;
+            gridXY.material.opacity = 0.2;
+            gridXY.material.transparent = true;
+            scene.add(gridXY);
+            
+            // XZ grid
+            const gridXZ = new THREE.GridHelper(4, 10);
+            gridXZ.material.opacity = 0.2;
+            gridXZ.material.transparent = true;
+            scene.add(gridXZ);
+            
+            // YZ grid
+            const gridYZ = new THREE.GridHelper(4, 10);
+            gridYZ.rotation.z = Math.PI / 2;
+            gridYZ.material.opacity = 0.2;
+            gridYZ.material.transparent = true;
+            scene.add(gridYZ);
+        }
+        
+        function addPoint(x, y, z) {
+            // Remove existing point if any
+            if (point) {
+                scene.remove(point);
+            }
+            
+            // Create sphere for point
+            const geometry = new THREE.SphereGeometry(0.1, 32, 32);
+            const material = new THREE.MeshBasicMaterial({ color: 0xff4500 });
+            point = new THREE.Mesh(geometry, material);
+            point.position.set(x, y, z);
+            scene.add(point);
+            
+            // Update coordinate display
+            document.getElementById('coordinate-display').textContent = `(${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`;
+        }
+        
+        function createTextSprite(text) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 64;
+            canvas.height = 64;
+            
+            context.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            
+            context.font = '24px Arial';
+            context.fillStyle = 'black';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText(text, canvas.width / 2, canvas.height / 2);
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            const material = new THREE.SpriteMaterial({ map: texture });
+            const sprite = new THREE.Sprite(material);
+            sprite.scale.set(0.5, 0.5, 1);
+            
+            return sprite;
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        function onWindowResize() {
+            camera.aspect = document.getElementById('visualization').clientWidth / document.getElementById('visualization').clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(document.getElementById('visualization').clientWidth, document.getElementById('visualization').clientHeight);
+        }
+        
+        // Coordinate transformation functions
+        
+        // Cartesian to Polar
+        function cartesianToPolar(x, y) {
+            const r = Math.sqrt(x*x + y*y);
+            let theta = Math.atan2(y, x) * (180 / Math.PI);
+            if (theta < 0) theta += 360;
+            return { r, theta };
+        }
+        
+        // Polar to Cartesian
+        function polarToCartesian(r, theta) {
+            const thetaRad = theta * (Math.PI / 180);
+            const x = r * Math.cos(thetaRad);
+            const y = r * Math.sin(thetaRad);
+            return { x, y };
+        }
+        
+        // Cartesian to Spherical
+        function cartesianToSpherical(x, y, z) {
+            const r = Math.sqrt(x*x + y*y + z*z);
+            let theta = 0;
+            if (r !== 0) {
+                theta = Math.acos(z / r) * (180 / Math.PI);
+            }
+            let phi = Math.atan2(y, x) * (180 / Math.PI);
+            if (phi < 0) phi += 360;
+            return { r, theta, phi };
+        }
+        
+        // Spherical to Cartesian
+        function sphericalToCartesian(r, theta, phi) {
+            const thetaRad = theta * (Math.PI / 180);
+            const phiRad = phi * (Math.PI / 180);
+            const x = r * Math.sin(thetaRad) * Math.cos(phiRad);
+            const y = r * Math.sin(thetaRad) * Math.sin(phiRad);
+            const z = r * Math.cos(thetaRad);
+            return { x, y, z };
+        }
+        
+        // Equatorial to Cartesian
+        function equatorialToCartesian(ra, dec, distance) {
+            const raRad = ra * (Math.PI / 12); // Convert hours to radians
+            const decRad = dec * (Math.PI / 180);
+            const x = distance * Math.cos(decRad) * Math.cos(raRad);
+            const y = distance * Math.cos(decRad) * Math.sin(raRad);
+            const z = distance * Math.sin(decRad);
+            return { x, y, z };
+        }
+        
+        // Cartesian to Equatorial
+        function cartesianToEquatorial(x, y, z) {
+            const distance = Math.sqrt(x*x + y*y + z*z);
+            let ra = Math.atan2(y, x) * (12 / Math.PI); // Convert radians to hours
+            if (ra < 0) ra += 24;
+            const dec = Math.asin(z / distance) * (180 / Math.PI);
+            return { ra, dec, distance };
+        }
+        
+        // Horizontal to Equatorial
+        function horizontalToEquatorial(alt, az, lat, lst) {
+            const altRad = alt * (Math.PI / 180);
+            const azRad = az * (Math.PI / 180);
+            const latRad = lat * (Math.PI / 180);
+            
+            // Calculate declination
+            const sinDec = Math.sin(altRad) * Math.sin(latRad) + Math.cos(altRad) * Math.cos(latRad) * Math.cos(azRad);
+            const dec = Math.asin(sinDec) * (180 / Math.PI);
+            
+            // Calculate hour angle
+            const cosHA = (Math.sin(altRad) - Math.sin(latRad) * sinDec) / (Math.cos(latRad) * Math.cos(Math.asin(sinDec)));
+            const sinHA = -Math.cos(altRad) * Math.sin(azRad) / Math.cos(Math.asin(sinDec));
+            let ha = Math.atan2(sinHA, cosHA) * (12 / Math.PI); // Convert to hours
+            
+            // Calculate right ascension
+            let ra = lst - ha;
+            // Normalize to 0-24 range
+            while (ra < 0) ra += 24;
+            while (ra >= 24) ra -= 24;
+            
+            return { ra, dec };
+        }
+        
+        // Equatorial to Horizontal
+        function equatorialToHorizontal(ra, dec, lat, lst) {
+            const decRad = dec * (Math.PI / 180);
+            const latRad = lat * (Math.PI / 180);
+            
+            // Calculate hour angle
+            let ha = lst - ra;
+            // Normalize to 0-24 range
+            while (ha < 0) ha += 24;
+            while (ha >= 24) ha -= 24;
+            const haRad = ha * (Math.PI / 12); // Convert hours to radians
+            
+            // Calculate altitude
+            const sinAlt = Math.sin(decRad) * Math.sin(latRad) + Math.cos(decRad) * Math.cos(latRad) * Math.cos(haRad);
+            const alt = Math.asin(sinAlt) * (180 / Math.PI);
+            
+            // Calculate azimuth
+            const cosAz = (Math.sin(decRad) - Math.sin(latRad) * sinAlt) / (Math.cos(latRad) * Math.cos(Math.asin(sinAlt)));
+            const sinAz = -Math.cos(decRad) * Math.sin(haRad) / Math.cos(Math.asin(sinAlt));
+            let az = Math.atan2(sinAz, cosAz) * (180 / Math.PI);
+            // Normalize to 0-360 range
+            while (az < 0) az += 360;
+            
+            return { alt, az };
+        }
+        
+        // Equatorial to Ecliptic
+        function equatorialToEcliptic(ra, dec, obliquity) {
+            const raRad = ra * (Math.PI / 12); // Convert hours to radians
+            const decRad = dec * (Math.PI / 180);
+            const obliquityRad = obliquity * (Math.PI / 180);
+            
+            // Calculate ecliptic latitude
+            const sinBeta = Math.sin(decRad) * Math.cos(obliquityRad) - Math.cos(decRad) * Math.sin(obliquityRad) * Math.sin(raRad);
+            const beta = Math.asin(sinBeta) * (180 / Math.PI);
+            
+            // Calculate ecliptic longitude
+            const y = Math.sin(raRad) * Math.cos(obliquityRad) + Math.tan(decRad) * Math.sin(obliquityRad);
+            const x = Math.cos(raRad);
+            let lambda = Math.atan2(y, x) * (180 / Math.PI);
+            // Normalize to 0-360 range
+            while (lambda < 0) lambda += 360;
+            
+            return { lambda, beta };
+        }
+        
+        // Ecliptic to Equatorial
+        function eclipticToEquatorial(lambda, beta, obliquity) {
+            const lambdaRad = lambda * (Math.PI / 180);
+            const betaRad = beta * (Math.PI / 180);
+            const obliquityRad = obliquity * (Math.PI / 180);
+            
+            // Calculate declination
+            const sinDec = Math.sin(betaRad) * Math.cos(obliquityRad) + Math.cos(betaRad) * Math.sin(obliquityRad) * Math.sin(lambdaRad);
+            const dec = Math.asin(sinDec) * (180 / Math.PI);
+            
+            // Calculate right ascension
+            const y = Math.sin(lambdaRad) * Math.cos(obliquityRad) - Math.tan(betaRad) * Math.sin(obliquityRad);
+            const x = Math.cos(lambdaRad);
+            let ra = Math.atan2(y, x) * (12 / Math.PI); // Convert to hours
+            // Normalize to 0-24 range
+            while (ra < 0) ra += 24;
+            
+            return { ra, dec };
+        }
+        
+        // Equatorial to Galactic
+        function equatorialToGalactic(ra, dec) {
+            // Constants for J2000 (in degrees)
+            const raNGP = 192.85; // RA of North Galactic Pole
+            const decNGP = 27.13; // Dec of North Galactic Pole
+            const lNCP = 123.93; // Galactic longitude of North Celestial Pole
+            
+            // Convert to radians
+            const raRad = ra * (Math.PI / 12); // Convert hours to radians
+            const decRad = dec * (Math.PI / 180);
+            const raNGPRad = raNGP * (Math.PI / 180);
+            const decNGPRad = decNGP * (Math.PI / 180);
+            
+            // Calculate galactic latitude
+            const sinb = Math.sin(decRad) * Math.sin(decNGPRad) + 
+                         Math.cos(decRad) * Math.cos(decNGPRad) * Math.cos(raRad - raNGPRad);
+            const b = Math.asin(sinb) * (180 / Math.PI);
+            
+            // Calculate galactic longitude
+            const y = Math.cos(decRad) * Math.sin(raRad - raNGPRad);
+            const x = Math.sin(decRad) * Math.cos(decNGPRad) - 
+                      Math.cos(decRad) * Math.sin(decNGPRad) * Math.cos(raRad - raNGPRad);
+            let l = Math.atan2(y, x) * (180 / Math.PI) + lNCP;
+            // Normalize to 0-360 range
+            while (l < 0) l += 360;
+            while (l >= 360) l -= 360;
+            
+            return { l, b };
+        }
+        
+        // Galactic to Equatorial
+        function galacticToEquatorial(l, b) {
+            // Constants for J2000 (in degrees)
+            const raNGP = 192.85; // RA of North Galactic Pole
+            const decNGP = 27.13; // Dec of North Galactic Pole
+            const lNCP = 123.93; // Galactic longitude of North Celestial Pole
+            
+            // Convert to radians
+            const lRad = l * (Math.PI / 180);
+            const bRad = b * (Math.PI / 180);
+            const raNGPRad = raNGP * (Math.PI / 180);
+            const decNGPRad = decNGP * (Math.PI / 180);
+            const lNCPRad = lNCP * (Math.PI / 180);
+            
+            // Calculate declination
+            const sinDec = Math.sin(bRad) * Math.sin(decNGPRad) + 
+                           Math.cos(bRad) * Math.cos(decNGPRad) * Math.cos(lRad - lNCPRad);
+            const dec = Math.asin(sinDec) * (180 / Math.PI);
+            
+            // Calculate right ascension
+            const y = Math.cos(bRad) * Math.sin(lRad - lNCPRad);
+            const x = Math.sin(bRad) * Math.cos(decNGPRad) - 
+                      Math.cos(bRad) * Math.sin(decNGPRad) * Math.cos(lRad - lNCPRad);
+            let ra = Math.atan2(y, x) * (180 / Math.PI) + raNGP;
+            // Convert to hours and normalize to 0-24 range
+            ra = ra / 15; // Convert degrees to hours
+            while (ra < 0) ra += 24;
+            while (ra >= 24) ra -= 24;
+            
+            return { ra, dec };
+        }
+        
+        // Function to perform all transformations
+        function transformCoordinates() {
+            const system = document.getElementById('coordinate-system').value;
+            let x, y, z, r, theta, phi, ra, dec, distance, alt, az, lambda, beta, l, b;
+            
+            // Get input values based on selected coordinate system
+            switch (system) {
+                case 'cartesian':
+                    x = parseFloat(document.getElementById('cartesian-x').value);
+                    y = parseFloat(document.getElementById('cartesian-y').value);
+                    z = parseFloat(document.getElementById('cartesian-z').value);
+                    break;
+                    
+                case 'polar':
+                    r = parseFloat(document.getElementById('polar-r').value);
+                    theta = parseFloat(document.getElementById('polar-theta').value);
+                    const polar = polarToCartesian(r, theta);
+                    x = polar.x;
+                    y = polar.y;
+                    z = 0;
+                    break;
+                    
+                case 'spherical':
+                    r = parseFloat(document.getElementById('spherical-r').value);
+                    theta = parseFloat(document.getElementById('spherical-theta').value);
+                    phi = parseFloat(document.getElementById('spherical-phi').value);
+                    const spherical = sphericalToCartesian(r, theta, phi);
+                    x = spherical.x;
+                    y = spherical.y;
+                    z = spherical.z;
+                    break;
+                    
+                case 'celestial-equatorial':
+                    ra = parseFloat(document.getElementById('ra-hours').value);
+                    dec = parseFloat(document.getElementById('dec-degrees').value);
+                    distance = parseFloat(document.getElementById('equatorial-distance').value);
+                    const equatorial = equatorialToCartesian(ra, dec, distance);
+                    x = equatorial.x;
+                    y = equatorial.y;
+                    z = equatorial.z;
+                    break;
+                    
+                case 'celestial-horizontal':
+                    alt = parseFloat(document.getElementById('altitude').value);
+                    az = parseFloat(document.getElementById('azimuth').value);
+                    distance = parseFloat(document.getElementById('horizontal-distance').value);
+                    const lat = parseFloat(document.getElementById('observer-latitude').value);
+                    const lst = parseFloat(document.getElementById('local-sidereal-time').value);
+                    const horizontal = horizontalToEquatorial(alt, az, lat, lst);
+                    ra = horizontal.ra;
+                    dec = horizontal.dec;
+                    const horizontalCart = equatorialToCartesian(ra, dec, distance);
+                    x = horizontalCart.x;
+                    y = horizontalCart.y;
+                    z = horizontalCart.z;
+                    break;
+                    
+                case 'celestial-ecliptic':
+                    lambda = parseFloat(document.getElementById('ecliptic-longitude').value);
+                    beta = parseFloat(document.getElementById('ecliptic-latitude').value);
+                    distance = parseFloat(document.getElementById('ecliptic-distance').value);
+                    const obliquity = parseFloat(document.getElementById('obliquity').value);
+                    const ecliptic = eclipticToEquatorial(lambda, beta, obliquity);
+                    ra = ecliptic.ra;
+                    dec = ecliptic.dec;
+                    const eclipticCart = equatorialToCartesian(ra, dec, distance);
+                    x = eclipticCart.x;
+                    y = eclipticCart.y;
+                    z = eclipticCart.z;
+                    break;
+                    
+                case 'celestial-galactic':
+                    l = parseFloat(document.getElementById('galactic-longitude').value);
+                    b = parseFloat(document.getElementById('galactic-latitude').value);
+                    distance = parseFloat(document.getElementById('galactic-distance').value);
+                    const galactic = galacticToEquatorial(l, b);
+                    ra = galactic.ra;
+                    dec = galactic.dec;
+                    const galacticCart = equatorialToCartesian(ra, dec, distance);
+                    x = galacticCart.x;
+                    y = galacticCart.y;
+                    z = galacticCart.z;
+                    break;
+            }
+            
+            // Update 3D visualization
+            addPoint(x, y, z);
+            
+            // Calculate all coordinate representations
+            const polar = cartesianToPolar(x, y);
+            const spherical = cartesianToSpherical(x, y, z);
+            const equatorial = cartesianToEquatorial(x, y, z);
+            
+            // For horizontal coordinates, we need observer's location
+            let horizontal = { alt: "N/A", az: "N/A" };
+            if (document.getElementById('observer-latitude')) {
+                const lat = parseFloat(document.getElementById('observer-latitude').value);
+                const lst = parseFloat(document.getElementById('local-sidereal-time').value);
+                horizontal = equatorialToHorizontal(equatorial.ra, equatorial.dec, lat, lst);
+            }
+            
+            // For ecliptic coordinates, we need obliquity
+            let ecliptic = { lambda: "N/A", beta: "N/A" };
+            if (document.getElementById('obliquity')) {
+                const obliquity = parseFloat(document.getElementById('obliquity').value);
+                ecliptic = equatorialToEcliptic(equatorial.ra, equatorial.dec, obliquity);
+            }
+            
+            // Calculate galactic coordinates
+            const galactic = equatorialToGalactic(equatorial.ra, equatorial.dec);
+            
+            // Display results
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <h3>Cartesian Coordinates</h3>
+                <p>x = ${x.toFixed(2)}</p>
+                <p>y = ${y.toFixed(2)}</p>
+                <p>z = ${z.toFixed(2)}</p>
+                
+                <h3>Polar Coordinates (2D)</h3>
+                <p>r = ${polar.r.toFixed(2)}</p>
+                <p>θ = ${polar.theta.toFixed(2)}°</p>
+                
+                <h3>Spherical Coordinates</h3>
+                <p>r = ${spherical.r.toFixed(2)}</p>
+                <p>θ = ${spherical.theta.toFixed(2)}°</p>
+                <p>φ = ${spherical.phi.toFixed(2)}°</p>
+                
+                <h3>Celestial Equatorial Coordinates</h3>
+                <p>Right Ascension = ${equatorial.ra.toFixed(2)} hours</p>
+                <p>Declination = ${equatorial.dec.toFixed(2)}°</p>
+                <p>Distance = ${equatorial.distance.toFixed(2)} parsecs</p>
+                
+                <h3>Celestial Horizontal Coordinates</h3>
+                <p>Altitude = ${typeof horizontal.alt === 'number' ? horizontal.alt.toFixed(2) + '°' : horizontal.alt}</p>
+                <p>Azimuth = ${typeof horizontal.az === 'number' ? horizontal.az.toFixed(2) + '°' : horizontal.az}</p>
+                
+                <h3>Celestial Ecliptic Coordinates</h3>
+                <p>Longitude (λ) = ${typeof ecliptic.lambda === 'number' ? ecliptic.lambda.toFixed(2) + '°' : ecliptic.lambda}</p>
+                <p>Latitude (β) = ${typeof ecliptic.beta === 'number' ? ecliptic.beta.toFixed(2) + '°' : ecliptic.beta}</p>
+                
+                <h3>Celestial Galactic Coordinates</h3>
+                <p>Longitude (l) = ${galactic.l.toFixed(2)}°</p>
+                <p>Latitude (b) = ${galactic.b.toFixed(2)}°</p>
+            `;
+        }
+        
+        // Function to show/hide input fields based on selected coordinate system
+        function updateInputFields() {
+            const system = document.getElementById('coordinate-system').value;
+            
+            // Hide all input divs
+            document.getElementById('cartesian-inputs').style.display = 'none';
+            document.getElementById('polar-inputs').style.display = 'none';
+            document.getElementById('spherical-inputs').style.display = 'none';
+            document.getElementById('celestial-equatorial-inputs').style.display = 'none';
+            document.getElementById('celestial-horizontal-inputs').style.display = 'none';
+            document.getElementById('celestial-ecliptic-inputs').style.display = 'none';
+            document.getElementById('celestial-galactic-inputs').style.display = 'none';
+            
+            // Show selected input div
+            document.getElementById(`${system}-inputs`).style.display = 'block';
+        }
+        
+        // Tab switching functionality
+        function setupTabs() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons and content
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding content
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab') + '-tab';
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+        
+        // Initialize everything when the page loads
+        window.onload = function() {
+            initVisualization();
+            updateInputFields();
+            setupTabs();
+            
+            // Add event listeners
+            document.getElementById('coordinate-system').addEventListener('change', updateInputFields);
+            document.getElementById('transform-button').addEventListener('click', transformCoordinates);
+        };
+    </script>
+</body>
+</html>
