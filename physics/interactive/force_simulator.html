@@ -1,0 +1,1810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Force Simulator - AstroCourse Physics</title>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background-color: var(--light-color);
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: var(--secondary-color);
+            margin: 20px 0 10px;
+        }
+
+        h3 {
+            color: var(--primary-color);
+            margin: 15px 0 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .simulation-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            flex: 1;
+            min-width: 250px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .control-group h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .control-item {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input[type="range"], 
+        input[type="number"], 
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            padding: 0;
+        }
+
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button.primary {
+            background-color: var(--primary-color);
+        }
+
+        button.primary:hover {
+            background-color: #1a252f;
+        }
+
+        button.accent {
+            background-color: var(--accent-color);
+        }
+
+        button.accent:hover {
+            background-color: #c0392b;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .canvas-container {
+            width: 100%;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+        }
+
+        #simulation-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .data-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .data-panel {
+            flex: 1;
+            min-width: 250px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .data-panel h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .data-item {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .data-label {
+            font-weight: 500;
+        }
+
+        .data-value {
+            font-family: monospace;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            background-color: #f8f9fa;
+            margin-right: 5px;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background-color: #e9ecef;
+        }
+
+        .tab.active {
+            background-color: white;
+            border-color: #dee2e6;
+            border-bottom-color: white;
+            margin-bottom: -1px;
+            font-weight: 500;
+            color: var(--secondary-color);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background-color: white;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .preset-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .preset-button {
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .info-panel {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid #e9ecef;
+        }
+
+        .info-panel h3 {
+            margin-top: 0;
+            color: var(--secondary-color);
+        }
+
+        .equation {
+            font-family: 'Cambria Math', Georgia, serif;
+            background-color: #f1f1f1;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow-x: auto;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 500;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        @media (max-width: 768px) {
+            .controls-container,
+            .data-display {
+                flex-direction: column;
+            }
+            
+            .control-group,
+            .data-panel {
+                min-width: 100%;
+            }
+            
+            .canvas-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Force Simulator</h1>
+        <p>Explore the effects of forces on objects in various astronomical contexts</p>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" data-tab="simulator">Simulator</div>
+            <div class="tab" data-tab="concepts">Physics Concepts</div>
+            <div class="tab" data-tab="astronomy">Astronomical Applications</div>
+            <div class="tab" data-tab="advanced">Advanced Topics</div>
+        </div>
+
+        <div id="simulator" class="tab-content active">
+            <div class="preset-container">
+                <button class="preset-button" data-preset="orbital">Orbital Motion</button>
+                <button class="preset-button" data-preset="projectile">Projectile Motion</button>
+                <button class="preset-button" data-preset="spring">Spring Oscillation</button>
+                <button class="preset-button" data-preset="charged">Charged Particles</button>
+                <button class="preset-button" data-preset="nbody">N-Body System</button>
+            </div>
+
+            <div class="simulation-container">
+                <div class="controls-container">
+                    <div class="control-group">
+                        <h3>Simulation Settings</h3>
+                        <div class="control-item">
+                            <label for="simulation-type">Simulation Type:</label>
+                            <select id="simulation-type">
+                                <option value="gravitational">Gravitational</option>
+                                <option value="electric">Electric</option>
+                                <option value="magnetic">Magnetic</option>
+                                <option value="spring">Spring/Harmonic</option>
+                                <option value="custom">Custom Force</option>
+                            </select>
+                        </div>
+                        <div class="control-item">
+                            <label for="time-step">Time Step (s):</label>
+                            <input type="range" id="time-step" min="0.01" max="1" step="0.01" value="0.1">
+                            <input type="number" id="time-step-value" min="0.01" max="1" step="0.01" value="0.1">
+                        </div>
+                        <div class="control-item">
+                            <label for="gravity-strength">Gravity Strength (G):</label>
+                            <input type="range" id="gravity-strength" min="0" max="100" step="1" value="6.67">
+                            <input type="number" id="gravity-strength-value" min="0" max="100" step="0.01" value="6.67">
+                        </div>
+                        <div class="control-item">
+                            <label for="display-mode">Display Mode:</label>
+                            <select id="display-mode">
+                                <option value="3d">3D View</option>
+                                <option value="2d">2D View</option>
+                                <option value="paths">Show Paths</option>
+                                <option value="vectors">Show Force Vectors</option>
+                            </select>
+                        </div>
+                        <div class="button-group">
+                            <button id="start-simulation" class="primary">Start</button>
+                            <button id="pause-simulation">Pause</button>
+                            <button id="reset-simulation" class="accent">Reset</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>Object Properties</h3>
+                        <div class="control-item">
+                            <label for="object-select">Select Object:</label>
+                            <select id="object-select">
+                                <option value="object1">Object 1</option>
+                                <option value="object2">Object 2</option>
+                            </select>
+                            <button id="add-object" style="width: auto; margin-top: 5px;">Add Object</button>
+                            <button id="remove-object" style="width: auto; margin-top: 5px;">Remove Object</button>
+                        </div>
+                        <div class="control-item">
+                            <label for="object-mass">Mass (kg):</label>
+                            <input type="range" id="object-mass" min="1" max="1000" step="1" value="100">
+                            <input type="number" id="object-mass-value" min="1" max="1000" step="1" value="100">
+                        </div>
+                        <div class="control-item">
+                            <label for="object-charge">Charge (C):</label>
+                            <input type="range" id="object-charge" min="-10" max="10" step="0.1" value="0">
+                            <input type="number" id="object-charge-value" min="-10" max="10" step="0.1" value="0">
+                        </div>
+                        <div class="control-item">
+                            <label for="initial-position">Initial Position (x,y,z):</label>
+                            <div style="display: flex; gap: 5px;">
+                                <input type="number" id="position-x" placeholder="x" value="0" style="width: 33%;">
+                                <input type="number" id="position-y" placeholder="y" value="0" style="width: 33%;">
+                                <input type="number" id="position-z" placeholder="z" value="0" style="width: 33%;">
+                            </div>
+                        </div>
+                        <div class="control-item">
+                            <label for="initial-velocity">Initial Velocity (vx,vy,vz):</label>
+                            <div style="display: flex; gap: 5px;">
+                                <input type="number" id="velocity-x" placeholder="vx" value="0" style="width: 33%;">
+                                <input type="number" id="velocity-y" placeholder="vy" value="0" style="width: 33%;">
+                                <input type="number" id="velocity-z" placeholder="vz" value="0" style="width: 33%;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="simulation-canvas"></canvas>
+                </div>
+
+                <div class="data-display">
+                    <div class="data-panel">
+                        <h3>Real-time Data</h3>
+                        <div class="data-item">
+                            <span class="data-label">Time:</span>
+                            <span class="data-value" id="time-value">0.00 s</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Total Energy:</span>
+                            <span class="data-value" id="energy-value">0.00 J</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Angular Momentum:</span>
+                            <span class="data-value" id="momentum-value">0.00 kg·m²/s</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Net Force:</span>
+                            <span class="data-value" id="force-value">0.00 N</span>
+                        </div>
+                    </div>
+
+                    <div class="data-panel">
+                        <h3>Selected Object Data</h3>
+                        <div class="data-item">
+                            <span class="data-label">Position:</span>
+                            <span class="data-value" id="position-value">(0.00, 0.00, 0.00) m</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Velocity:</span>
+                            <span class="data-value" id="velocity-value">(0.00, 0.00, 0.00) m/s</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Acceleration:</span>
+                            <span class="data-value" id="acceleration-value">(0.00, 0.00, 0.00) m/s²</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Kinetic Energy:</span>
+                            <span class="data-value" id="kinetic-value">0.00 J</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Potential Energy:</span>
+                            <span class="data-value" id="potential-value">0.00 J</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="data-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="concepts" class="tab-content">
+            <h2>Key Physics Concepts</h2>
+            
+            <div class="info-panel">
+                <h3>Newton's Laws of Motion</h3>
+                <p>Newton's three laws of motion form the foundation of classical mechanics and describe how objects move when forces act upon them:</p>
+                
+                <h4>First Law: Law of Inertia</h4>
+                <p>An object at rest stays at rest, and an object in motion stays in motion with the same speed and in the same direction, unless acted upon by an unbalanced force.</p>
+                
+                <h4>Second Law: Force and Acceleration</h4>
+                <p>The acceleration of an object is directly proportional to the net force acting on it and inversely proportional to its mass.</p>
+                <div class="equation">F = ma</div>
+                <p>Where F is the net force vector, m is the object's mass, and a is the resulting acceleration vector.</p>
+                
+                <h4>Third Law: Action and Reaction</h4>
+                <p>For every action, there is an equal and opposite reaction. When one object exerts a force on a second object, the second object exerts an equal and opposite force on the first.</p>
+            </div>
+            
+            <div class="info-panel">
+                <h3>Types of Forces</h3>
+                
+                <h4>Gravitational Force</h4>
+                <p>The gravitational force between two objects is directly proportional to the product of their masses and inversely proportional to the square of the distance between them:</p>
+                <div class="equation">F_g = G \frac{m_1 m_2}{r^2}</div>
+                <p>Where G is the gravitational constant (6.674 × 10⁻¹¹ N·m²/kg²), m₁ and m₂ are the masses, and r is the distance between the centers of the objects.</p>
+                
+                <h4>Electric Force</h4>
+                <p>The electric force between two charged particles is directly proportional to the product of their charges and inversely proportional to the square of the distance between them:</p>
+                <div class="equation">F_e = k \frac{q_1 q_2}{r^2}</div>
+                <p>Where k is Coulomb's constant (8.988 × 10⁹ N·m²/C²), q₁ and q₂ are the charges, and r is the distance between the particles.</p>
+                
+                <h4>Magnetic Force</h4>
+                <p>The magnetic force on a moving charged particle in a magnetic field is proportional to the charge, velocity, and magnetic field strength:</p>
+                <div class="equation">F_m = q(v \times B)</div>
+                <p>Where q is the charge, v is the velocity vector, B is the magnetic field vector, and × denotes the cross product.</p>
+                
+                <h4>Spring Force (Hooke's Law)</h4>
+                <p>The force exerted by a spring is proportional to its displacement from equilibrium:</p>
+                <div class="equation">F_s = -kx</div>
+                <p>Where k is the spring constant and x is the displacement from equilibrium. The negative sign indicates that the force is in the opposite direction of the displacement.</p>
+            </div>
+            
+            <div class="info-panel">
+                <h3>Conservation Laws</h3>
+                
+                <h4>Conservation of Linear Momentum</h4>
+                <p>In an isolated system, the total linear momentum remains constant if no external forces act on the system:</p>
+                <div class="equation">P = \sum m_i v_i = \text{constant}</div>
+                
+                <h4>Conservation of Angular Momentum</h4>
+                <p>In an isolated system, the total angular momentum remains constant if no external torques act on the system:</p>
+                <div class="equation">L = \sum r_i \times m_i v_i = \text{constant}</div>
+                
+                <h4>Conservation of Energy</h4>
+                <p>In an isolated system, energy can be transformed between different forms, but the total energy remains constant:</p>
+                <div class="equation">E = T + U = \text{constant}</div>
+                <p>Where T is kinetic energy (½mv²) and U is potential energy.</p>
+            </div>
+            
+            <div class="info-panel">
+                <h3>Orbital Dynamics</h3>
+                
+                <h4>Circular Orbital Velocity</h4>
+                <p>The velocity needed for a circular orbit around a central body:</p>
+                <div class="equation">v = \sqrt{\frac{GM}{r}}</div>
+                
+                <h4>Escape Velocity</h4>
+                <p>The minimum velocity needed to escape the gravitational field of a body:</p>
+                <div class="equation">v_{esc} = \sqrt{\frac{2GM}{r}}</div>
+                
+                <h4>Orbital Period (Kepler's Third Law)</h4>
+                <p>The relationship between orbital period and semi-major axis:</p>
+                <div class="equation">T^2 = \frac{4\pi^2}{GM}a^3</div>
+            </div>
+        </div>
+
+        <div id="astronomy" class="tab-content">
+            <h2>Astronomical Applications</h2>
+            
+            <div class="info-panel">
+                <h3>Planetary Motion</h3>
+                <p>The motion of planets around the Sun is governed by Newton's law of universal gravitation and Kepler's laws of planetary motion. These principles explain:</p>
+                <ul>
+                    <li>Elliptical orbits of planets, with the Sun at one focus</li>
+                    <li>Variation in orbital velocity (faster at perihelion, slower at aphelion)</li>
+                    <li>Relationship between orbital period and distance from the Sun</li>
+                    <li>Stability of the solar system over long time periods</li>
+                </ul>
+                <p>The simulator can model planetary orbits by setting appropriate initial conditions and gravitational parameters. Try the "Orbital Motion" preset to see a simplified model of planetary motion.</p>
+                
+                <h4>Example: Earth's Orbit</h4>
+                <table>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Value</th>
+                    </tr>
+                    <tr>
+                        <td>Semi-major axis</td>
+                        <td>1.496 × 10¹¹ m (1 AU)</td>
+                    </tr>
+                    <tr>
+                        <td>Orbital period</td>
+                        <td>365.25 days</td>
+                    </tr>
+                    <tr>
+                        <td>Orbital velocity (average)</td>
+                        <td>29.78 km/s</td>
+                    </tr>
+                    <tr>
+                        <td>Eccentricity</td>
+                        <td>0.0167</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="info-panel">
+                <h3>Spacecraft Trajectories</h3>
+                <p>Space mission planning relies on understanding forces and orbital mechanics to design efficient trajectories. Key concepts include:</p>
+                <ul>
+                    <li>Hohmann transfer orbits for efficient travel between planets</li>
+                    <li>Gravity assists to change direction and gain/lose energy</li>
+                    <li>Delta-v budgets for mission planning</li>
+                    <li>Orbital insertion and escape maneuvers</li>
+                </ul>
+                <p>The simulator can demonstrate basic principles of spacecraft trajectories by modeling the effects of gravitational forces on a spacecraft's path. The "Projectile Motion" preset can be modified to explore launch trajectories.</p>
+                
+                <h4>Example: Voyager 1 Gravity Assist</h4>
+                <p>The Voyager 1 spacecraft used gravity assists from Jupiter and Saturn to gain enough energy to escape the solar system. This "slingshot" effect demonstrates conservation of energy and angular momentum in gravitational encounters.</p>
+            </div>
+            
+            <div class="info-panel">
+                <h3>Stellar Dynamics</h3>
+                <p>Stars interact through gravitational forces, leading to various dynamic systems:</p>
+                <ul>
+                    <li>Binary star systems orbiting a common center of mass</li>
+                    <li>Star clusters held together by mutual gravitation</li>
+                    <li>Galactic rotation curves and evidence for dark matter</li>
+                    <li>Tidal disruption events when stars approach black holes</li>
+                </ul>
+                <p>The "N-Body System" preset demonstrates simplified stellar dynamics with multiple gravitationally interacting objects.</p>
+                
+                <h4>Example: Binary Star System</h4>
+                <p>In a binary star system, two stars orbit their common center of mass. The period of the orbit depends on the total mass of the system and the separation between the stars, following Kepler's third law. By observing binary star orbits, astronomers can determine stellar masses.</p>
+            </div>
+            
+            <div class="info-panel">
+                <h3>Charged Particle Motion</h3>
+                <p>Many astronomical phenomena involve charged particles moving in electromagnetic fields:</p>
+                <ul>
+                    <li>Solar wind particles interacting with planetary magnetic fields</li>
+                    <li>Cosmic rays deflected by galactic magnetic fields</li>
+                    <li>Synchrotron radiation from electrons spiraling in magnetic fields</li>
+                    <li>Accretion processes around neutron stars and black holes</li>
+                </ul>
+                <p>The "Charged Particles" preset demonstrates the motion of charged particles in electric and magnetic fields, similar to processes occurring in space plasmas.</p>
+                
+                <h4>Example: Aurora Formation</h4>
+                <p>Auroras (Northern and Southern Lights) form when charged particles from the solar wind are guided by Earth's magnetic field toward the polar regions, where they collide with atmospheric molecules, causing them to emit light. This process demonstrates the Lorentz force on moving charges in a magnetic field.</p>
+            </div>
+        </div>
+
+        <div id="advanced" class="tab-content">
+            <h2>Advanced Topics</h2>
+            
+            <div class="info-panel">
+                <h3>N-Body Problem</h3>
+                <p>The N-body problem refers to predicting the motion of a group of celestial objects interacting through gravitational forces. While the two-body problem has an analytical solution, systems with three or more bodies generally require numerical methods.</p>
+                <p>Key aspects of the N-body problem include:</p>
+                <ul>
+                    <li>Chaotic dynamics and sensitivity to initial conditions</li>
+                    <li>Hierarchical systems and perturbation theory</li>
+                    <li>Numerical integration techniques (Euler, Runge-Kutta, symplectic integrators)</li>
+                    <li>Conservation laws as constraints and error checks</li>
+                </ul>
+                <p>The simulator uses numerical integration to approximate solutions to the N-body problem, allowing exploration of complex gravitational interactions.</p>
+            </div>
+            
+            <div class="info-panel">
+                <h3>Relativistic Effects</h3>
+                <p>While this simulator uses classical Newtonian mechanics, many astronomical phenomena require Einstein's theories of relativity for accurate description:</p>
+                
+                <h4>Special Relativity Effects</h4>
+                <ul>
+                    <li>Time dilation for objects moving at high velocities</li>
+                    <li>Length contraction in the direction of motion</li>
+                    <li>Relativistic increase in mass with velocity</li>
+                    <li>Equivalence of mass and energy (E = mc²)</li>
+                </ul>
+                
+                <h4>General Relativity Effects</h4>
+                <ul>
+                    <li>Gravitational time dilation near massive objects</li>
+                    <li>Curvature of spacetime causing gravitational lensing</li>
+                    <li>Precession of Mercury's orbit</li>
+                    <li>Gravitational waves from accelerating masses</li>
+                    <li>Black hole event horizons and singularities</li>
+                </ul>
+                
+                <p>These effects become significant in strong gravitational fields or at velocities approaching the speed of light. For most solar system dynamics, Newtonian mechanics provides an excellent approximation.</p>
+            </div>
+            
+            <div class="info-panel">
+                <h3>Numerical Methods</h3>
+                <p>This simulator uses numerical integration to solve the equations of motion for objects under various forces. Several methods are available:</p>
+                
+                <h4>Euler Method</h4>
+                <p>The simplest numerical integration technique, updating position and velocity in discrete time steps:</p>
+                <div class="equation">
+                    v_{n+1} = v_n + a_n \Delta t \\
+                    r_{n+1} = r_n + v_n \Delta t
+                </div>
+                <p>While computationally efficient, the Euler method can accumulate significant errors over time.</p>
+                
+                <h4>Velocity Verlet</h4>
+                <p>A more accurate method that better preserves energy in conservative systems:</p>
+                <div class="equation">
+                    r_{n+1} = r_n + v_n \Delta t + \frac{1}{2}a_n \Delta t^2 \\
+                    v_{n+1} = v_n + \frac{1}{2}(a_n + a_{n+1}) \Delta t
+                </div>
+                
+                <h4>Runge-Kutta Methods</h4>
+                <p>A family of higher-order methods that evaluate derivatives at intermediate points to improve accuracy. The fourth-order Runge-Kutta method (RK4) is commonly used for orbital simulations.</p>
+                
+                <p>The choice of numerical method and time step affects the accuracy and stability of the simulation. Smaller time steps generally improve accuracy but increase computational cost.</p>
+            </div>
+            
+            <div class="info-panel">
+                <h3>Chaos in Dynamical Systems</h3>
+                <p>Many gravitational systems exhibit chaotic behavior, characterized by:</p>
+                <ul>
+                    <li>Extreme sensitivity to initial conditions (the "butterfly effect")</li>
+                    <li>Long-term unpredictability despite deterministic equations</li>
+                    <li>Fractal structure in phase space</li>
+                    <li>Strange attractors and complex orbital patterns</li>
+                </ul>
+                <p>Examples of chaotic systems in astronomy include:</p>
+                <ul>
+                    <li>The three-body problem</li>
+                    <li>Asteroid orbits influenced by multiple planets</li>
+                    <li>Saturn's ring dynamics</li>
+                    <li>Long-term evolution of the solar system</li>
+                </ul>
+                <p>The simulator can demonstrate chaotic behavior by slightly varying initial conditions in multi-body systems and observing how trajectories diverge over time.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Main simulation variables
+        let scene, camera, renderer, controls;
+        let objects = [];
+        let simTime = 0;
+        let timeStep = 0.1;
+        let running = false;
+        let simulationType = 'gravitational';
+        let displayMode = '3d';
+        let gravityStrength = 6.67e-11;
+        let selectedObjectIndex = 0;
+        let dataChart;
+        let dataHistory = {
+            time: [],
+            energy: [],
+            momentum: []
+        };
+        
+        // Constants
+        const COULOMB_CONSTANT = 8.988e9;
+        
+        // Initialize the simulation
+        function init() {
+            // Set up Three.js scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f0f0);
+            
+            // Set up camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 10, 20);
+            
+            // Set up renderer
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('simulation-canvas'), antialias: true });
+            renderer.setSize(document.querySelector('.canvas-container').clientWidth, 
+                             document.querySelector('.canvas-container').clientHeight);
+            
+            // Set up controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.25;
+            
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            
+            // Add coordinate grid
+            const gridHelper = new THREE.GridHelper(20, 20);
+            scene.add(gridHelper);
+            
+            // Initialize objects
+            createDefaultObjects();
+            
+            // Set up chart
+            setupChart();
+            
+            // Add event listeners
+            setupEventListeners();
+            
+            // Start animation loop
+            animate();
+        }
+        
+        // Create default objects for the simulation
+        function createDefaultObjects() {
+            // Clear existing objects
+            objects.forEach(obj => scene.remove(obj.mesh));
+            objects = [];
+            
+            // Create central object (e.g., Sun)
+            const centralObject = {
+                mass: 1000,
+                charge: 0,
+                position: new THREE.Vector3(0, 0, 0),
+                velocity: new THREE.Vector3(0, 0, 0),
+                acceleration: new THREE.Vector3(0, 0, 0),
+                mesh: new THREE.Mesh(
+                    new THREE.SphereGeometry(1, 32, 32),
+                    new THREE.MeshPhongMaterial({ color: 0xffff00 })
+                ),
+                trail: []
+            };
+            centralObject.mesh.position.copy(centralObject.position);
+            scene.add(centralObject.mesh);
+            objects.push(centralObject);
+            
+            // Create orbiting object (e.g., planet)
+            const orbitingObject = {
+                mass: 10,
+                charge: 0,
+                position: new THREE.Vector3(10, 0, 0),
+                velocity: new THREE.Vector3(0, 0, -2.5),
+                acceleration: new THREE.Vector3(0, 0, 0),
+                mesh: new THREE.Mesh(
+                    new THREE.SphereGeometry(0.5, 32, 32),
+                    new THREE.MeshPhongMaterial({ color: 0x3498db })
+                ),
+                trail: []
+            };
+            orbitingObject.mesh.position.copy(orbitingObject.position);
+            scene.add(orbitingObject.mesh);
+            objects.push(orbitingObject);
+            
+            // Update UI to reflect object properties
+            updateObjectUI();
+        }
+        
+        // Set up the data chart
+        function setupChart() {
+            const ctx = document.getElementById('data-chart').getContext('2d');
+            dataChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Total Energy',
+                            data: [],
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Angular Momentum',
+                            data: [],
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time (s)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Value'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Set up event listeners for UI controls
+        function setupEventListeners() {
+            // Simulation control buttons
+            document.getElementById('start-simulation').addEventListener('click', startSimulation);
+            document.getElementById('pause-simulation').addEventListener('click', pauseSimulation);
+            document.getElementById('reset-simulation').addEventListener('click', resetSimulation);
+            
+            // Object controls
+            document.getElementById('add-object').addEventListener('click', addObject);
+            document.getElementById('remove-object').addEventListener('click', removeObject);
+            document.getElementById('object-select').addEventListener('change', updateObjectUI);
+            
+            // Preset buttons
+            document.querySelectorAll('.preset-button').forEach(button => {
+                button.addEventListener('click', () => loadPreset(button.dataset.preset));
+            });
+            
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.tab).classList.add('active');
+                });
+            });
+            
+            // Sync range inputs with number inputs
+            document.getElementById('time-step').addEventListener('input', () => {
+                document.getElementById('time-step-value').value = document.getElementById('time-step').value;
+                timeStep = parseFloat(document.getElementById('time-step').value);
+            });
+            
+            document.getElementById('time-step-value').addEventListener('input', () => {
+                document.getElementById('time-step').value = document.getElementById('time-step-value').value;
+                timeStep = parseFloat(document.getElementById('time-step-value').value);
+            });
+            
+            document.getElementById('gravity-strength').addEventListener('input', () => {
+                document.getElementById('gravity-strength-value').value = document.getElementById('gravity-strength').value;
+                gravityStrength = parseFloat(document.getElementById('gravity-strength').value) * 1e-11;
+            });
+            
+            document.getElementById('gravity-strength-value').addEventListener('input', () => {
+                document.getElementById('gravity-strength').value = document.getElementById('gravity-strength-value').value;
+                gravityStrength = parseFloat(document.getElementById('gravity-strength-value').value) * 1e-11;
+            });
+            
+            document.getElementById('object-mass').addEventListener('input', () => {
+                document.getElementById('object-mass-value').value = document.getElementById('object-mass').value;
+                updateObjectProperty('mass');
+            });
+            
+            document.getElementById('object-mass-value').addEventListener('input', () => {
+                document.getElementById('object-mass').value = document.getElementById('object-mass-value').value;
+                updateObjectProperty('mass');
+            });
+            
+            document.getElementById('object-charge').addEventListener('input', () => {
+                document.getElementById('object-charge-value').value = document.getElementById('object-charge').value;
+                updateObjectProperty('charge');
+            });
+            
+            document.getElementById('object-charge-value').addEventListener('input', () => {
+                document.getElementById('object-charge').value = document.getElementById('object-charge-value').value;
+                updateObjectProperty('charge');
+            });
+            
+            // Position and velocity inputs
+            ['position-x', 'position-y', 'position-z', 'velocity-x', 'velocity-y', 'velocity-z'].forEach(id => {
+                document.getElementById(id).addEventListener('change', updateObjectPositionVelocity);
+            });
+            
+            // Simulation type and display mode
+            document.getElementById('simulation-type').addEventListener('change', () => {
+                simulationType = document.getElementById('simulation-type').value;
+            });
+            
+            document.getElementById('display-mode').addEventListener('change', () => {
+                displayMode = document.getElementById('display-mode').value;
+            });
+            
+            // Window resize
+            window.addEventListener('resize', () => {
+                renderer.setSize(document.querySelector('.canvas-container').clientWidth, 
+                                 document.querySelector('.canvas-container').clientHeight);
+                camera.aspect = document.querySelector('.canvas-container').clientWidth / 
+                                document.querySelector('.canvas-container').clientHeight;
+                camera.updateProjectionMatrix();
+            });
+        }
+        
+        // Start the simulation
+        function startSimulation() {
+            running = true;
+            document.getElementById('start-simulation').disabled = true;
+            document.getElementById('pause-simulation').disabled = false;
+        }
+        
+        // Pause the simulation
+        function pauseSimulation() {
+            running = false;
+            document.getElementById('start-simulation').disabled = false;
+            document.getElementById('pause-simulation').disabled = true;
+        }
+        
+        // Reset the simulation
+        function resetSimulation() {
+            simTime = 0;
+            dataHistory = {
+                time: [],
+                energy: [],
+                momentum: []
+            };
+            dataChart.data.labels = [];
+            dataChart.data.datasets[0].data = [];
+            dataChart.data.datasets[1].data = [];
+            dataChart.update();
+            
+            createDefaultObjects();
+            updateDataDisplay();
+        }
+        
+        // Add a new object to the simulation
+        function addObject() {
+            const newObject = {
+                mass: 10,
+                charge: 0,
+                position: new THREE.Vector3(Math.random() * 10 - 5, Math.random() * 10 - 5, Math.random() * 10 - 5),
+                velocity: new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1),
+                acceleration: new THREE.Vector3(0, 0, 0),
+                mesh: new THREE.Mesh(
+                    new THREE.SphereGeometry(0.5, 32, 32),
+                    new THREE.MeshPhongMaterial({ color: Math.random() * 0xffffff })
+                ),
+                trail: []
+            };
+            newObject.mesh.position.copy(newObject.position);
+            scene.add(newObject.mesh);
+            objects.push(newObject);
+            
+            // Update object selector
+            const select = document.getElementById('object-select');
+            const option = document.createElement('option');
+            option.value = `object${objects.length}`;
+            option.textContent = `Object ${objects.length}`;
+            select.appendChild(option);
+            select.value = option.value;
+            
+            selectedObjectIndex = objects.length - 1;
+            updateObjectUI();
+        }
+        
+        // Remove the selected object from the simulation
+        function removeObject() {
+            if (objects.length <= 1) {
+                alert('Cannot remove the last object.');
+                return;
+            }
+            
+            const index = selectedObjectIndex;
+            scene.remove(objects[index].mesh);
+            objects.splice(index, 1);
+            
+            // Update object selector
+            const select = document.getElementById('object-select');
+            select.innerHTML = '';
+            objects.forEach((obj, i) => {
+                const option = document.createElement('option');
+                option.value = `object${i+1}`;
+                option.textContent = `Object ${i+1}`;
+                select.appendChild(option);
+            });
+            
+            selectedObjectIndex = Math.min(index, objects.length - 1);
+            select.value = `object${selectedObjectIndex+1}`;
+            updateObjectUI();
+        }
+        
+        // Update the UI to reflect the selected object's properties
+        function updateObjectUI() {
+            const select = document.getElementById('object-select');
+            selectedObjectIndex = parseInt(select.value.replace('object', '')) - 1;
+            
+            const obj = objects[selectedObjectIndex];
+            document.getElementById('object-mass').value = obj.mass;
+            document.getElementById('object-mass-value').value = obj.mass;
+            document.getElementById('object-charge').value = obj.charge;
+            document.getElementById('object-charge-value').value = obj.charge;
+            
+            document.getElementById('position-x').value = obj.position.x.toFixed(2);
+            document.getElementById('position-y').value = obj.position.y.toFixed(2);
+            document.getElementById('position-z').value = obj.position.z.toFixed(2);
+            
+            document.getElementById('velocity-x').value = obj.velocity.x.toFixed(2);
+            document.getElementById('velocity-y').value = obj.velocity.y.toFixed(2);
+            document.getElementById('velocity-z').value = obj.velocity.z.toFixed(2);
+        }
+        
+        // Update object property based on UI input
+        function updateObjectProperty(property) {
+            const obj = objects[selectedObjectIndex];
+            if (property === 'mass') {
+                obj.mass = parseFloat(document.getElementById('object-mass-value').value);
+                // Adjust size based on mass (for visualization)
+                const radius = 0.2 + Math.pow(obj.mass / 10, 1/3) * 0.3;
+                obj.mesh.geometry = new THREE.SphereGeometry(radius, 32, 32);
+            } else if (property === 'charge') {
+                obj.charge = parseFloat(document.getElementById('object-charge-value').value);
+                // Change color based on charge (red for positive, blue for negative, gray for neutral)
+                if (obj.charge > 0) {
+                    obj.mesh.material.color.setHex(0xe74c3c);
+                } else if (obj.charge < 0) {
+                    obj.mesh.material.color.setHex(0x3498db);
+                } else {
+                    obj.mesh.material.color.setHex(0x95a5a6);
+                }
+            }
+        }
+        
+        // Update object position and velocity based on UI input
+        function updateObjectPositionVelocity() {
+            const obj = objects[selectedObjectIndex];
+            
+            obj.position.x = parseFloat(document.getElementById('position-x').value);
+            obj.position.y = parseFloat(document.getElementById('position-y').value);
+            obj.position.z = parseFloat(document.getElementById('position-z').value);
+            obj.mesh.position.copy(obj.position);
+            
+            obj.velocity.x = parseFloat(document.getElementById('velocity-x').value);
+            obj.velocity.y = parseFloat(document.getElementById('velocity-y').value);
+            obj.velocity.z = parseFloat(document.getElementById('velocity-z').value);
+        }
+        
+        // Load a preset configuration
+        function loadPreset(preset) {
+            // Clear existing objects
+            objects.forEach(obj => scene.remove(obj.mesh));
+            objects = [];
+            
+            switch (preset) {
+                case 'orbital':
+                    // Sun-planet system
+                    document.getElementById('simulation-type').value = 'gravitational';
+                    simulationType = 'gravitational';
+                    document.getElementById('gravity-strength').value = '6.67';
+                    document.getElementById('gravity-strength-value').value = '6.67';
+                    gravityStrength = 6.67e-11;
+                    
+                    // Sun
+                    const sun = {
+                        mass: 1000,
+                        charge: 0,
+                        position: new THREE.Vector3(0, 0, 0),
+                        velocity: new THREE.Vector3(0, 0, 0),
+                        acceleration: new THREE.Vector3(0, 0, 0),
+                        mesh: new THREE.Mesh(
+                            new THREE.SphereGeometry(2, 32, 32),
+                            new THREE.MeshPhongMaterial({ color: 0xffff00, emissive: 0xffff00, emissiveIntensity: 0.3 })
+                        ),
+                        trail: []
+                    };
+                    sun.mesh.position.copy(sun.position);
+                    scene.add(sun.mesh);
+                    objects.push(sun);
+                    
+                    // Mercury
+                    const mercury = {
+                        mass: 5,
+                        charge: 0,
+                        position: new THREE.Vector3(5, 0, 0),
+                        velocity: new THREE.Vector3(0, 0, -4.5),
+                        acceleration: new THREE.Vector3(0, 0, 0),
+                        mesh: new THREE.Mesh(
+                            new THREE.SphereGeometry(0.3, 32, 32),
+                            new THREE.MeshPhongMaterial({ color: 0xa0a0a0 })
+                        ),
+                        trail: []
+                    };
+                    mercury.mesh.position.copy(mercury.position);
+                    scene.add(mercury.mesh);
+                    objects.push(mercury);
+                    
+                    // Venus
+                    const venus = {
+                        mass: 8,
+                        charge: 0,
+                        position: new THREE.Vector3(7, 0, 0),
+                        velocity: new THREE.Vector3(0, 0, -3.8),
+                        acceleration: new THREE.Vector3(0, 0, 0),
+                        mesh: new THREE.Mesh(
+                            new THREE.SphereGeometry(0.4, 32, 32),
+                            new THREE.MeshPhongMaterial({ color: 0xe67e22 })
+                        ),
+                        trail: []
+                    };
+                    venus.mesh.position.copy(venus.position);
+                    scene.add(venus.mesh);
+                    objects.push(venus);
+                    
+                    // Earth
+                    const earth = {
+                        mass: 10,
+                        charge: 0,
+                        position: new THREE.Vector3(10, 0, 0),
+                        velocity: new THREE.Vector3(0, 0, -3.1),
+                        acceleration: new THREE.Vector3(0, 0, 0),
+                        mesh: new THREE.Mesh(
+                            new THREE.SphereGeometry(0.5, 32, 32),
+                            new THREE.MeshPhongMaterial({ color: 0x3498db })
+                        ),
+                        trail: []
+                    };
+                    earth.mesh.position.copy(earth.position);
+                    scene.add(earth.mesh);
+                    objects.push(earth);
+                    
+                    // Mars
+                    const mars = {
+                        mass: 7,
+                        charge: 0,
+                        position: new THREE.Vector3(13, 0, 0),
+                        velocity: new THREE.Vector3(0, 0, -2.7),
+                        acceleration: new THREE.Vector3(0, 0, 0),
+                        mesh: new THREE.Mesh(
+                            new THREE.SphereGeometry(0.4, 32, 32),
+                            new THREE.MeshPhongMaterial({ color: 0xe74c3c })
+                        ),
+                        trail: []
+                    };
+                    mars.mesh.position.copy(mars.position);
+                    scene.add(mars.mesh);
+                    objects.push(mars);
+                    
+                    break;
+                    
+                case 'projectile':
+                    // Projectile motion with gravity
+                    document.getElementById('simulation-type').value = 'gravitational';
+                    simulationType = 'gravitational';
+                    document.getElementById('gravity-strength').value = '9.8';
+                    document.getElementById('gravity-strength-value').value = '9.8';
+                    gravityStrength = 9.8;
+                    
+                    // Ground (large mass fixed in place)
+                    const ground = {
+                        mass: 1e10,
+                        charge: 0,
+                        position: new THREE.Vector3(0, -10, 0),
+                        velocity: new THREE.Vector3(0, 0, 0),
+                        acceleration: new THREE.Vector3(0, 0, 0),
+                        mesh: new THREE.Mesh(
+                            new THREE.BoxGeometry(30, 1, 30),
+                            new THREE.MeshPhongMaterial({ color: 0x8e44ad })
+                        ),
+                        trail: [],
+                        fixed: true
+                    };
+                    ground.mesh.position.copy(ground.position);
+                    scene.add(ground.mesh);
+                    objects.push(ground);
+                    
+                    // Projectile
+                    const projectile = {
+                        mass: 1,
+                        charge: 0,
+                        position: new THREE.Vector3(-10, 0, 0),
+                        velocity: new THREE.Vector3(5, 8, 0),
+                        acceleration: new THREE.Vector3(0, 0, 0),
+                        mesh: new THREE.Mesh(
+                            new THREE.SphereGeometry(0.5, 32, 32),
+                            new THREE.MeshPhongMaterial({ color: 0xe74c3c })
+                        ),
+                        trail: []
+                    };
+                    projectile.mesh.position.copy(projectile.position);
+                    scene.add(projectile.mesh);
+                    objects.push(projectile);
+                    
+                    break;
+                    
+                case 'spring':
+                    // Spring oscillation
+                    document.getElementById('simulation-type').value = 'spring';
+                    simulationType = 'spring';
+                    
+                    // Anchor point (fixed)
+                    const anchor = {
+                        mass: 1e10,
+                        charge: 0,
+                        position: new THREE.Vector3(0, 0, 0),
+                        velocity: new THREE.Vector3(0, 0, 0),
+                        acceleration: new THREE.Vector3(0, 0, 0),
+                        mesh: new THREE.Mesh(
+                            new THREE.BoxGeometry(1, 1, 1),
+                            new THREE.MeshPhongMaterial({ color: 0x95a5a6 })
+                        ),
+                        trail: [],
+                        fixed: true
+                    };
+                    anchor.mesh.position.copy(anchor.position);
+                    scene.add(anchor.mesh);
+                    objects.push(anchor);
+                    
+                    // Oscillating mass
+                    const oscillator = {
+                        mass: 1,
+                        charge: 0,
+                        position: new THREE.Vector3(5, 0, 0),
+                        velocity: new THREE.Vector3(0, 0, 0),
+                        acceleration: new THREE.Vector3(0, 0, 0),
+                        mesh: new THREE.Mesh(
+                            new THREE.SphereGeometry(0.5, 32, 32),
+                            new THREE.MeshPhongMaterial({ color: 0x3498db })
+                        ),
+                        trail: [],
+                        springConstant: 2,
+                        equilibriumPosition: new THREE.Vector3(0, 0, 0)
+                    };
+                    oscillator.mesh.position.copy(oscillator.position);
+                    scene.add(oscillator.mesh);
+                    objects.push(oscillator);
+                    
+                    break;
+                    
+                case 'charged':
+                    // Charged particles in electric/magnetic fields
+                    document.getElementById('simulation-type').value = 'electric';
+                    simulationType = 'electric';
+                    
+                    // Positive charge (fixed)
+                    const positiveCharge = {
+                        mass: 1,
+                        charge: 5,
+                        position: new THREE.Vector3(-5, 0, 0),
+                        velocity: new THREE.Vector3(0, 0, 0),
+                        acceleration: new THREE.Vector3(0, 0, 0),
+                        mesh: new THREE.Mesh(
+                            new THREE.SphereGeometry(0.5, 32, 32),
+                            new THREE.MeshPhongMaterial({ color: 0xe74c3c })
+                        ),
+                        trail: [],
+                        fixed: true
+                    };
+                    positiveCharge.mesh.position.copy(positiveCharge.position);
+                    scene.add(positiveCharge.mesh);
+                    objects.push(positiveCharge);
+                    
+                    // Negative charge (fixed)
+                    const negativeCharge = {
+                        mass: 1,
+                        charge: -5,
+                        position: new THREE.Vector3(5, 0, 0),
+                        velocity: new THREE.Vector3(0, 0, 0),
+                        acceleration: new THREE.Vector3(0, 0, 0),
+                        mesh: new THREE.Mesh(
+                            new THREE.SphereGeometry(0.5, 32, 32),
+                            new THREE.MeshPhongMaterial({ color: 0x3498db })
+                        ),
+                        trail: [],
+                        fixed: true
+                    };
+                    negativeCharge.mesh.position.copy(negativeCharge.position);
+                    scene.add(negativeCharge.mesh);
+                    objects.push(negativeCharge);
+                    
+                    // Test charge (moving)
+                    const testCharge = {
+                        mass: 0.1,
+                        charge: 1,
+                        position: new THREE.Vector3(0, 5, 0),
+                        velocity: new THREE.Vector3(1, 0, 0),
+                        acceleration: new THREE.Vector3(0, 0, 0),
+                        mesh: new THREE.Mesh(
+                            new THREE.SphereGeometry(0.3, 32, 32),
+                            new THREE.MeshPhongMaterial({ color: 0xf1c40f })
+                        ),
+                        trail: []
+                    };
+                    testCharge.mesh.position.copy(testCharge.position);
+                    scene.add(testCharge.mesh);
+                    objects.push(testCharge);
+                    
+                    break;
+                    
+                case 'nbody':
+                    // N-body gravitational system
+                    document.getElementById('simulation-type').value = 'gravitational';
+                    simulationType = 'gravitational';
+                    document.getElementById('gravity-strength').value = '6.67';
+                    document.getElementById('gravity-strength-value').value = '6.67';
+                    gravityStrength = 6.67e-11;
+                    
+                    // Create several bodies with random positions and velocities
+                    for (let i = 0; i < 5; i++) {
+                        const mass = 10 + Math.random() * 90;
+                        const radius = 0.2 + Math.pow(mass / 10, 1/3) * 0.3;
+                        const distance = 3 + Math.random() * 7;
+                        const angle = Math.random() * Math.PI * 2;
+                        const position = new THREE.Vector3(
+                            distance * Math.cos(angle),
+                            (Math.random() - 0.5) * 2,
+                            distance * Math.sin(angle)
+                        );
+                        
+                        // Calculate velocity for approximate circular orbit around center of mass
+                        const speed = Math.sqrt(gravityStrength * 100 / distance) * 0.8;
+                        const velocity = new THREE.Vector3(
+                            -speed * Math.sin(angle),
+                            (Math.random() - 0.5) * 0.5,
+                            speed * Math.cos(angle)
+                        );
+                        
+                        const body = {
+                            mass: mass,
+                            charge: 0,
+                            position: position,
+                            velocity: velocity,
+                            acceleration: new THREE.Vector3(0, 0, 0),
+                            mesh: new THREE.Mesh(
+                                new THREE.SphereGeometry(radius, 32, 32),
+                                new THREE.MeshPhongMaterial({ 
+                                    color: new THREE.Color(Math.random(), Math.random(), Math.random()) 
+                                })
+                            ),
+                            trail: []
+                        };
+                        body.mesh.position.copy(body.position);
+                        scene.add(body.mesh);
+                        objects.push(body);
+                    }
+                    
+                    break;
+            }
+            
+            // Update object selector
+            const select = document.getElementById('object-select');
+            select.innerHTML = '';
+            objects.forEach((obj, i) => {
+                const option = document.createElement('option');
+                option.value = `object${i+1}`;
+                option.textContent = `Object ${i+1}`;
+                select.appendChild(option);
+            });
+            
+            selectedObjectIndex = 0;
+            select.value = 'object1';
+            updateObjectUI();
+            
+            // Reset simulation time and data
+            simTime = 0;
+            dataHistory = {
+                time: [],
+                energy: [],
+                momentum: []
+            };
+            dataChart.data.labels = [];
+            dataChart.data.datasets[0].data = [];
+            dataChart.data.datasets[1].data = [];
+            dataChart.update();
+            
+            updateDataDisplay();
+        }
+        
+        // Calculate forces on objects
+        function calculateForces() {
+            // Reset accelerations
+            objects.forEach(obj => {
+                obj.acceleration.set(0, 0, 0);
+            });
+            
+            // Calculate forces based on simulation type
+            switch (simulationType) {
+                case 'gravitational':
+                    // Gravitational forces between all pairs of objects
+                    for (let i = 0; i < objects.length; i++) {
+                        for (let j = i + 1; j < objects.length; j++) {
+                            const obj1 = objects[i];
+                            const obj2 = objects[j];
+                            
+                            // Skip fixed objects
+                            if (obj1.fixed && obj2.fixed) continue;
+                            
+                            // Calculate distance vector
+                            const distanceVector = new THREE.Vector3().subVectors(obj2.position, obj1.position);
+                            const distance = distanceVector.length();
+                            
+                            // Avoid division by zero
+                            if (distance < 0.1) continue;
+                            
+                            // Calculate gravitational force magnitude
+                            const forceMagnitude = gravityStrength * obj1.mass * obj2.mass / (distance * distance);
+                            
+                            // Calculate force direction (unit vector)
+                            const forceDirection = distanceVector.clone().normalize();
+                            
+                            // Calculate force vector
+                            const force = forceDirection.multiplyScalar(forceMagnitude);
+                            
+                            // Apply force to both objects (Newton's third law)
+                            if (!obj1.fixed) {
+                                const acc1 = force.clone().divideScalar(obj1.mass);
+                                obj1.acceleration.add(acc1);
+                            }
+                            
+                            if (!obj2.fixed) {
+                                const acc2 = force.clone().negate().divideScalar(obj2.mass);
+                                obj2.acceleration.add(acc2);
+                            }
+                        }
+                    }
+                    break;
+                    
+                case 'electric':
+                    // Electric forces between all pairs of charged objects
+                    for (let i = 0; i < objects.length; i++) {
+                        for (let j = i + 1; j < objects.length; j++) {
+                            const obj1 = objects[i];
+                            const obj2 = objects[j];
+                            
+                            // Skip fixed objects or objects with no charge
+                            if ((obj1.fixed && obj2.fixed) || (obj1.charge === 0 && obj2.charge === 0)) continue;
+                            
+                            // Calculate distance vector
+                            const distanceVector = new THREE.Vector3().subVectors(obj2.position, obj1.position);
+                            const distance = distanceVector.length();
+                            
+                            // Avoid division by zero
+                            if (distance < 0.1) continue;
+                            
+                            // Calculate electric force magnitude (Coulomb's law)
+                            const forceMagnitude = COULOMB_CONSTANT * Math.abs(obj1.charge * obj2.charge) / (distance * distance);
+                            
+                            // Calculate force direction (unit vector)
+                            const forceDirection = distanceVector.clone().normalize();
+                            
+                            // Determine if force is attractive or repulsive
+                            const sameSign = (obj1.charge * obj2.charge) > 0;
+                            const forceSign = sameSign ? -1 : 1; // Opposite charges attract, same charges repel
+                            
+                            // Calculate force vector
+                            const force = forceDirection.multiplyScalar(forceMagnitude * forceSign);
+                            
+                            // Apply force to both objects (Newton's third law)
+                            if (!obj1.fixed) {
+                                const acc1 = force.clone().divideScalar(obj1.mass);
+                                obj1.acceleration.add(acc1);
+                            }
+                            
+                            if (!obj2.fixed) {
+                                const acc2 = force.clone().negate().divideScalar(obj2.mass);
+                                obj2.acceleration.add(acc2);
+                            }
+                        }
+                    }
+                    break;
+                    
+                case 'magnetic':
+                    // Magnetic forces on moving charged particles
+                    // Simplified model with a uniform magnetic field in the z-direction
+                    const magneticField = new THREE.Vector3(0, 0, 1); // B field in z-direction
+                    
+                    objects.forEach(obj => {
+                        if (obj.fixed || obj.charge === 0) return;
+                        
+                        // Calculate magnetic force: F = q(v × B)
+                        const force = new THREE.Vector3().crossVectors(obj.velocity, magneticField)
+                            .multiplyScalar(obj.charge);
+                        
+                        // Apply force to object
+                        const acc = force.clone().divideScalar(obj.mass);
+                        obj.acceleration.add(acc);
+                    });
+                    break;
+                    
+                case 'spring':
+                    // Spring forces (Hooke's law)
+                    objects.forEach(obj => {
+                        if (obj.fixed || !obj.springConstant) return;
+                        
+                        // Calculate displacement from equilibrium
+                        const displacement = new THREE.Vector3().subVectors(
+                            obj.position, 
+                            obj.equilibriumPosition || new THREE.Vector3(0, 0, 0)
+                        );
+                        
+                        // Calculate spring force: F = -kx
+                        const force = displacement.clone().multiplyScalar(-obj.springConstant);
+                        
+                        // Apply force to object
+                        const acc = force.clone().divideScalar(obj.mass);
+                        obj.acceleration.add(acc);
+                    });
+                    break;
+                    
+                case 'custom':
+                    // Custom force function could be implemented here
+                    break;
+            }
+        }
+        
+        // Update object positions using numerical integration
+        function updatePositions() {
+            // Calculate forces and accelerations
+            calculateForces();
+            
+            // Update positions and velocities using Velocity Verlet integration
+            objects.forEach(obj => {
+                if (obj.fixed) return;
+                
+                // Store old acceleration for velocity update
+                const oldAcceleration = obj.acceleration.clone();
+                
+                // Update position: r(t+dt) = r(t) + v(t)dt + (1/2)a(t)dt²
+                const positionIncrement = new THREE.Vector3()
+                    .addVectors(
+                        obj.velocity.clone().multiplyScalar(timeStep),
+                        obj.acceleration.clone().multiplyScalar(0.5 * timeStep * timeStep)
+                    );
+                obj.position.add(positionIncrement);
+                
+                // Recalculate forces and accelerations at new positions
+                calculateForces();
+                
+                // Update velocity: v(t+dt) = v(t) + (1/2)[a(t) + a(t+dt)]dt
+                const velocityIncrement = new THREE.Vector3()
+                    .addVectors(oldAcceleration, obj.acceleration)
+                    .multiplyScalar(0.5 * timeStep);
+                obj.velocity.add(velocityIncrement);
+                
+                // Update mesh position
+                obj.mesh.position.copy(obj.position);
+                
+                // Store position for trail
+                if (displayMode === 'paths') {
+                    obj.trail.push(obj.position.clone());
+                    if (obj.trail.length > 100) {
+                        obj.trail.shift();
+                    }
+                }
+            });
+            
+            // Update simulation time
+            simTime += timeStep;
+            
+            // Update data display
+            updateDataDisplay();
+            
+            // Record data for chart
+            if (simTime % 1 < timeStep) {
+                const energy = calculateTotalEnergy();
+                const momentum = calculateAngularMomentum();
+                
+                dataHistory.time.push(simTime);
+                dataHistory.energy.push(energy);
+                dataHistory.momentum.push(momentum);
+                
+                // Limit data history length
+                if (dataHistory.time.length > 100) {
+                    dataHistory.time.shift();
+                    dataHistory.energy.shift();
+                    dataHistory.momentum.shift();
+                }
+                
+                // Update chart
+                dataChart.data.labels = dataHistory.time.map(t => t.toFixed(1));
+                dataChart.data.datasets[0].data = dataHistory.energy;
+                dataChart.data.datasets[1].data = dataHistory.momentum;
+                dataChart.update();
+            }
+        }
+        
+        // Calculate total energy of the system
+        function calculateTotalEnergy() {
+            let totalEnergy = 0;
+            
+            // Kinetic energy
+            objects.forEach(obj => {
+                if (obj.fixed) return;
+                const speed = obj.velocity.length();
+                const kineticEnergy = 0.5 * obj.mass * speed * speed;
+                totalEnergy += kineticEnergy;
+            });
+            
+            // Potential energy (depends on simulation type)
+            if (simulationType === 'gravitational') {
+                // Gravitational potential energy
+                for (let i = 0; i < objects.length; i++) {
+                    for (let j = i + 1; j < objects.length; j++) {
+                        const obj1 = objects[i];
+                        const obj2 = objects[j];
+                        
+                        const distance = obj1.position.distanceTo(obj2.position);
+                        if (distance < 0.1) continue;
+                        
+                        const potentialEnergy = -gravityStrength * obj1.mass * obj2.mass / distance;
+                        totalEnergy += potentialEnergy;
+                    }
+                }
+            } else if (simulationType === 'electric') {
+                // Electric potential energy
+                for (let i = 0; i < objects.length; i++) {
+                    for (let j = i + 1; j < objects.length; j++) {
+                        const obj1 = objects[i];
+                        const obj2 = objects[j];
+                        
+                        if (obj1.charge === 0 || obj2.charge === 0) continue;
+                        
+                        const distance = obj1.position.distanceTo(obj2.position);
+                        if (distance < 0.1) continue;
+                        
+                        const potentialEnergy = COULOMB_CONSTANT * obj1.charge * obj2.charge / distance;
+                        totalEnergy += potentialEnergy;
+                    }
+                }
+            } else if (simulationType === 'spring') {
+                // Spring potential energy
+                objects.forEach(obj => {
+                    if (!obj.springConstant) return;
+                    
+                    const displacement = obj.position.distanceTo(obj.equilibriumPosition || new THREE.Vector3(0, 0, 0));
+                    const potentialEnergy = 0.5 * obj.springConstant * displacement * displacement;
+                    totalEnergy += potentialEnergy;
+                });
+            }
+            
+            return totalEnergy;
+        }
+        
+        // Calculate total angular momentum of the system
+        function calculateAngularMomentum() {
+            const totalAngularMomentum = new THREE.Vector3(0, 0, 0);
+            const origin = new THREE.Vector3(0, 0, 0);
+            
+            objects.forEach(obj => {
+                if (obj.fixed) return;
+                
+                const r = obj.position.clone().sub(origin);
+                const p = obj.velocity.clone().multiplyScalar(obj.mass);
+                const L = new THREE.Vector3().crossVectors(r, p);
+                
+                totalAngularMomentum.add(L);
+            });
+            
+            return totalAngularMomentum.length();
+        }
+        
+        // Update data display with current values
+        function updateDataDisplay() {
+            document.getElementById('time-value').textContent = simTime.toFixed(2) + ' s';
+            document.getElementById('energy-value').textContent = calculateTotalEnergy().toExponential(2) + ' J';
+            document.getElementById('momentum-value').textContent = calculateAngularMomentum().toExponential(2) + ' kg·m²/s';
+            
+            // Calculate net force on selected object
+            const obj = objects[selectedObjectIndex];
+            const netForce = obj.acceleration.clone().multiplyScalar(obj.mass);
+            document.getElementById('force-value').textContent = netForce.length().toExponential(2) + ' N';
+            
+            // Update selected object data
+            document.getElementById('position-value').textContent = 
+                `(${obj.position.x.toFixed(2)}, ${obj.position.y.toFixed(2)}, ${obj.position.z.toFixed(2)}) m`;
+            document.getElementById('velocity-value').textContent = 
+                `(${obj.velocity.x.toFixed(2)}, ${obj.velocity.y.toFixed(2)}, ${obj.velocity.z.toFixed(2)}) m/s`;
+            document.getElementById('acceleration-value').textContent = 
+                `(${obj.acceleration.x.toFixed(2)}, ${obj.acceleration.y.toFixed(2)}, ${obj.acceleration.z.toFixed(2)}) m/s²`;
+            
+            // Calculate kinetic and potential energy of selected object
+            const speed = obj.velocity.length();
+            const kineticEnergy = 0.5 * obj.mass * speed * speed;
+            document.getElementById('kinetic-value').textContent = kineticEnergy.toExponential(2) + ' J';
+            
+            let potentialEnergy = 0;
+            if (simulationType === 'gravitational') {
+                objects.forEach(otherObj => {
+                    if (otherObj === obj) return;
+                    
+                    const distance = obj.position.distanceTo(otherObj.position);
+                    if (distance < 0.1) return;
+                    
+                    potentialEnergy += -gravityStrength * obj.mass * otherObj.mass / distance;
+                });
+            } else if (simulationType === 'spring' && obj.springConstant) {
+                const displacement = obj.position.distanceTo(obj.equilibriumPosition || new THREE.Vector3(0, 0, 0));
+                potentialEnergy = 0.5 * obj.springConstant * displacement * displacement;
+            }
+            
+            document.getElementById('potential-value').textContent = potentialEnergy.toExponential(2) + ' J';
+        }
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (running) {
+                updatePositions();
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // Initialize the simulation when the page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
