@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbit Simulator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .control-panel {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+        .visualization {
+            flex: 2;
+            min-width: 300px;
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result-panel {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .tab-container {
+            margin-top: 20px;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .tab-button {
+            padding: 10px 15px;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 0 4px 4px 4px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .info-box {
+            background-color: #e8f4f8;
+            padding: 10px 15px;
+            border-left: 4px solid #007bff;
+            margin-bottom: 15px;
+        }
+        .formula {
+            font-family: monospace;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .slider-container input[type="range"] {
+            flex: 1;
+        }
+        .slider-value {
+            width: 50px;
+            text-align: right;
+        }
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .control-buttons button {
+            flex: 1;
+            margin-top: 0;
+        }
+        .planet-info {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .preset-button {
+            padding: 5px 10px;
+            background-color: #e0e0e0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .preset-button:hover {
+            background-color: #d0d0d0;
+        }
+        .time-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .time-controls button {
+            padding: 5px 10px;
+            margin-top: 0;
+        }
+        .time-controls input {
+            width: 80px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Orbit Simulator</h1>
+    
+    <div class="container">
+        <div class="info-box">
+            <p>This interactive tool simulates orbital motion based on Kepler's laws and Newton's law of gravitation. You can adjust orbital parameters to see how they affect the shape and properties of orbits, which is essential for understanding planetary motion in astronomy.</p>
+        </div>
+        
+        <div class="preset-buttons">
+            <button class="preset-button" data-preset="earth">Earth</button>
+            <button class="preset-button" data-preset="mercury">Mercury</button>
+            <button class="preset-button" data-preset="venus">Venus</button>
+            <button class="preset-button" data-preset="mars">Mars</button>
+            <button class="preset-button" data-preset="jupiter">Jupiter</button>
+            <button class="preset-button" data-preset="saturn">Saturn</button>
+            <button class="preset-button" data-preset="uranus">Uranus</button>
+            <button class="preset-button" data-preset="neptune">Neptune</button>
+            <button class="preset-button" data-preset="pluto">Pluto</button>
+            <button class="preset-button" data-preset="halley">Halley's Comet</button>
+            <button class="preset-button" data-preset="custom">Custom Orbit</button>
+        </div>
+        
+        <div class="main-content">
+            <div class="control-panel">
+                <h2>Orbital Parameters</h2>
+                
+                <div class="form-group">
+                    <label for="semi-major-axis">Semi-major Axis (AU):</label>
+                    <div class="slider-container">
+                        <input type="range" id="semi-major-axis" min="0.1" max="40" step="0.1" value="1">
+                        <span class="slider-value" id="semi-major-axis-value">1.0</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="eccentricity">Eccentricity:</label>
+                    <div class="slider-container">
+                        <input type="range" id="eccentricity" min="0" max="0.99" step="0.01" value="0.017">
+                        <span class="slider-value" id="eccentricity-value">0.017</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="inclination">Inclination (degrees):</label>
+                    <div class="slider-container">
+                        <input type="range" id="inclination" min="0" max="180" step="1" value="0">
+                        <span class="slider-value" id="inclination-value">0</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="longitude-ascending-node">Longitude of Ascending Node (degrees):</label>
+                    <div class="slider-container">
+                        <input type="range" id="longitude-ascending-node" min="0" max="360" step="1" value="0">
+                        <span class="slider-value" id="longitude-ascending-node-value">0</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="argument-periapsis">Argument of Periapsis (degrees):</label>
+                    <div class="slider-container">
+                        <input type="range" id="argument-periapsis" min="0" max="360" step="1" value="0">
+                        <span class="slider-value" id="argument-periapsis-value">0</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="central-body">Central Body:</label>
+                    <select id="central-body">
+                        <option value="sun">Sun</option>
+                        <option value="earth">Earth</option>
+                        <option value="jupiter">Jupiter</option>
+                    </select>
+                </div>
+                
+                <div class="time-controls">
+                    <button id="play-pause-button">Play</button>
+                    <label for="time-scale">Time Scale:</label>
+                    <input type="number" id="time-scale" min="0.1" max="100" step="0.1" value="1">
+                    <button id="reset-button">Reset</button>
+                </div>
+                
+                <div class="result-panel" id="orbit-info">
+                    <h3>Orbit Information</h3>
+                    <table>
+                        <tr>
+                            <td>Orbital Period:</td>
+                            <td id="orbital-period">1.0 years</td>
+                        </tr>
+                        <tr>
+                            <td>Periapsis Distance:</td>
+                            <td id="periapsis-distance">0.983 AU</td>
+                        </tr>
+                        <tr>
+                            <td>Apoapsis Distance:</td>
+                            <td id="apoapsis-distance">1.017 AU</td>
+                        </tr>
+                        <tr>
+                            <td>Current Position:</td>
+                            <td id="current-position">(1.0, 0.0) AU</td>
+                        </tr>
+                        <tr>
+                            <td>Current Velocity:</td>
+                            <td id="current-velocity">29.8 km/s</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="visualization" id="visualization">
+                <!-- Orbit visualization will be rendered here -->
+                <div class="planet-info" id="planet-info"></div>
+            </div>
+        </div>
+        
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="kepler">Kepler's Laws</button>
+                <button class="tab-button" data-tab="orbital-elements">Orbital Elements</button>
+                <button class="tab-button" data-tab="applications">Astronomical Applications</button>
+                <button class="tab-button" data-tab="help">Help</button>
+            </div>
+            
+            <div class="tab-content active" id="kepler-tab">
+                <h3>Kepler's Laws of Planetary Motion</h3>
+                
+                <h4>First Law: The Law of Ellipses</h4>
+                <p>The orbit of a planet is an ellipse with the Sun at one of the two foci.</p>
+                <div class="formula">
+                    r = a(1 - e²) / (1 + e·cos(θ))
+                </div>
+                <p>Where r is the distance from the focus to the orbiting body, a is the semi-major axis, e is the eccentricity, and θ is the true anomaly (angle from periapsis).</p>
+                
+                <h4>Second Law: The Law of Equal Areas</h4>
+                <p>A line segment joining a planet and the Sun sweeps out equal areas during equal intervals of time.</p>
+                <p>This law is a consequence of the conservation of angular momentum. It means that planets move faster when they are closer to the Sun (at perihelion) and slower when they are farther away (at aphelion).</p>
+                
+                <h4>Third Law: The Law of Harmonies</h4>
+                <p>The square of the orbital period of a planet is directly proportional to the cube of the semi-major axis of its orbit.</p>
+                <div class="formula">
+                    P² = a³
+                </div>
+                <p>Where P is the orbital period in years and a is the semi-major axis in astronomical units (AU). This formula applies when the central body is the Sun and the orbiting body's mass is negligible compared to the Sun.</p>
+                
+                <h4>Newton's Version of Kepler's Third Law</h4>
+                <p>For any two bodies orbiting each other under their mutual gravitational attraction:</p>
+                <div class="formula">
+                    P² = 4π²a³ / G(M₁ + M₂)
+                </div>
+                <p>Where G is the gravitational constant, and M₁ and M₂ are the masses of the two bodies.</p>
+            </div>
+            
+            <div class="tab-content" id="orbital-elements-tab">
+                <h3>Orbital Elements</h3>
+                <p>Orbital elements are the parameters needed to uniquely identify a specific orbit and the position of a body within that orbit at a specific time.</p>
+                
+                <h4>The Six Classical Orbital Elements</h4>
+                <ol>
+                    <li><strong>Semi-major Axis (a):</strong> Half the longest diameter of the elliptical orbit. It defines the size of the orbit.</li>
+                    <li><strong>Eccentricity (e):</strong> Defines the shape of the orbit. e = 0 is a circle, 0 < e < 1 is an ellipse, e = 1 is a parabola, and e > 1 is a hyperbola.</li>
+                    <li><strong>Inclination (i):</strong> The angle between the orbital plane and the reference plane (usually the ecliptic for solar system objects).</li>
+                    <li><strong>Longitude of the Ascending Node (Ω):</strong> The angle from the reference direction (usually the vernal equinox) to the ascending node (where the orbit crosses the reference plane from south to north).</li>
+                    <li><strong>Argument of Periapsis (ω):</strong> The angle from the ascending node to the periapsis (closest approach to the central body).</li>
+                    <li><strong>True Anomaly (ν or θ):</strong> The angle from the periapsis to the current position of the orbiting body.</li>
+                </ol>
+                
+                <h4>Derived Orbital Properties</h4>
+                <ul>
+                    <li><strong>Periapsis Distance:</strong> r_p = a(1 - e)</li>
+                    <li><strong>Apoapsis Distance:</strong> r_a = a(1 + e)</li>
+                    <li><strong>Orbital Period:</strong> P = 2π√(a³/μ), where μ = G(M₁ + M₂)</li>
+                    <li><strong>Orbital Velocity:</strong> v = √(μ(2/r - 1/a))</li>
+                </ul>
+            </div>
+            
+            <div class="tab-content" id="applications-tab">
+                <h3>Astronomical Applications of Orbital Mechanics</h3>
+                
+                <h4>Planetary Science</h4>
+                <ul>
+                    <li><strong>Predicting Planetary Positions:</strong> Orbital mechanics allows astronomers to calculate the positions of planets at any given time.</li>
+                    <li><strong>Understanding Seasons:</strong> Earth's axial tilt and orbital motion cause seasonal changes.</li>
+                    <li><strong>Planetary Formation Models:</strong> Orbital dynamics helps explain how planets form and evolve in protoplanetary disks.</li>
+                </ul>
+                
+                <h4>Space Exploration</h4>
+                <ul>
+                    <li><strong>Mission Planning:</strong> Calculating transfer orbits between planets for spacecraft missions.</li>
+                    <li><strong>Gravity Assists:</strong> Using a planet's gravity to change a spacecraft's trajectory and speed.</li>
+                    <li><strong>Orbital Maneuvers:</strong> Planning burns to change orbital parameters for rendezvous or landing.</li>
+                </ul>
+                
+                <h4>Celestial Mechanics Research</h4>
+                <ul>
+                    <li><strong>N-body Problem:</strong> Studying the complex gravitational interactions between multiple bodies.</li>
+                    <li><strong>Orbital Resonances:</strong> Understanding how orbits can be locked in specific ratios (like Pluto and Neptune's 2:3 resonance).</li>
+                    <li><strong>Chaos Theory:</strong> Investigating how small changes in initial conditions can lead to vastly different orbital outcomes over long time periods.</li>
+                </ul>
+                
+                <h4>Practical Applications</h4>
+                <ul>
+                    <li><strong>Satellite Deployment:</strong> Placing satellites in specific orbits for communications, Earth observation, or navigation.</li>
+                    <li><strong>Space Debris Tracking:</strong> Predicting the orbits of space debris to avoid collisions with operational spacecraft.</li>
+                    <li><strong>Asteroid Impact Prediction:</strong> Calculating the orbits of near-Earth objects to assess potential impact risks.</li>
+                </ul>
+            </div>
+            
+            <div class="tab-content" id="help-tab">
+                <h3>How to Use This Simulator</h3>
+                
+                <h4>Basic Controls</h4>
+                <ol>
+                    <li>Use the preset buttons at the top to select a pre-configured orbit for a planet or comet</li>
+                    <li>Or adjust the sliders to create a custom orbit with specific parameters</li>
+                    <li>Click "Play" to start the simulation and watch the body orbit</li>
+                    <li>Adjust the time scale to speed up or slow down the simulation</li>
+                    <li>Click "Reset" to return the orbiting body to its starting position</li>
+                </ol>
+                
+                <h4>Visualization Controls</h4>
+                <ul>
+                    <li>Click and drag to rotate the 3D view</li>
+                    <li>Scroll to zoom in and out</li>
+                    <li>Right-click and drag to pan the view</li>
+                </ul>
+                
+                <h4>Understanding the Display</h4>
+                <ul>
+                    <li>The yellow sphere represents the central body (usually the Sun)</li>
+                    <li>The blue sphere represents the orbiting body</li>
+                    <li>The white line shows the complete orbital path</li>
+                    <li>The green line shows the semi-major axis</li>
+                    <li>The red line points to the periapsis (closest approach)</li>
+                    <li>The blue line points to the apoapsis (farthest point)</li>
+                </ul>
+                
+                <h4>Orbital Parameters</h4>
+                <ul>
+                    <li><strong>Semi-major Axis:</strong> Controls the size of the orbit</li>
+                    <li><strong>Eccentricity:</strong> Controls the shape of the orbit (0 = circle, close to 1 = very elongated ellipse)</li>
+                    <li><strong>Inclination:</strong> Tilts the orbit relative to the reference plane</li>
+                    <li><strong>Longitude of Ascending Node:</strong> Rotates the orbit around the central body's axis</li>
+                    <li><strong>Argument of Periapsis:</strong> Rotates the orbit in its own plane</li>
+                </ul>
+                
+                <h4>Tips</h4>
+                <ul>
+                    <li>Observe how changing the eccentricity affects the orbital speed at different points</li>
+                    <li>Notice how the orbital period changes with the semi-major axis (Kepler's Third Law)</li>
+                    <li>Try creating highly eccentric orbits like those of comets</li>
+                    <li>Experiment with different central bodies to see how the mass affects orbital properties</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        // Global variables
+        let scene, camera, renderer, controls;
+        let centralBody, orbitingBody, orbitPath, semimajorAxis, periapsisLine, apoapsisLine;
+        let isPlaying = false;
+        let timeScale = 1.0;
+        let currentTime = 0;
+        let orbitalPeriod = 1.0; // in years
+        
+        // Orbital parameters
+        let orbitalElements = {
+            semiMajorAxis: 1.0, // in AU
+            eccentricity: 0.017, // Earth's eccentricity
+            inclination: 0, // in degrees
+            longitudeAscendingNode: 0, // in degrees
+            argumentPeriapsis: 0, // in degrees
+            centralBodyMass: 1.0 // in solar masses
+        };
+        
+        // Constants
+        const AU = 149.6e6; // Astronomical Unit in km
+        const SCALE_FACTOR = 50; // Scale factor for visualization
+        
+        // Preset orbital elements for planets and other objects
+        const presets = {
+            earth: {
+                semiMajorAxis: 1.0,
+                eccentricity: 0.017,
+                inclination: 0.0,
+                longitudeAscendingNode: 0.0,
+                argumentPeriapsis: 114.2,
+                centralBodyMass: 1.0,
+                name: "Earth"
+            },
+            mercury: {
+                semiMajorAxis: 0.387,
+                eccentricity: 0.206,
+                inclination: 7.0,
+                longitudeAscendingNode: 48.3,
+                argumentPeriapsis: 29.1,
+                centralBodyMass: 1.0,
+                name: "Mercury"
+            },
+            venus: {
+                semiMajorAxis: 0.723,
+                eccentricity: 0.007,
+                inclination: 3.4,
+                longitudeAscendingNode: 76.7,
+                argumentPeriapsis: 54.9,
+                centralBodyMass: 1.0,
+                name: "Venus"
+            },
+            mars: {
+                semiMajorAxis: 1.524,
+                eccentricity: 0.093,
+                inclination: 1.9,
+                longitudeAscendingNode: 49.6,
+                argumentPeriapsis: 286.5,
+                centralBodyMass: 1.0,
+                name: "Mars"
+            },
+            jupiter: {
+                semiMajorAxis: 5.203,
+                eccentricity: 0.048,
+                inclination: 1.3,
+                longitudeAscendingNode: 100.5,
+                argumentPeriapsis: 273.9,
+                centralBodyMass: 1.0,
+                name: "Jupiter"
+            },
+            saturn: {
+                semiMajorAxis: 9.537,
+                eccentricity: 0.054,
+                inclination: 2.5,
+                longitudeAscendingNode: 113.7,
+                argumentPeriapsis: 339.4,
+                centralBodyMass: 1.0,
+                name: "Saturn"
+            },
+            uranus: {
+                semiMajorAxis: 19.191,
+                eccentricity: 0.047,
+                inclination: 0.8,
+                longitudeAscendingNode: 74.0,
+                argumentPeriapsis: 96.7,
+                centralBodyMass: 1.0,
+                name: "Uranus"
+            },
+            neptune: {
+                semiMajorAxis: 30.069,
+                eccentricity: 0.009,
+                inclination: 1.8,
+                longitudeAscendingNode: 131.8,
+                argumentPeriapsis: 273.2,
+                centralBodyMass: 1.0,
+                name: "Neptune"
+            },
+            pluto: {
+                semiMajorAxis: 39.482,
+                eccentricity: 0.249,
+                inclination: 17.2,
+                longitudeAscendingNode: 110.3,
+                argumentPeriapsis: 113.8,
+                centralBodyMass: 1.0,
+                name: "Pluto"
+            },
+            halley: {
+                semiMajorAxis: 17.8,
+                eccentricity: 0.967,
+                inclination: 162.3,
+                longitudeAscendingNode: 58.4,
+                argumentPeriapsis: 111.3,
+                centralBodyMass: 1.0,
+                name: "Halley's Comet"
+            },
+            custom: {
+                semiMajorAxis: 1.0,
+                eccentricity: 0.5,
+                inclination: 30.0,
+                longitudeAscendingNode: 0.0,
+                argumentPeriapsis: 0.0,
+                centralBodyMass: 1.0,
+                name: "Custom Orbit"
+            }
+        };
+        
+        // Initialize the simulator
+        function init() {
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Set up tab switching
+            setupTabs();
+            
+            // Initialize 3D visualization
+            initVisualization();
+            
+            // Load Earth as the default preset
+            loadPreset('earth');
+            
+            // Calculate initial orbit
+            calculateOrbit();
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Preset buttons
+            document.querySelectorAll('.preset-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const preset = this.getAttribute('data-preset');
+                    loadPreset(preset);
+                });
+            });
+            
+            // Sliders
+            document.getElementById('semi-major-axis').addEventListener('input', function() {
+                orbitalElements.semiMajorAxis = parseFloat(this.value);
+                document.getElementById('semi-major-axis-value').textContent = orbitalElements.semiMajorAxis.toFixed(1);
+                calculateOrbit();
+            });
+            
+            document.getElementById('eccentricity').addEventListener('input', function() {
+                orbitalElements.eccentricity = parseFloat(this.value);
+                document.getElementById('eccentricity-value').textContent = orbitalElements.eccentricity.toFixed(3);
+                calculateOrbit();
+            });
+            
+            document.getElementById('inclination').addEventListener('input', function() {
+                orbitalElements.inclination = parseFloat(this.value);
+                document.getElementById('inclination-value').textContent = orbitalElements.inclination.toFixed(0);
+                calculateOrbit();
+            });
+            
+            document.getElementById('longitude-ascending-node').addEventListener('input', function() {
+                orbitalElements.longitudeAscendingNode = parseFloat(this.value);
+                document.getElementById('longitude-ascending-node-value').textContent = orbitalElements.longitudeAscendingNode.toFixed(0);
+                calculateOrbit();
+            });
+            
+            document.getElementById('argument-periapsis').addEventListener('input', function() {
+                orbitalElements.argumentPeriapsis = parseFloat(this.value);
+                document.getElementById('argument-periapsis-value').textContent = orbitalElements.argumentPeriapsis.toFixed(0);
+                calculateOrbit();
+            });
+            
+            // Central body selection
+            document.getElementById('central-body').addEventListener('change', function() {
+                switch(this.value) {
+                    case 'sun':
+                        orbitalElements.centralBodyMass = 1.0;
+                        break;
+                    case 'earth':
+                        orbitalElements.centralBodyMass = 3.0e-6; // Earth mass in solar masses
+                        break;
+                    case 'jupiter':
+                        orbitalElements.centralBodyMass = 9.55e-4; // Jupiter mass in solar masses
+                        break;
+                }
+                calculateOrbit();
+            });
+            
+            // Play/Pause button
+            document.getElementById('play-pause-button').addEventListener('click', function() {
+                isPlaying = !isPlaying;
+                this.textContent = isPlaying ? 'Pause' : 'Play';
+            });
+            
+            // Time scale input
+            document.getElementById('time-scale').addEventListener('input', function() {
+                timeScale = parseFloat(this.value);
+            });
+            
+            // Reset button
+            document.getElementById('reset-button').addEventListener('click', function() {
+                currentTime = 0;
+                updateOrbitingBodyPosition(0);
+                updateOrbitInfo(0);
+            });
+        }
+        
+        // Load preset orbital elements
+        function loadPreset(presetName) {
+            const preset = presets[presetName];
+            
+            // Update orbital elements
+            orbitalElements = { ...preset };
+            
+            // Update UI sliders
+            document.getElementById('semi-major-axis').value = preset.semiMajorAxis;
+            document.getElementById('semi-major-axis-value').textContent = preset.semiMajorAxis.toFixed(1);
+            
+            document.getElementById('eccentricity').value = preset.eccentricity;
+            document.getElementById('eccentricity-value').textContent = preset.eccentricity.toFixed(3);
+            
+            document.getElementById('inclination').value = preset.inclination;
+            document.getElementById('inclination-value').textContent = preset.inclination.toFixed(0);
+            
+            document.getElementById('longitude-ascending-node').value = preset.longitudeAscendingNode;
+            document.getElementById('longitude-ascending-node-value').textContent = preset.longitudeAscendingNode.toFixed(0);
+            
+            document.getElementById('argument-periapsis').value = preset.argumentPeriapsis;
+            document.getElementById('argument-periapsis-value').textContent = preset.argumentPeriapsis.toFixed(0);
+            
+            // Reset simulation
+            currentTime = 0;
+            isPlaying = false;
+            document.getElementById('play-pause-button').textContent = 'Play';
+            
+            // Update orbit
+            calculateOrbit();
+        }
+        
+        // Initialize the 3D visualization
+        function initVisualization() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x000000);
+            
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, document.getElementById('visualization').clientWidth / document.getElementById('visualization').clientHeight, 0.1, 1000);
+            camera.position.set(0, 5, 10);
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(document.getElementById('visualization').clientWidth, document.getElementById('visualization').clientHeight);
+            document.getElementById('visualization').appendChild(renderer.domElement);
+            
+            // Add orbit controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.25;
+            
+            // Add ambient light
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            
+            // Add directional light
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            
+            // Create central body (Sun)
+            const centralBodyGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+            const centralBodyMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+            centralBody = new THREE.Mesh(centralBodyGeometry, centralBodyMaterial);
+            scene.add(centralBody);
+            
+            // Create orbiting body (Planet)
+            const orbitingBodyGeometry = new THREE.SphereGeometry(0.2, 32, 32);
+            const orbitingBodyMaterial = new THREE.MeshBasicMaterial({ color: 0x3498db });
+            orbitingBody = new THREE.Mesh(orbitingBodyGeometry, orbitingBodyMaterial);
+            scene.add(orbitingBody);
+            
+            // Create orbit path
+            const orbitPathMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+            orbitPath = new THREE.Line(new THREE.BufferGeometry(), orbitPathMaterial);
+            scene.add(orbitPath);
+            
+            // Create semi-major axis line
+            const semimajorAxisMaterial = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+            semimajorAxis = new THREE.Line(new THREE.BufferGeometry(), semimajorAxisMaterial);
+            scene.add(semimajorAxis);
+            
+            // Create periapsis line
+            const periapsisMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+            periapsisLine = new THREE.Line(new THREE.BufferGeometry(), periapsisMaterial);
+            scene.add(periapsisLine);
+            
+            // Create apoapsis line
+            const apoapsisMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });
+            apoapsisLine = new THREE.Line(new THREE.BufferGeometry(), apoapsisMaterial);
+            scene.add(apoapsisLine);
+            
+            // Animation loop
+            animate();
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+        }
+        
+        // Calculate orbit based on orbital elements
+        function calculateOrbit() {
+            // Calculate derived orbital properties
+            const a = orbitalElements.semiMajorAxis;
+            const e = orbitalElements.eccentricity;
+            const i = orbitalElements.inclination * Math.PI / 180;
+            const Omega = orbitalElements.longitudeAscendingNode * Math.PI / 180;
+            const omega = orbitalElements.argumentPeriapsis * Math.PI / 180;
+            const mu = orbitalElements.centralBodyMass; // Gravitational parameter (simplified)
+            
+            // Calculate periapsis and apoapsis distances
+            const periapsis = a * (1 - e);
+            const apoapsis = a * (1 + e);
+            
+            // Calculate orbital period using Kepler's Third Law
+            orbitalPeriod = Math.sqrt(Math.pow(a, 3) / mu);
+            
+            // Update orbit info display
+            document.getElementById('orbital-period').textContent = orbitalPeriod.toFixed(2) + ' years';
+            document.getElementById('periapsis-distance').textContent = periapsis.toFixed(3) + ' AU';
+            document.getElementById('apoapsis-distance').textContent = apoapsis.toFixed(3) + ' AU';
+            
+            // Generate points for the orbit path
+            const points = [];
+            const numPoints = 360;
+            
+            for (let i = 0; i <= numPoints; i++) {
+                const theta = (i / numPoints) * 2 * Math.PI;
+                const r = a * (1 - e * e) / (1 + e * Math.cos(theta));
+                
+                // Calculate position in orbital plane
+                const x = r * Math.cos(theta);
+                const y = r * Math.sin(theta);
+                const z = 0;
+                
+                // Apply orbital orientation (inclination, longitude of ascending node, argument of periapsis)
+                const xRot = x * (Math.cos(Omega) * Math.cos(omega) - Math.sin(Omega) * Math.sin(omega) * Math.cos(i)) -
+                             y * (Math.cos(Omega) * Math.sin(omega) + Math.sin(Omega) * Math.cos(omega) * Math.cos(i));
+                             
+                const yRot = x * (Math.sin(Omega) * Math.cos(omega) + Math.cos(Omega) * Math.sin(omega) * Math.cos(i)) +
+                             y * (Math.cos(Omega) * Math.cos(omega) * Math.cos(i) - Math.sin(Omega) * Math.sin(omega));
+                             
+                const zRot = x * Math.sin(omega) * Math.sin(i) + y * Math.cos(omega) * Math.sin(i);
+                
+                points.push(new THREE.Vector3(xRot, zRot, -yRot)); // Adjust for Three.js coordinate system
+            }
+            
+            // Update orbit path
+            orbitPath.geometry.dispose();
+            orbitPath.geometry = new THREE.BufferGeometry().setFromPoints(points);
+            
+            // Update semi-major axis line
+            const semimajorPoints = [
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(a, 0, 0)
+            ];
+            semimajorAxis.geometry.dispose();
+            semimajorAxis.geometry = new THREE.BufferGeometry().setFromPoints(semimajorPoints);
+            
+            // Update periapsis line
+            const periapsisPoint = points[0]; // Assuming theta starts at 0
+            const periapsisPoints = [
+                new THREE.Vector3(0, 0, 0),
+                periapsisPoint
+            ];
+            periapsisLine.geometry.dispose();
+            periapsisLine.geometry = new THREE.BufferGeometry().setFromPoints(periapsisPoints);
+            
+            // Update apoapsis line
+            const apoapsisPoint = points[Math.floor(numPoints / 2)]; // Assuming theta = π at numPoints/2
+            const apoapsisPoints = [
+                new THREE.Vector3(0, 0, 0),
+                apoapsisPoint
+            ];
+            apoapsisLine.geometry.dispose();
+            apoapsisLine.geometry = new THREE.BufferGeometry().setFromPoints(apoapsisPoints);
+            
+            // Reset orbiting body position
+            updateOrbitingBodyPosition(0);
+            updateOrbitInfo(0);
+        }
+        
+        // Update the position of the orbiting body based on time
+        function updateOrbitingBodyPosition(time) {
+            // Calculate mean anomaly (M) based on time
+            const M = (2 * Math.PI * time) % (2 * Math.PI);
+            
+            // Solve Kepler's equation to get eccentric anomaly (E)
+            let E = M;
+            const e = orbitalElements.eccentricity;
+            
+            // Newton-Raphson iteration to solve Kepler's equation
+            for (let i = 0; i < 10; i++) {
+                E = E - (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+            }
+            
+            // Calculate true anomaly (θ)
+            const theta = 2 * Math.atan2(Math.sqrt(1 + e) * Math.sin(E / 2), Math.sqrt(1 - e) * Math.cos(E / 2));
+            
+            // Calculate distance from focus
+            const a = orbitalElements.semiMajorAxis;
+            const r = a * (1 - e * e) / (1 + e * Math.cos(theta));
+            
+            // Calculate position in orbital plane
+            const x = r * Math.cos(theta);
+            const y = r * Math.sin(theta);
+            const z = 0;
+            
+            // Apply orbital orientation
+            const i = orbitalElements.inclination * Math.PI / 180;
+            const Omega = orbitalElements.longitudeAscendingNode * Math.PI / 180;
+            const omega = orbitalElements.argumentPeriapsis * Math.PI / 180;
+            
+            const xRot = x * (Math.cos(Omega) * Math.cos(omega) - Math.sin(Omega) * Math.sin(omega) * Math.cos(i)) -
+                         y * (Math.cos(Omega) * Math.sin(omega) + Math.sin(Omega) * Math.cos(omega) * Math.cos(i));
+                         
+            const yRot = x * (Math.sin(Omega) * Math.cos(omega) + Math.cos(Omega) * Math.sin(omega) * Math.cos(i)) +
+                         y * (Math.cos(Omega) * Math.cos(omega) * Math.cos(i) - Math.sin(Omega) * Math.sin(omega));
+                         
+            const zRot = x * Math.sin(omega) * Math.sin(i) + y * Math.cos(omega) * Math.sin(i);
+            
+            // Update orbiting body position
+            orbitingBody.position.set(xRot, zRot, -yRot); // Adjust for Three.js coordinate system
+            
+            // Calculate orbital velocity
+            const mu = orbitalElements.centralBodyMass;
+            const velocity = Math.sqrt(mu * (2 / r - 1 / a)) * 29.8; // in km/s (scaled to Earth's velocity)
+            
+            // Update planet info display
+            document.getElementById('planet-info').textContent = `Position: (${r.toFixed(2)} AU, ${(theta * 180 / Math.PI).toFixed(0)}°)`;
+            
+            return { position: { x: xRot, y: zRot, z: -yRot }, r, theta, velocity };
+        }
+        
+        // Update orbit information display
+        function updateOrbitInfo(time) {
+            const orbitData = updateOrbitingBodyPosition(time);
+            
+            // Update current position and velocity in the info panel
+            document.getElementById('current-position').textContent = `(${orbitData.r.toFixed(2)} AU, ${(orbitData.theta * 180 / Math.PI).toFixed(0)}°)`;
+            document.getElementById('current-velocity').textContent = `${orbitData.velocity.toFixed(1)} km/s`;
+        }
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Update orbiting body position if playing
+            if (isPlaying) {
+                currentTime += 0.01 * timeScale;
+                updateOrbitingBodyPosition(currentTime / orbitalPeriod);
+                updateOrbitInfo(currentTime / orbitalPeriod);
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // Handle window resize
+        function onWindowResize() {
+            camera.aspect = document.getElementById('visualization').clientWidth / document.getElementById('visualization').clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(document.getElementById('visualization').clientWidth, document.getElementById('visualization').clientHeight);
+        }
+        
+        // Tab switching functionality
+        function setupTabs() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons and content
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding content
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab') + '-tab';
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+        
+        // Initialize when the page loads
+        window.onload = init;
+    </script>
+</body>
+</html>
