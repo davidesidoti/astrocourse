@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Derivative Explorer</title>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/function-plot@1.23.2/dist/function-plot.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .control-panel {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+        .visualization {
+            flex: 2;
+            min-width: 500px;
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result-panel {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .tab-container {
+            margin-top: 20px;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .tab-button {
+            padding: 10px 15px;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 0 4px 4px 4px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .info-box {
+            background-color: #e8f4f8;
+            padding: 10px 15px;
+            border-left: 4px solid #007bff;
+            margin-bottom: 15px;
+        }
+        .formula {
+            font-family: monospace;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .preset-button {
+            padding: 5px 10px;
+            background-color: #e0e0e0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .preset-button:hover {
+            background-color: #d0d0d0;
+        }
+        .error-message {
+            color: #d9534f;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .function-display {
+            margin: 15px 0;
+            font-size: 18px;
+        }
+        .derivative-display {
+            margin: 15px 0;
+            font-size: 18px;
+            color: #007bff;
+        }
+        .point-info {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .slider-container input[type="range"] {
+            flex: 1;
+        }
+        .slider-value {
+            width: 50px;
+            text-align: right;
+        }
+        .function-library {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+        .function-item {
+            padding: 5px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .function-item:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Derivative Explorer</h1>
+    
+    <div class="container">
+        <div class="info-box">
+            <p>This interactive tool allows you to explore derivatives of various functions. You can visualize how the derivative represents the slope of the tangent line at any point and see how changes to the function affect its derivative.</p>
+        </div>
+        
+        <div class="preset-buttons">
+            <button class="preset-button" data-function="x^2">f(x) = x²</button>
+            <button class="preset-button" data-function="sin(x)">f(x) = sin(x)</button>
+            <button class="preset-button" data-function="e^x">f(x) = e^x</button>
+            <button class="preset-button" data-function="ln(x)">f(x) = ln(x)</button>
+            <button class="preset-button" data-function="1/x">f(x) = 1/x</button>
+            <button class="preset-button" data-function="sqrt(x)">f(x) = √x</button>
+            <button class="preset-button" data-function="x^3-3*x">f(x) = x³-3x</button>
+            <button class="preset-button" data-function="sin(x)*e^(-0.1*x)">f(x) = sin(x)·e^(-0.1x)</button>
+            <button class="preset-button" data-function="1/(1+x^2)">f(x) = 1/(1+x²)</button>
+        </div>
+        
+        <div class="main-content">
+            <div class="control-panel">
+                <h2>Function Controls</h2>
+                
+                <div class="form-group">
+                    <label for="function-input">Enter a function f(x):</label>
+                    <input type="text" id="function-input" value="x^2" placeholder="e.g., x^2, sin(x), e^x">
+                    <div class="error-message" id="function-error"></div>
+                </div>
+                
+                <div class="function-display" id="function-display">
+                    f(x) = x²
+                </div>
+                
+                <div class="derivative-display" id="derivative-display">
+                    f'(x) = 2x
+                </div>
+                
+                <div class="form-group">
+                    <label for="x-value">x value:</label>
+                    <div class="slider-container">
+                        <input type="range" id="x-value" min="-10" max="10" step="0.1" value="1">
+                        <span class="slider-value" id="x-value-display">1.0</span>
+                    </div>
+                </div>
+                
+                <div class="point-info" id="point-info">
+                    <p>At x = 1:</p>
+                    <p>f(1) = 1</p>
+                    <p>f'(1) = 2 (slope of tangent line)</p>
+                </div>
+                
+                <h3>Graph Settings</h3>
+                
+                <div class="form-group">
+                    <label for="x-min">x-axis range:</label>
+                    <div class="slider-container">
+                        <span>Min:</span>
+                        <input type="number" id="x-min" value="-10" min="-100" max="0" step="1">
+                        <span>Max:</span>
+                        <input type="number" id="x-max" value="10" min="0" max="100" step="1">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="y-min">y-axis range:</label>
+                    <div class="slider-container">
+                        <span>Min:</span>
+                        <input type="number" id="y-min" value="-10" min="-100" max="0" step="1">
+                        <span>Max:</span>
+                        <input type="number" id="y-max" value="10" min="0" max="100" step="1">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Display options:</label>
+                    <div>
+                        <input type="checkbox" id="show-function" checked>
+                        <label for="show-function" style="display: inline;">Show function</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="show-derivative" checked>
+                        <label for="show-derivative" style="display: inline;">Show derivative</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="show-tangent" checked>
+                        <label for="show-tangent" style="display: inline;">Show tangent line</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="show-secant" checked>
+                        <label for="show-secant" style="display: inline;">Show secant lines</label>
+                    </div>
+                </div>
+                
+                <button id="update-button">Update Graph</button>
+            </div>
+            
+            <div class="visualization" id="visualization">
+                <!-- Graph will be rendered here -->
+            </div>
+        </div>
+        
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="concept">Derivative Concept</button>
+                <button class="tab-button" data-tab="applications">Astronomical Applications</button>
+                <button class="tab-button" data-tab="rules">Differentiation Rules</button>
+                <button class="tab-button" data-tab="help">Help</button>
+            </div>
+            
+            <div class="tab-content active" id="concept-tab">
+                <h3>Understanding Derivatives</h3>
+                
+                <p>The derivative of a function represents the rate at which the function's value changes with respect to its input. Geometrically, it's the slope of the tangent line to the function's graph at a given point.</p>
+                
+                <h4>From Average to Instantaneous Rate of Change</h4>
+                <p>Consider how we calculate average velocity:</p>
+                <div class="formula">
+                    Average velocity = Δx/Δt = [x(t+Δt) - x(t)]/Δt
+                </div>
+                
+                <p>As Δt becomes infinitesimally small, this average velocity approaches the instantaneous velocity:</p>
+                <div class="formula">
+                    Instantaneous velocity = dx/dt = lim<sub>Δt→0</sub> [x(t+Δt) - x(t)]/Δt
+                </div>
+                
+                <p>This limit definition applies to any function, not just position. For a function f(x), the derivative is:</p>
+                <div class="formula">
+                    f'(x) = lim<sub>h→0</sub> [f(x+h) - f(x)]/h
+                </div>
+                
+                <h4>Secant Lines Becoming Tangent Lines</h4>
+                <p>The expression [f(x+h) - f(x)]/h represents the slope of a secant line through the points (x, f(x)) and (x+h, f(x+h)). As h approaches zero, these secant lines approach the tangent line at (x, f(x)).</p>
+                
+                <p>In this explorer, you can visualize this process by adjusting the x-value slider and observing how the tangent line changes, reflecting the derivative value at each point.</p>
+            </div>
+            
+            <div class="tab-content" id="applications-tab">
+                <h3>Derivatives in Astronomy</h3>
+                
+                <h4>Orbital Mechanics</h4>
+                <p>Derivatives are essential for understanding planetary motion:</p>
+                <ul>
+                    <li><strong>Velocity</strong> is the derivative of position: v = dr/dt</li>
+                    <li><strong>Acceleration</strong> is the derivative of velocity: a = dv/dt = d²r/dt²</li>
+                    <li><strong>Kepler's laws</strong> can be derived using derivatives of orbital equations</li>
+                </ul>
+                
+                <h4>Stellar Evolution</h4>
+                <p>Stars change over time, and derivatives help track these changes:</p>
+                <ul>
+                    <li><strong>Temperature change rate</strong>: dT/dt</li>
+                    <li><strong>Luminosity change rate</strong>: dL/dt</li>
+                    <li><strong>Radius change rate</strong>: dR/dt</li>
+                </ul>
+                
+                <h4>Cosmology</h4>
+                <p>The expansion of the universe is described using derivatives:</p>
+                <ul>
+                    <li><strong>Hubble parameter</strong>: H(t) = (da/dt)/a, where a is the scale factor</li>
+                    <li><strong>Deceleration parameter</strong>: q = -a·(d²a/dt²)/(da/dt)²</li>
+                    <li><strong>Expansion rate changes</strong> reveal the influence of dark energy</li>
+                </ul>
+                
+                <h4>Light Curves</h4>
+                <p>When observing variable stars or exoplanet transits, derivatives help analyze light curves:</p>
+                <ul>
+                    <li><strong>Rate of brightness change</strong>: dB/dt</li>
+                    <li><strong>Inflection points</strong> in light curves (where d²B/dt² = 0) mark important events</li>
+                    <li><strong>Period changes</strong> in variable stars: dP/dt</li>
+                </ul>
+                
+                <h4>Example: Analyzing Supernova Light Curves</h4>
+                <p>During a supernova, a star's brightness typically follows a curve where:</p>
+                <ul>
+                    <li>Before peak: dB/dt > 0 (brightening)</li>
+                    <li>At peak: dB/dt = 0 (momentarily stable)</li>
+                    <li>After peak: dB/dt < 0 (dimming)</li>
+                </ul>
+                <p>The second derivative d²B/dt² tells us how the rate of brightening or dimming changes, helping astronomers classify different types of supernovae.</p>
+            </div>
+            
+            <div class="tab-content" id="rules-tab">
+                <h3>Differentiation Rules</h3>
+                
+                <table>
+                    <tr>
+                        <th>Rule</th>
+                        <th>Formula</th>
+                        <th>Example</th>
+                    </tr>
+                    <tr>
+                        <td>Constant Rule</td>
+                        <td>d/dx(c) = 0</td>
+                        <td>d/dx(5) = 0</td>
+                    </tr>
+                    <tr>
+                        <td>Power Rule</td>
+                        <td>d/dx(x^n) = n·x^(n-1)</td>
+                        <td>d/dx(x³) = 3x²</td>
+                    </tr>
+                    <tr>
+                        <td>Sum Rule</td>
+                        <td>d/dx(f + g) = f' + g'</td>
+                        <td>d/dx(x² + sin(x)) = 2x + cos(x)</td>
+                    </tr>
+                    <tr>
+                        <td>Product Rule</td>
+                        <td>d/dx(f·g) = f'·g + f·g'</td>
+                        <td>d/dx(x·sin(x)) = 1·sin(x) + x·cos(x)</td>
+                    </tr>
+                    <tr>
+                        <td>Quotient Rule</td>
+                        <td>d/dx(f/g) = (f'·g - f·g')/g²</td>
+                        <td>d/dx(x/sin(x)) = (1·sin(x) - x·cos(x))/sin²(x)</td>
+                    </tr>
+                    <tr>
+                        <td>Chain Rule</td>
+                        <td>d/dx(f(g(x))) = f'(g(x))·g'(x)</td>
+                        <td>d/dx(sin(x²)) = cos(x²)·2x</td>
+                    </tr>
+                </table>
+                
+                <h4>Common Derivatives</h4>
+                
+                <table>
+                    <tr>
+                        <th>Function</th>
+                        <th>Derivative</th>
+                    </tr>
+                    <tr>
+                        <td>sin(x)</td>
+                        <td>cos(x)</td>
+                    </tr>
+                    <tr>
+                        <td>cos(x)</td>
+                        <td>-sin(x)</td>
+                    </tr>
+                    <tr>
+                        <td>tan(x)</td>
+                        <td>sec²(x)</td>
+                    </tr>
+                    <tr>
+                        <td>e^x</td>
+                        <td>e^x</td>
+                    </tr>
+                    <tr>
+                        <td>ln(x)</td>
+                        <td>1/x</td>
+                    </tr>
+                    <tr>
+                        <td>a^x</td>
+                        <td>a^x·ln(a)</td>
+                    </tr>
+                    <tr>
+                        <td>arcsin(x)</td>
+                        <td>1/√(1-x²)</td>
+                    </tr>
+                    <tr>
+                        <td>arctan(x)</td>
+                        <td>1/(1+x²)</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="tab-content" id="help-tab">
+                <h3>How to Use This Tool</h3>
+                
+                <h4>Basic Usage</h4>
+                <ol>
+                    <li>Enter a function in the input field or select a preset function</li>
+                    <li>Use the x-value slider to select a point on the function</li>
+                    <li>Observe the tangent line at that point and the corresponding derivative value</li>
+                    <li>Adjust the graph settings to customize the visualization</li>
+                </ol>
+                
+                <h4>Function Input Syntax</h4>
+                <ul>
+                    <li>Basic operations: +, -, *, /, ^ (for exponents)</li>
+                    <li>Functions: sin(), cos(), tan(), exp(), ln(), log(), sqrt()</li>
+                    <li>Constants: pi, e</li>
+                    <li>Examples: x^2, sin(x), e^(-x), ln(1+x^2)</li>
+                </ul>
+                
+                <h4>Display Options</h4>
+                <ul>
+                    <li><strong>Show function</strong>: Displays the original function f(x)</li>
+                    <li><strong>Show derivative</strong>: Displays the derivative function f'(x)</li>
+                    <li><strong>Show tangent line</strong>: Displays the tangent line at the selected x-value</li>
+                    <li><strong>Show secant lines</strong>: Displays secant lines approaching the tangent line</li>
+                </ul>
+                
+                <h4>Tips</h4>
+                <ul>
+                    <li>Use the preset buttons for quick access to common functions</li>
+                    <li>Adjust the axis ranges to zoom in or out on specific regions</li>
+                    <li>Watch how the derivative graph relates to the slope of the original function</li>
+                    <li>Notice where the derivative equals zero (these are critical points where the original function has horizontal tangents)</li>
+                    <li>Explore the relationship between the concavity of the function and the sign of the second derivative</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentFunction = "x^2";
+        let currentDerivative = "2*x";
+        let currentXValue = 1;
+        let xMin = -10;
+        let xMax = 10;
+        let yMin = -10;
+        let yMax = 10;
+        let functionPlot;
+        
+        // Initialize the application
+        function init() {
+            // Set up event listeners
+            document.getElementById('function-input').addEventListener('input', validateFunction);
+            document.getElementById('update-button').addEventListener('click', updateGraph);
+            document.getElementById('x-value').addEventListener('input', updateXValue);
+            
+            // Set up preset buttons
+            document.querySelectorAll('.preset-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const functionStr = this.getAttribute('data-function');
+                    document.getElementById('function-input').value = functionStr;
+                    validateFunction();
+                    updateGraph();
+                });
+            });
+            
+            // Set up tab switching
+            setupTabs();
+            
+            // Initial graph rendering
+            updateGraph();
+        }
+        
+        // Validate the function input
+        function validateFunction() {
+            const functionInput = document.getElementById('function-input').value;
+            const errorElement = document.getElementById('function-error');
+            
+            try {
+                // Try to parse the function
+                const expr = math.parse(functionInput);
+                const compiled = expr.compile();
+                compiled.evaluate({ x: 1 }); // Test with a sample value
+                
+                // If successful, clear error and update function display
+                errorElement.textContent = '';
+                currentFunction = functionInput;
+                
+                // Try to compute the derivative symbolically
+                try {
+                    const derivative = math.derivative(functionInput, 'x').toString();
+                    currentDerivative = derivative;
+                    document.getElementById('derivative-display').textContent = `f'(x) = ${formatMathExpression(derivative)}`;
+                } catch (err) {
+                    // If symbolic differentiation fails, use numerical differentiation
+                    currentDerivative = `numerical`;
+                    document.getElementById('derivative-display').textContent = `f'(x) = (numerical approximation)`;
+                }
+                
+                document.getElementById('function-display').textContent = `f(x) = ${formatMathExpression(functionInput)}`;
+                return true;
+            } catch (err) {
+                // If parsing fails, show error
+                errorElement.textContent = 'Invalid function: ' + err.message;
+                return false;
+            }
+        }
+        
+        // Format mathematical expressions for display
+        function formatMathExpression(expr) {
+            // Replace some common patterns for better display
+            return expr
+                .replace(/\*\*/g, '^')
+                .replace(/\*/g, '·')
+                .replace(/sqrt/g, '√')
+                .replace(/pi/g, 'π')
+                .replace(/\^2/g, '²')
+                .replace(/\^3/g, '³');
+        }
+        
+        // Update the graph based on current settings
+        function updateGraph() {
+            if (!validateFunction()) return;
+            
+            // Get axis ranges
+            xMin = parseFloat(document.getElementById('x-min').value);
+            xMax = parseFloat(document.getElementById('x-max').value);
+            yMin = parseFloat(document.getElementById('y-min').value);
+            yMax = parseFloat(document.getElementById('y-max').value);
+            
+            // Get display options
+            const showFunction = document.getElementById('show-function').checked;
+            const showDerivative = document.getElementById('show-derivative').checked;
+            const showTangent = document.getElementById('show-tangent').checked;
+            const showSecant = document.getElementById('show-secant').checked;
+            
+            // Prepare data for plotting
+            const data = [];
+            
+            // Add original function if enabled
+            if (showFunction) {
+                data.push({
+                    fn: currentFunction,
+                    color: 'blue',
+                    graphType: 'polyline',
+                    title: 'f(x)'
+                });
+            }
+            
+            // Add derivative if enabled
+            if (showDerivative) {
+                if (currentDerivative === 'numerical') {
+                    // Use numerical differentiation
+                    data.push({
+                        fn: `derivative(${currentFunction}, x)`,
+                        color: 'red',
+                        graphType: 'polyline',
+                        title: 'f\'(x)',
+                        nSamples: 1000
+                    });
+                } else {
+                    // Use symbolic derivative
+                    data.push({
+                        fn: currentDerivative,
+                        color: 'red',
+                        graphType: 'polyline',
+                        title: 'f\'(x)'
+                    });
+                }
+            }
+            
+            // Calculate function value and derivative at current x
+            let fx, fpx;
+            try {
+                fx = math.evaluate(currentFunction, { x: currentXValue });
+                
+                if (currentDerivative === 'numerical') {
+                    // Use numerical differentiation
+                    const h = 0.0001;
+                    const fxPlusH = math.evaluate(currentFunction, { x: currentXValue + h });
+                    const fxMinusH = math.evaluate(currentFunction, { x: currentXValue - h });
+                    fpx = (fxPlusH - fxMinusH) / (2 * h);
+                } else {
+                    // Use symbolic derivative
+                    fpx = math.evaluate(currentDerivative, { x: currentXValue });
+                }
+            } catch (err) {
+                console.error('Error evaluating function at x =', currentXValue, err);
+                return;
+            }
+            
+            // Add tangent line if enabled
+            if (showTangent) {
+                // Tangent line equation: y - f(x₀) = f'(x₀)(x - x₀)
+                // Simplified: y = f'(x₀)x - f'(x₀)x₀ + f(x₀)
+                const tangentFn = `${fpx}*x - ${fpx}*${currentXValue} + ${fx}`;
+                data.push({
+                    fn: tangentFn,
+                    color: 'green',
+                    graphType: 'polyline',
+                    title: 'Tangent',
+                    dashStyle: '5'
+                });
+            }
+            
+            // Add secant lines if enabled
+            if (showSecant) {
+                // Add secant lines with different h values
+                const hValues = [2, 1, 0.5, 0.25];
+                hValues.forEach((h, index) => {
+                    try {
+                        const x1 = currentXValue - h;
+                        const x2 = currentXValue + h;
+                        const y1 = math.evaluate(currentFunction, { x: x1 });
+                        const y2 = math.evaluate(currentFunction, { x: x2 });
+                        const slope = (y2 - y1) / (x2 - x1);
+                        
+                        // Secant line equation: y - y₁ = m(x - x₁)
+                        // Simplified: y = mx - mx₁ + y₁
+                        const secantFn = `${slope}*x - ${slope}*${x1} + ${y1}`;
+                        
+                        data.push({
+                            fn: secantFn,
+                            color: `rgba(128, 0, 128, ${0.3 + index * 0.15})`,
+                            graphType: 'polyline',
+                            title: `Secant (h=${h})`,
+                            dashStyle: '3'
+                        });
+                    } catch (err) {
+                        console.error('Error calculating secant line with h =', h, err);
+                    }
+                });
+            }
+            
+            // Add point at current x value
+            data.push({
+                points: [[currentXValue, fx]],
+                fnType: 'points',
+                graphType: 'scatter',
+                color: 'black',
+                pointSize: 4
+            });
+            
+            // Create or update the plot
+            const plotOptions = {
+                target: '#visualization',
+                width: document.getElementById('visualization').clientWidth,
+                height: document.getElementById('visualization').clientHeight,
+                grid: true,
+                xAxis: { domain: [xMin, xMax] },
+                yAxis: { domain: [yMin, yMax] },
+                data: data,
+                disableZoom: false,
+                tip: {
+                    xLine: true,
+                    yLine: true
+                }
+            };
+            
+            try {
+                functionPlot(plotOptions);
+            } catch (err) {
+                console.error('Error plotting functions:', err);
+            }
+            
+            // Update point info display
+            updatePointInfo(currentXValue, fx, fpx);
+        }
+        
+        // Update the x value from the slider
+        function updateXValue() {
+            currentXValue = parseFloat(document.getElementById('x-value').value);
+            document.getElementById('x-value-display').textContent = currentXValue.toFixed(1);
+            
+            // Calculate function value and derivative at current x
+            let fx, fpx;
+            try {
+                fx = math.evaluate(currentFunction, { x: currentXValue });
+                
+                if (currentDerivative === 'numerical') {
+                    // Use numerical differentiation
+                    const h = 0.0001;
+                    const fxPlusH = math.evaluate(currentFunction, { x: currentXValue + h });
+                    const fxMinusH = math.evaluate(currentFunction, { x: currentXValue - h });
+                    fpx = (fxPlusH - fxMinusH) / (2 * h);
+                } else {
+                    // Use symbolic derivative
+                    fpx = math.evaluate(currentDerivative, { x: currentXValue });
+                }
+                
+                updatePointInfo(currentXValue, fx, fpx);
+                updateGraph();
+            } catch (err) {
+                console.error('Error evaluating function at x =', currentXValue, err);
+            }
+        }
+        
+        // Update the point information display
+        function updatePointInfo(x, fx, fpx) {
+            document.getElementById('point-info').innerHTML = `
+                <p>At x = ${x.toFixed(2)}:</p>
+                <p>f(${x.toFixed(2)}) = ${fx.toFixed(4)}</p>
+                <p>f'(${x.toFixed(2)}) = ${fpx.toFixed(4)} (slope of tangent line)</p>
+            `;
+        }
+        
+        // Tab switching functionality
+        function setupTabs() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons and content
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding content
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab') + '-tab';
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (functionPlot) {
+                updateGraph();
+            }
+        });
+        
+        // Initialize when the page loads
+        window.onload = init;
+    </script>
+</body>
+</html>
