@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Differential Equation Solver</title>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/function-plot@1.23.2/dist/function-plot.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.20.0.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .control-panel {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+        .visualization {
+            flex: 2;
+            min-width: 500px;
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result-panel {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .tab-container {
+            margin-top: 20px;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .tab-button {
+            padding: 10px 15px;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 0 4px 4px 4px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .info-box {
+            background-color: #e8f4f8;
+            padding: 10px 15px;
+            border-left: 4px solid #007bff;
+            margin-bottom: 15px;
+        }
+        .formula {
+            font-family: monospace;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .preset-button {
+            padding: 5px 10px;
+            background-color: #e0e0e0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .preset-button:hover {
+            background-color: #d0d0d0;
+        }
+        .error-message {
+            color: #d9534f;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .function-display {
+            margin: 15px 0;
+            font-size: 18px;
+        }
+        .solution-display {
+            margin: 15px 0;
+            font-size: 18px;
+            color: #007bff;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .slider-container input[type="range"] {
+            flex: 1;
+        }
+        .slider-value {
+            width: 50px;
+            text-align: right;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .astronomical-example {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border-radius: 8px;
+            border-left: 4px solid #0077cc;
+        }
+        .astronomical-example h3 {
+            margin-top: 0;
+            color: #0077cc;
+        }
+        .parameter-group {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        .parameter-group h3 {
+            margin-top: 0;
+            font-size: 16px;
+        }
+        .solution-method-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .solution-method-selector label {
+            display: inline-flex;
+            align-items: center;
+            font-weight: normal;
+            margin-right: 10px;
+        }
+        .solution-method-selector input {
+            width: auto;
+            margin-right: 5px;
+        }
+        .equation-type-selector {
+            margin-bottom: 15px;
+        }
+        .initial-conditions {
+            margin-top: 15px;
+        }
+        .solution-info {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+        .step-result {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-bottom: 1px dashed #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Differential Equation Solver</h1>
+    
+    <div class="container">
+        <div class="info-box">
+            <p>This interactive tool allows you to explore differential equations and their solutions. You can solve various types of differential equations, visualize the solutions, and understand their applications in astronomy and astrophysics.</p>
+        </div>
+        
+        <div class="preset-buttons">
+            <button class="preset-button" data-type="first-order" data-equation="dy/dx = x*y" data-initial="y(0) = 1" data-xrange="0,5">Exponential Growth</button>
+            <button class="preset-button" data-type="first-order" data-equation="dy/dx = -0.1*y" data-initial="y(0) = 100" data-xrange="0,50">Radioactive Decay</button>
+            <button class="preset-button" data-type="second-order" data-equation="d2y/dx2 + y = 0" data-initial="y(0) = 0, y'(0) = 1" data-xrange="0,20">Simple Harmonic Motion</button>
+            <button class="preset-button" data-type="second-order" data-equation="d2y/dx2 + 0.2*dy/dx + y = 0" data-initial="y(0) = 1, y'(0) = 0" data-xrange="0,40">Damped Oscillation</button>
+            <button class="preset-button" data-type="second-order" data-equation="d2y/dx2 + 0.1*dy/dx + y = cos(x)" data-initial="y(0) = 0, y'(0) = 0" data-xrange="0,50">Forced Oscillation</button>
+            <button class="preset-button" data-type="system" data-equation="dx/dt = y, dy/dt = -x" data-initial="x(0) = 0, y(0) = 1" data-xrange="0,10">Circular Orbit</button>
+            <button class="preset-button" data-type="system" data-equation="dx/dt = y, dy/dt = -x - 0.1*y" data-initial="x(0) = 1, y(0) = 0" data-xrange="0,40">Spiral Orbit</button>
+        </div>
+        
+        <div class="main-content">
+            <div class="control-panel">
+                <h2>Equation Controls</h2>
+                
+                <div class="equation-type-selector">
+                    <label for="equation-type">Equation Type:</label>
+                    <select id="equation-type">
+                        <option value="first-order">First-Order ODE</option>
+                        <option value="second-order">Second-Order ODE</option>
+                        <option value="system">System of ODEs</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="first-order-input">
+                    <label for="first-order-equation">Enter a first-order ODE:</label>
+                    <input type="text" id="first-order-equation" value="dy/dx = x*y" placeholder="e.g., dy/dx = x*y">
+                    <div class="error-message" id="first-order-error"></div>
+                </div>
+                
+                <div class="form-group" id="second-order-input" style="display: none;">
+                    <label for="second-order-equation">Enter a second-order ODE:</label>
+                    <input type="text" id="second-order-equation" value="d2y/dx2 + y = 0" placeholder="e.g., d2y/dx2 + y = 0">
+                    <div class="error-message" id="second-order-error"></div>
+                </div>
+                
+                <div class="form-group" id="system-input" style="display: none;">
+                    <label for="system-equation-x">Enter system of ODEs:</label>
+                    <input type="text" id="system-equation-x" value="dx/dt = y" placeholder="e.g., dx/dt = y">
+                    <input type="text" id="system-equation-y" value="dy/dt = -x" placeholder="e.g., dy/dt = -x">
+                    <div class="error-message" id="system-error"></div>
+                </div>
+                
+                <div class="initial-conditions">
+                    <h3>Initial Conditions</h3>
+                    
+                    <div class="form-group" id="first-order-initial">
+                        <label for="first-order-initial-value">Initial value:</label>
+                        <input type="text" id="first-order-initial-value" value="y(0) = 1" placeholder="e.g., y(0) = 1">
+                    </div>
+                    
+                    <div class="form-group" id="second-order-initial" style="display: none;">
+                        <label for="second-order-initial-value">Initial values:</label>
+                        <input type="text" id="second-order-initial-value" value="y(0) = 0, y'(0) = 1" placeholder="e.g., y(0) = 0, y'(0) = 1">
+                    </div>
+                    
+                    <div class="form-group" id="system-initial" style="display: none;">
+                        <label for="system-initial-value">Initial values:</label>
+                        <input type="text" id="system-initial-value" value="x(0) = 0, y(0) = 1" placeholder="e.g., x(0) = 0, y(0) = 1">
+                    </div>
+                </div>
+                
+                <div class="parameter-group">
+                    <h3>Solution Parameters</h3>
+                    
+                    <div class="solution-method-selector">
+                        <label>
+                            <input type="radio" name="solution-method" value="analytical" checked>
+                            Analytical (when possible)
+                        </label>
+                        <label>
+                            <input type="radio" name="solution-method" value="numerical">
+                            Numerical
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="x-range">x-range:</label>
+                        <div class="slider-container">
+                            <span>Min:</span>
+                            <input type="number" id="x-min" value="0" min="-100" max="0" step="1">
+                            <span>Max:</span>
+                            <input type="number" id="x-max" value="10" min="0" max="100" step="1">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="numerical-params">
+                        <label for="num-points">Number of points:</label>
+                        <input type="range" id="num-points" min="10" max="1000" step="10" value="200">
+                        <span class="slider-value" id="num-points-display">200</span>
+                    </div>
+                </div>
+                
+                <button id="solve-button">Solve Equation</button>
+                
+                <div class="solution-display" id="solution-display">
+                    Solution: y(x) = e^(x²/2)
+                </div>
+                
+                <div class="solution-info" id="solution-info">
+                    <p>Method: Analytical solution (separable equation)</p>
+                    <p>Steps:</p>
+                    <div class="step-result">1. Separate variables: dy/y = x dx</div>
+                    <div class="step-result">2. Integrate both sides: ∫(dy/y) = ∫x dx</div>
+                    <div class="step-result">3. Evaluate integrals: ln|y| = x²/2 + C</div>
+                    <div class="step-result">4. Solve for y: y = Ce^(x²/2)</div>
+                    <div class="step-result">5. Apply initial condition y(0) = 1: C = 1</div>
+                    <div class="step-result">6. Final solution: y(x) = e^(x²/2)</div>
+                </div>
+            </div>
+            
+            <div class="visualization" id="visualization">
+                <!-- Graph will be rendered here -->
+            </div>
+        </div>
+        
+        <div class="astronomical-example" id="astronomical-example">
+            <h3>Astronomical Application: Radioactive Decay in Stellar Nucleosynthesis</h3>
+            <p>Radioactive decay follows the differential equation dN/dt = -λN, where N is the number of radioactive nuclei and λ is the decay constant.</p>
+            <p>The solution is N(t) = N₀e^(-λt), where N₀ is the initial number of nuclei.</p>
+            <p>This equation is crucial for understanding nucleosynthesis in stars and supernovae, as well as for dating astronomical objects using radioactive isotopes.</p>
+            <p>Try the "Radioactive Decay" preset to explore this application!</p>
+        </div>
+        
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="concept">Differential Equations</button>
+                <button class="tab-button" data-tab="applications">Astronomical Applications</button>
+                <button class="tab-button" data-tab="methods">Solution Methods</button>
+                <button class="tab-button" data-tab="help">Help</button>
+            </div>
+            
+            <div class="tab-content active" id="concept-tab">
+                <h3>Understanding Differential Equations</h3>
+                
+                <p>Differential equations are equations that involve derivatives of an unknown function. They are fundamental to modeling dynamic processes in astronomy and astrophysics.</p>
+                
+                <h4>Types of Differential Equations</h4>
+                <ul>
+                    <li><strong>Ordinary Differential Equations (ODEs)</strong> involve derivatives with respect to a single variable</li>
+                    <li><strong>Partial Differential Equations (PDEs)</strong> involve partial derivatives with respect to multiple variables</li>
+                    <li><strong>First-order equations</strong> involve only first derivatives</li>
+                    <li><strong>Higher-order equations</strong> involve higher derivatives</li>
+                    <li><strong>Linear equations</strong> have the unknown function and its derivatives appearing linearly</li>
+                    <li><strong>Nonlinear equations</strong> have nonlinear terms involving the unknown function or its derivatives</li>
+                </ul>
+                
+                <h4>Common First-Order Equations</h4>
+                <ul>
+                    <li><strong>Separable equations</strong>: dy/dx = g(x)h(y)</li>
+                    <li><strong>Linear equations</strong>: dy/dx + P(x)y = Q(x)</li>
+                    <li><strong>Exact equations</strong>: M(x,y)dx + N(x,y)dy = 0 where ∂M/∂y = ∂N/∂x</li>
+                </ul>
+                
+                <h4>Common Second-Order Equations</h4>
+                <ul>
+                    <li><strong>Simple harmonic oscillator</strong>: d²y/dx² + ω²y = 0</li>
+                    <li><strong>Damped harmonic oscillator</strong>: d²y/dx² + 2γ·dy/dx + ω₀²y = 0</li>
+                    <li><strong>Forced oscillator</strong>: d²y/dx² + 2γ·dy/dx + ω₀²y = F(x)</li>
+                </ul>
+                
+                <h4>Systems of Differential Equations</h4>
+                <p>Many astronomical phenomena involve multiple interacting variables, requiring systems of differential equations:</p>
+                <div class="formula">
+                    dx/dt = f(t, x, y)<br>
+                    dy/dt = g(t, x, y)
+                </div>
+                <p>Examples include the two-body problem in orbital mechanics and predator-prey models in astrobiology.</p>
+            </div>
+            
+            <div class="tab-content" id="applications-tab">
+                <h3>Differential Equations in Astronomy</h3>
+                
+                <h4>Orbital Mechanics</h4>
+                <p>The motion of celestial bodies under gravity is governed by:</p>
+                <div class="formula">
+                    d²r/dt² = -GM·r/|r|³
+                </div>
+                <p>This leads to Kepler's laws of planetary motion and is essential for calculating spacecraft trajectories.</p>
+                
+                <h4>Stellar Structure and Evolution</h4>
+                <p>The structure of a star is described by a set of differential equations:</p>
+                <ul>
+                    <li><strong>Mass conservation</strong>: dm/dr = 4πr²ρ</li>
+                    <li><strong>Hydrostatic equilibrium</strong>: dP/dr = -Gm·ρ/r²</li>
+                    <li><strong>Energy conservation</strong>: dL/dr = 4πr²ρε</li>
+                    <li><strong>Energy transport</strong>: dT/dr depends on the transport mechanism (radiative or convective)</li>
+                </ul>
+                <p>These equations allow astronomers to model stellar evolution from birth to death.</p>
+                
+                <h4>Fluid Dynamics in Astrophysics</h4>
+                <p>The behavior of gases and plasmas is described by the fluid equations:</p>
+                <ul>
+                    <li><strong>Continuity equation</strong>: ∂ρ/∂t + ∇·(ρv) = 0</li>
+                    <li><strong>Momentum equation</strong>: ρ(∂v/∂t + v·∇v) = -∇P + ρg + other forces</li>
+                    <li><strong>Energy equation</strong>: ∂e/∂t + ∇·(ev) = -P∇·v + heating - cooling</li>
+                </ul>
+                <p>These equations model stellar atmospheres, accretion disks, and galaxy formation.</p>
+                
+                <h4>Radiative Transfer</h4>
+                <p>The transport of radiation through matter follows:</p>
+                <div class="formula">
+                    dI_ν/ds = -κ_ν·I_ν + j_ν
+                </div>
+                <p>This equation helps astronomers understand stellar atmospheres, nebular emission, and cosmic background radiation.</p>
+                
+                <h4>Cosmological Models</h4>
+                <p>The evolution of the universe is described by the Friedmann equations:</p>
+                <div class="formula">
+                    (ȧ/a)² = (8πG/3)ρ - k/a² + Λ/3<br>
+                    ä/a = -(4πG/3)(ρ + 3P/c²) + Λ/3
+                </div>
+                <p>These equations model the expansion history of the universe and the effects of dark energy and dark matter.</p>
+            </div>
+            
+            <div class="tab-content" id="methods-tab">
+                <h3>Solution Methods for Differential Equations</h3>
+                
+                <h4>Analytical Methods</h4>
+                <p>Analytical methods provide exact solutions but are only applicable to certain types of equations:</p>
+                <ul>
+                    <li><strong>Separation of Variables</strong>: For equations of the form dy/dx = g(x)h(y)</li>
+                    <li><strong>Integrating Factor</strong>: For linear first-order equations dy/dx + P(x)y = Q(x)</li>
+                    <li><strong>Characteristic Equation</strong>: For linear constant-coefficient equations</li>
+                    <li><strong>Variation of Parameters</strong>: For non-homogeneous linear equations</li>
+                    <li><strong>Power Series</strong>: For equations where other methods fail</li>
+                </ul>
+                
+                <h4>Numerical Methods</h4>
+                <p>Numerical methods provide approximate solutions and can be applied to almost any differential equation:</p>
+                <ul>
+                    <li><strong>Euler's Method</strong>: y(t + Δt) ≈ y(t) + Δt·f(t, y(t))</li>
+                    <li><strong>Runge-Kutta Methods</strong>: Higher-order methods that evaluate the derivative at multiple points</li>
+                    <li><strong>Adaptive Step Size Methods</strong>: Adjust the step size based on the estimated error</li>
+                    <li><strong>Implicit Methods</strong>: For stiff equations where explicit methods require very small steps</li>
+                </ul>
+                
+                <h4>Qualitative Analysis</h4>
+                <p>Sometimes understanding the behavior of solutions without solving explicitly is valuable:</p>
+                <ul>
+                    <li><strong>Phase Plane Analysis</strong>: For systems of two first-order equations</li>
+                    <li><strong>Stability Analysis</strong>: Determining whether solutions grow, decay, or oscillate</li>
+                    <li><strong>Bifurcation Theory</strong>: Studying how solutions change as parameters vary</li>
+                </ul>
+                
+                <h4>Computational Tools</h4>
+                <p>Modern differential equation solving often relies on specialized software:</p>
+                <ul>
+                    <li><strong>MATLAB</strong> with ODE solvers like ode45, ode15s</li>
+                    <li><strong>Python</strong> with SciPy's integrate.solve_ivp</li>
+                    <li><strong>Mathematica</strong> with DSolve and NDSolve</li>
+                    <li><strong>Specialized codes</strong> for astrophysical simulations</li>
+                </ul>
+            </div>
+            
+            <div class="tab-content" id="help-tab">
+                <h3>How to Use This Tool</h3>
+                
+                <h4>Basic Usage</h4>
+                <ol>
+                    <li>Select the type of differential equation (first-order, second-order, or system)</li>
+                    <li>Enter the equation in the input field or select a preset example</li>
+                    <li>Specify the initial conditions</li>
+                    <li>Choose between analytical or numerical solution methods</li>
+                    <li>Set the x-range and number of points for the solution</li>
+                    <li>Click "Solve Equation" to generate the solution and visualization</li>
+                </ol>
+                
+                <h4>Equation Input Syntax</h4>
+                <ul>
+                    <li>First-order equations: Use "dy/dx = ..." format</li>
+                    <li>Second-order equations: Use "d2y/dx2 = ..." or "d2y/dx2 + a*dy/dx + b*y = ..." format</li>
+                    <li>Systems: Enter each equation separately as "dx/dt = ..." and "dy/dt = ..."</li>
+                    <li>Use standard mathematical notation: +, -, *, /, ^</li>
+                    <li>Functions: sin(), cos(), tan(), exp(), log(), sqrt()</li>
+                </ul>
+                
+                <h4>Initial Conditions</h4>
+                <ul>
+                    <li>First-order: Specify y(x₀) = y₀, e.g., "y(0) = 1"</li>
+                    <li>Second-order: Specify y(x₀) = y₀, y'(x₀) = y₁, e.g., "y(0) = 0, y'(0) = 1"</li>
+                    <li>Systems: Specify x(t₀) = x₀, y(t₀) = y₀, e.g., "x(0) = 0, y(0) = 1"</li>
+                </ul>
+                
+                <h4>Solution Methods</h4>
+                <ul>
+                    <li><strong>Analytical</strong>: Attempts to find an exact solution formula (only works for certain equation types)</li>
+                    <li><strong>Numerical</strong>: Uses Runge-Kutta methods to compute an approximate solution (works for almost any equation)</li>
+                </ul>
+                
+                <h4>Tips</h4>
+                <ul>
+                    <li>Use the preset buttons for quick access to common differential equations in astronomy</li>
+                    <li>Adjust the x-range to zoom in or out on specific regions of the solution</li>
+                    <li>For oscillatory systems, increase the number of points to get smoother curves</li>
+                    <li>Check the "Solution Info" section to see the steps used to solve the equation analytically</li>
+                    <li>Explore the "Astronomical Applications" tab to understand how these equations apply to real astronomical phenomena</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let equationType = "first-order";
+        let solutionMethod = "analytical";
+        let xMin = 0;
+        let xMax = 10;
+        let numPoints = 200;
+        let currentPlot = null;
+        
+        // Initialize the application
+        function init() {
+            // Set up event listeners
+            document.getElementById('equation-type').addEventListener('change', changeEquationType);
+            document.getElementById('solve-button').addEventListener('click', solveEquation);
+            document.getElementById('num-points').addEventListener('input', updateNumPoints);
+            document.getElementById('x-min').addEventListener('input', updateXRange);
+            document.getElementById('x-max').addEventListener('input', updateXRange);
+            
+            // Set up solution method radio buttons
+            document.querySelectorAll('input[name="solution-method"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    solutionMethod = this.value;
+                });
+            });
+            
+            // Set up preset buttons
+            document.querySelectorAll('.preset-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const type = this.getAttribute('data-type');
+                    const equation = this.getAttribute('data-equation');
+                    const initial = this.getAttribute('data-initial');
+                    const xrange = this.getAttribute('data-xrange').split(',');
+                    
+                    // Set equation type
+                    document.getElementById('equation-type').value = type;
+                    changeEquationType({ target: { value: type } });
+                    
+                    // Set equation and initial conditions
+                    if (type === "first-order") {
+                        document.getElementById('first-order-equation').value = equation;
+                        document.getElementById('first-order-initial-value').value = initial;
+                    } else if (type === "second-order") {
+                        document.getElementById('second-order-equation').value = equation;
+                        document.getElementById('second-order-initial-value').value = initial;
+                    } else if (type === "system") {
+                        const equations = equation.split(', ');
+                        if (equations.length === 1 && equation.includes(',')) {
+                            equations = equation.split(',');
+                        }
+                        document.getElementById('system-equation-x').value = equations[0] || "dx/dt = y";
+                        document.getElementById('system-equation-y').value = equations[1] || "dy/dt = -x";
+                        document.getElementById('system-initial-value').value = initial;
+                    }
+                    
+                    // Set x-range
+                    document.getElementById('x-min').value = parseFloat(xrange[0]);
+                    document.getElementById('x-max').value = parseFloat(xrange[1]);
+                    updateXRange();
+                    
+                    // Update astronomical example based on selected preset
+                    updateAstronomicalExample(type, equation);
+                    
+                    // Solve the equation
+                    solveEquation();
+                });
+            });
+            
+            // Set up tab switching
+            setupTabs();
+            
+            // Initial equation solving
+            solveEquation();
+        }
+        
+        // Change equation type
+        function changeEquationType(event) {
+            equationType = event.target ? event.target.value : event;
+            
+            // Hide all input forms
+            document.getElementById('first-order-input').style.display = 'none';
+            document.getElementById('second-order-input').style.display = 'none';
+            document.getElementById('system-input').style.display = 'none';
+            document.getElementById('first-order-initial').style.display = 'none';
+            document.getElementById('second-order-initial').style.display = 'none';
+            document.getElementById('system-initial').style.display = 'none';
+            
+            // Show the selected input form
+            if (equationType === "first-order") {
+                document.getElementById('first-order-input').style.display = 'block';
+                document.getElementById('first-order-initial').style.display = 'block';
+            } else if (equationType === "second-order") {
+                document.getElementById('second-order-input').style.display = 'block';
+                document.getElementById('second-order-initial').style.display = 'block';
+            } else if (equationType === "system") {
+                document.getElementById('system-input').style.display = 'block';
+                document.getElementById('system-initial').style.display = 'block';
+            }
+        }
+        
+        // Update astronomical example based on equation
+        function updateAstronomicalExample(type, equation) {
+            const exampleDiv = document.getElementById('astronomical-example');
+            
+            // Default example
+            let title = "Astronomical Application: Radioactive Decay in Stellar Nucleosynthesis";
+            let description = `
+                <p>Radioactive decay follows the differential equation dN/dt = -λN, where N is the number of radioactive nuclei and λ is the decay constant.</p>
+                <p>The solution is N(t) = N₀e^(-λt), where N₀ is the initial number of nuclei.</p>
+                <p>This equation is crucial for understanding nucleosynthesis in stars and supernovae, as well as for dating astronomical objects using radioactive isotopes.</p>
+                <p>Try the "Radioactive Decay" preset to explore this application!</p>
+            `;
+            
+            // Customize based on equation type and content
+            if (type === "first-order" && equation.includes("x*y")) {
+                title = "Astronomical Application: Exponential Growth in Astrophysical Instabilities";
+                description = `
+                    <p>The differential equation dy/dx = x·y describes exponential growth with a variable rate.</p>
+                    <p>The solution is y = Ce^(x²/2), where C is determined by the initial condition.</p>
+                    <p>This type of growth appears in various astrophysical instabilities, such as the growth of density perturbations in the early universe that led to galaxy formation.</p>
+                    <p>The variable rate factor (x) can represent how certain instabilities become more pronounced over time or distance.</p>
+                `;
+            } else if (type === "first-order" && equation.includes("-0.1*y")) {
+                title = "Astronomical Application: Radioactive Decay in Stellar Nucleosynthesis";
+                description = `
+                    <p>The differential equation dy/dx = -0.1·y describes exponential decay with a decay constant λ = 0.1.</p>
+                    <p>The solution is y = y₀e^(-0.1x), where y₀ is the initial value.</p>
+                    <p>This equation models radioactive decay of isotopes created in stellar nucleosynthesis. For example, the decay of nickel-56 (half-life ≈ 6 days) to cobalt-56 in supernova remnants produces the light curves we observe.</p>
+                    <p>By measuring the decay rate, astronomers can determine the age of astronomical objects and understand the nuclear processes in stars.</p>
+                `;
+            } else if (type === "second-order" && equation.includes("d2y/dx2 + y = 0")) {
+                title = "Astronomical Application: Simple Harmonic Motion in Stellar Oscillations";
+                description = `
+                    <p>The differential equation d²y/dx² + y = 0 describes simple harmonic motion.</p>
+                    <p>The solution is y = A·cos(x) + B·sin(x), where A and B depend on initial conditions.</p>
+                    <p>This equation models various oscillatory phenomena in astronomy, including:</p>
+                    <ul>
+                        <li>Stellar pulsations in variable stars like Cepheids and RR Lyrae</li>
+                        <li>Small oscillations in planetary orbits</li>
+                        <li>Waves in stellar atmospheres</li>
+                    </ul>
+                    <p>By analyzing these oscillations, astronomers can infer the internal structure of stars through asteroseismology.</p>
+                `;
+            } else if (type === "second-order" && equation.includes("0.2*dy/dx")) {
+                title = "Astronomical Application: Damped Oscillations in Stellar Systems";
+                description = `
+                    <p>The differential equation d²y/dx² + 0.2·dy/dx + y = 0 describes a damped harmonic oscillator.</p>
+                    <p>The solution shows oscillations with gradually decreasing amplitude due to energy dissipation.</p>
+                    <p>In astronomy, this equation models:</p>
+                    <ul>
+                        <li>Damping of stellar pulsations due to viscosity and radiation</li>
+                        <li>Decay of orbital eccentricity due to tidal forces</li>
+                        <li>Damping of waves in the interstellar medium</li>
+                    </ul>
+                    <p>The damping coefficient (0.2 in this case) determines how quickly the oscillations die out.</p>
+                `;
+            } else if (type === "second-order" && equation.includes("cos(x)")) {
+                title = "Astronomical Application: Forced Oscillations in Astronomical Systems";
+                description = `
+                    <p>The differential equation d²y/dx² + 0.1·dy/dx + y = cos(x) describes a forced oscillator with damping.</p>
+                    <p>The solution shows how the system responds to an external periodic force.</p>
+                    <p>In astronomy, this equation models:</p>
+                    <ul>
+                        <li>Tidal forcing of planetary or satellite oscillations</li>
+                        <li>Stellar pulsations driven by periodic heating mechanisms</li>
+                        <li>Forced oscillations in accretion disks due to companion objects</li>
+                    </ul>
+                    <p>Resonance occurs when the forcing frequency matches the natural frequency of the system, leading to large amplitude oscillations.</p>
+                `;
+            } else if (type === "system" && equation.includes("dx/dt = y") && equation.includes("dy/dt = -x")) {
+                title = "Astronomical Application: Circular Orbits in Two-Body Systems";
+                description = `
+                    <p>The system of equations dx/dt = y, dy/dt = -x describes circular motion.</p>
+                    <p>The solution traces a circle in the phase plane, representing periodic motion with constant amplitude.</p>
+                    <p>This system models:</p>
+                    <ul>
+                        <li>Circular orbits in two-body gravitational systems</li>
+                        <li>The motion of charged particles in uniform magnetic fields</li>
+                        <li>Simplified models of stellar binary systems</li>
+                    </ul>
+                    <p>The conservation of energy and angular momentum in this system reflects fundamental conservation laws in astronomy.</p>
+                `;
+            } else if (type === "system" && equation.includes("0.1*y")) {
+                title = "Astronomical Application: Spiral Orbits and Orbital Decay";
+                description = `
+                    <p>The system of equations dx/dt = y, dy/dt = -x - 0.1·y describes a damped oscillatory system.</p>
+                    <p>The solution traces a spiral in the phase plane, representing orbital decay or inspiral.</p>
+                    <p>This system models:</p>
+                    <ul>
+                        <li>Orbital decay due to gravitational radiation in binary systems</li>
+                        <li>Inspiral of satellites due to atmospheric drag</li>
+                        <li>Decay of planetary orbits due to tidal interactions</li>
+                    </ul>
+                    <p>The damping term (-0.1·y) represents energy loss from the system, causing the orbit to gradually spiral inward.</p>
+                `;
+            }
+            
+            exampleDiv.innerHTML = `<h3>${title}</h3>${description}`;
+        }
+        
+        // Update the number of points from the slider
+        function updateNumPoints() {
+            numPoints = parseInt(document.getElementById('num-points').value);
+            document.getElementById('num-points-display').textContent = numPoints;
+        }
+        
+        // Update the x-range
+        function updateXRange() {
+            xMin = parseFloat(document.getElementById('x-min').value);
+            xMax = parseFloat(document.getElementById('x-max').value);
+            
+            // Ensure xMax is greater than xMin
+            if (xMin >= xMax) {
+                xMax = xMin + 1;
+                document.getElementById('x-max').value = xMax;
+            }
+        }
+        
+        // Solve the differential equation
+        function solveEquation() {
+            updateXRange();
+            updateNumPoints();
+            
+            let equation, initialConditions, solutionText, solutionInfoText;
+            
+            try {
+                if (equationType === "first-order") {
+                    equation = document.getElementById('first-order-equation').value;
+                    initialConditions = parseInitialConditions(document.getElementById('first-order-initial-value').value, "first-order");
+                    
+                    if (solutionMethod === "analytical") {
+                        const result = solveFirstOrderAnalytically(equation, initialConditions);
+                        solutionText = result.solution;
+                        solutionInfoText = result.steps;
+                    } else {
+                        const result = solveFirstOrderNumerically(equation, initialConditions);
+                        solutionText = "Numerical solution";
+                        solutionInfoText = `<p>Method: Fourth-order Runge-Kutta (RK4)</p><p>Number of points: ${numPoints}</p><p>Step size: ${((xMax - xMin) / numPoints).toFixed(6)}</p>`;
+                        plotNumericalSolution(result.x, result.y);
+                        return;
+                    }
+                } else if (equationType === "second-order") {
+                    equation = document.getElementById('second-order-equation').value;
+                    initialConditions = parseInitialConditions(document.getElementById('second-order-initial-value').value, "second-order");
+                    
+                    if (solutionMethod === "analytical") {
+                        const result = solveSecondOrderAnalytically(equation, initialConditions);
+                        solutionText = result.solution;
+                        solutionInfoText = result.steps;
+                    } else {
+                        const result = solveSecondOrderNumerically(equation, initialConditions);
+                        solutionText = "Numerical solution";
+                        solutionInfoText = `<p>Method: Fourth-order Runge-Kutta (RK4) for system of first-order equations</p><p>Number of points: ${numPoints}</p><p>Step size: ${((xMax - xMin) / numPoints).toFixed(6)}</p>`;
+                        plotNumericalSolution(result.x, result.y);
+                        return;
+                    }
+                } else if (equationType === "system") {
+                    const equationX = document.getElementById('system-equation-x').value;
+                    const equationY = document.getElementById('system-equation-y').value;
+                    equation = `${equationX}, ${equationY}`;
+                    initialConditions = parseInitialConditions(document.getElementById('system-initial-value').value, "system");
+                    
+                    // Systems are always solved numerically
+                    const result = solveSystemNumerically(equationX, equationY, initialConditions);
+                    solutionText = "Numerical solution";
+                    solutionInfoText = `<p>Method: Fourth-order Runge-Kutta (RK4) for system of first-order equations</p><p>Number of points: ${numPoints}</p><p>Step size: ${((xMax - xMin) / numPoints).toFixed(6)}</p>`;
+                    plotSystemSolution(result.t, result.x, result.y);
+                    return;
+                }
+                
+                // Update solution display
+                document.getElementById('solution-display').textContent = `Solution: ${solutionText}`;
+                document.getElementById('solution-info').innerHTML = solutionInfoText;
+                
+                // Plot the solution
+                plotAnalyticalSolution(solutionText);
+                
+            } catch (err) {
+                console.error('Error solving equation:', err);
+                document.getElementById('solution-display').textContent = `Error: ${err.message}`;
+                document.getElementById('solution-info').innerHTML = '<p>Could not solve the equation. Please check your input and try again.</p>';
+            }
+        }
+        
+        // Parse initial conditions from string
+        function parseInitialConditions(initialString, type) {
+            try {
+                if (type === "first-order") {
+                    // Format: y(x0) = y0
+                    const match = initialString.match(/y\s*\(\s*([^)]+)\s*\)\s*=\s*([^,]+)/);
+                    if (match) {
+                        return {
+                            x0: parseFloat(match[1]),
+                            y0: parseFloat(match[2])
+                        };
+                    }
+                } else if (type === "second-order") {
+                    // Format: y(x0) = y0, y'(x0) = y1
+                    const matchY = initialString.match(/y\s*\(\s*([^)]+)\s*\)\s*=\s*([^,]+)/);
+                    const matchYPrime = initialString.match(/y'\s*\(\s*([^)]+)\s*\)\s*=\s*([^,]+)/);
+                    
+                    if (matchY && matchYPrime) {
+                        return {
+                            x0: parseFloat(matchY[1]),
+                            y0: parseFloat(matchY[2]),
+                            y1: parseFloat(matchYPrime[2])
+                        };
+                    }
+                } else if (type === "system") {
+                    // Format: x(t0) = x0, y(t0) = y0
+                    const matchX = initialString.match(/x\s*\(\s*([^)]+)\s*\)\s*=\s*([^,]+)/);
+                    const matchY = initialString.match(/y\s*\(\s*([^)]+)\s*\)\s*=\s*([^,]+)/);
+                    
+                    if (matchX && matchY) {
+                        return {
+                            t0: parseFloat(matchX[1]),
+                            x0: parseFloat(matchX[2]),
+                            y0: parseFloat(matchY[2])
+                        };
+                    }
+                }
+                
+                throw new Error("Could not parse initial conditions");
+            } catch (err) {
+                console.error('Error parsing initial conditions:', err);
+                throw new Error("Invalid initial conditions format");
+            }
+        }
+        
+        // Solve first-order ODE analytically
+        function solveFirstOrderAnalytically(equation, initialConditions) {
+            // This is a simplified implementation that handles only a few cases
+            // In a real application, this would be much more sophisticated
+            
+            // Extract the right-hand side of the equation
+            const rhsMatch = equation.match(/dy\/dx\s*=\s*(.*)/);
+            if (!rhsMatch) {
+                throw new Error("Invalid equation format");
+            }
+            
+            const rhs = rhsMatch[1].trim();
+            
+            // Check for specific patterns
+            if (rhs === "x*y") {
+                // Separable equation: dy/y = x dx
+                // Solution: y = C*e^(x²/2)
+                const C = initialConditions.y0 / Math.exp(Math.pow(initialConditions.x0, 2) / 2);
+                const solution = `${C.toFixed(4)}e^(x²/2)`;
+                
+                const steps = `
+                    <p>Method: Analytical solution (separable equation)</p>
+                    <p>Steps:</p>
+                    <div class="step-result">1. Separate variables: dy/y = x dx</div>
+                    <div class="step-result">2. Integrate both sides: ∫(dy/y) = ∫x dx</div>
+                    <div class="step-result">3. Evaluate integrals: ln|y| = x²/2 + C</div>
+                    <div class="step-result">4. Solve for y: y = Ce^(x²/2)</div>
+                    <div class="step-result">5. Apply initial condition y(${initialConditions.x0}) = ${initialConditions.y0}: C = ${C.toFixed(4)}</div>
+                    <div class="step-result">6. Final solution: y(x) = ${solution}</div>
+                `;
+                
+                return { solution, steps };
+            } else if (rhs.match(/-?\d*\.?\d*\s*\*?\s*y/)) {
+                // Linear equation: dy/dx = k*y
+                // Solution: y = C*e^(kx)
+                const kMatch = rhs.match(/([-+]?\d*\.?\d*)\s*\*?\s*y/);
+                const k = kMatch ? parseFloat(kMatch[1]) : 1;
+                
+                const C = initialConditions.y0 / Math.exp(k * initialConditions.x0);
+                const solution = `${C.toFixed(4)}e^(${k}x)`;
+                
+                const steps = `
+                    <p>Method: Analytical solution (linear first-order equation)</p>
+                    <p>Steps:</p>
+                    <div class="step-result">1. Identify the equation as dy/dx = ${k}y</div>
+                    <div class="step-result">2. This is a separable equation: dy/y = ${k} dx</div>
+                    <div class="step-result">3. Integrate both sides: ∫(dy/y) = ∫${k} dx</div>
+                    <div class="step-result">4. Evaluate integrals: ln|y| = ${k}x + C</div>
+                    <div class="step-result">5. Solve for y: y = Ce^(${k}x)</div>
+                    <div class="step-result">6. Apply initial condition y(${initialConditions.x0}) = ${initialConditions.y0}: C = ${C.toFixed(4)}</div>
+                    <div class="step-result">7. Final solution: y(x) = ${solution}</div>
+                `;
+                
+                return { solution, steps };
+            } else {
+                // Fall back to numerical solution
+                return solveFirstOrderNumerically(equation, initialConditions);
+            }
+        }
+        
+        // Solve first-order ODE numerically
+        function solveFirstOrderNumerically(equation, initialConditions) {
+            // Extract the right-hand side of the equation
+            const rhsMatch = equation.match(/dy\/dx\s*=\s*(.*)/);
+            if (!rhsMatch) {
+                throw new Error("Invalid equation format");
+            }
+            
+            const rhs = rhsMatch[1].trim();
+            
+            // Create a function from the right-hand side
+            const f = (x, y) => {
+                try {
+                    return math.evaluate(rhs, { x, y });
+                } catch (err) {
+                    throw new Error(`Error evaluating equation: ${err.message}`);
+                }
+            };
+            
+            // Implement fourth-order Runge-Kutta method
+            const x = [];
+            const y = [];
+            
+            let currentX = initialConditions.x0;
+            let currentY = initialConditions.y0;
+            
+            const h = (xMax - xMin) / numPoints;
+            
+            x.push(currentX);
+            y.push(currentY);
+            
+            for (let i = 1; i <= numPoints; i++) {
+                const k1 = h * f(currentX, currentY);
+                const k2 = h * f(currentX + h/2, currentY + k1/2);
+                const k3 = h * f(currentX + h/2, currentY + k2/2);
+                const k4 = h * f(currentX + h, currentY + k3);
+                
+                currentY += (k1 + 2*k2 + 2*k3 + k4) / 6;
+                currentX += h;
+                
+                x.push(currentX);
+                y.push(currentY);
+            }
+            
+            return { x, y };
+        }
+        
+        // Solve second-order ODE analytically
+        function solveSecondOrderAnalytically(equation, initialConditions) {
+            // This is a simplified implementation that handles only a few cases
+            
+            // Check for the form d2y/dx2 + a*dy/dx + b*y = f(x)
+            const match = equation.match(/d2y\/dx2\s*([+-]\s*\d*\.?\d*\s*\*?\s*dy\/dx)?\s*([+-]\s*\d*\.?\d*\s*\*?\s*y)?\s*=\s*(.*)/);
+            
+            if (!match) {
+                throw new Error("Invalid equation format");
+            }
+            
+            let a = 0;
+            if (match[1]) {
+                const aMatch = match[1].match(/([-+]?\d*\.?\d*)\s*\*?\s*dy\/dx/);
+                a = aMatch ? parseFloat(aMatch[1]) : (match[1].includes('+') ? 1 : -1);
+            }
+            
+            let b = 0;
+            if (match[2]) {
+                const bMatch = match[2].match(/([-+]?\d*\.?\d*)\s*\*?\s*y/);
+                b = bMatch ? parseFloat(bMatch[1]) : (match[2].includes('+') ? 1 : -1);
+            }
+            
+            const rhs = match[3].trim();
+            
+            // Handle homogeneous equation with constant coefficients
+            if (rhs === "0") {
+                // Characteristic equation: r^2 + a*r + b = 0
+                const discriminant = a*a - 4*b;
+                
+                let solution, steps;
+                
+                if (discriminant > 0) {
+                    // Real distinct roots
+                    const r1 = (-a + Math.sqrt(discriminant)) / 2;
+                    const r2 = (-a - Math.sqrt(discriminant)) / 2;
+                    
+                    // General solution: y = C1*e^(r1*x) + C2*e^(r2*x)
+                    // Apply initial conditions to find C1 and C2
+                    const x0 = initialConditions.x0;
+                    const y0 = initialConditions.y0;
+                    const y1 = initialConditions.y1;
+                    
+                    const e1 = Math.exp(r1 * x0);
+                    const e2 = Math.exp(r2 * x0);
+                    
+                    // y0 = C1*e1 + C2*e2
+                    // y1 = C1*r1*e1 + C2*r2*e2
+                    
+                    const C2 = (y1 - r1*y0) / (r2*e2 - r1*e1);
+                    const C1 = (y0 - C2*e2) / e1;
+                    
+                    solution = `${C1.toFixed(4)}e^(${r1.toFixed(4)}x) + ${C2.toFixed(4)}e^(${r2.toFixed(4)}x)`;
+                    
+                    steps = `
+                        <p>Method: Analytical solution (homogeneous linear second-order equation with constant coefficients)</p>
+                        <p>Steps:</p>
+                        <div class="step-result">1. Identify the equation as d²y/dx² + ${a}dy/dx + ${b}y = 0</div>
+                        <div class="step-result">2. Form the characteristic equation: r² + ${a}r + ${b} = 0</div>
+                        <div class="step-result">3. Calculate the discriminant: Δ = ${a}² - 4(${b}) = ${discriminant}</div>
+                        <div class="step-result">4. Since Δ > 0, the roots are real and distinct: r₁ = ${r1.toFixed(4)}, r₂ = ${r2.toFixed(4)}</div>
+                        <div class="step-result">5. General solution: y = C₁e^(${r1.toFixed(4)}x) + C₂e^(${r2.toFixed(4)}x)</div>
+                        <div class="step-result">6. Apply initial conditions y(${x0}) = ${y0}, y'(${x0}) = ${y1}</div>
+                        <div class="step-result">7. Solve for constants: C₁ = ${C1.toFixed(4)}, C₂ = ${C2.toFixed(4)}</div>
+                        <div class="step-result">8. Final solution: y(x) = ${solution}</div>
+                    `;
+                } else if (discriminant === 0) {
+                    // Repeated root
+                    const r = -a / 2;
+                    
+                    // General solution: y = (C1 + C2*x)*e^(r*x)
+                    // Apply initial conditions to find C1 and C2
+                    const x0 = initialConditions.x0;
+                    const y0 = initialConditions.y0;
+                    const y1 = initialConditions.y1;
+                    
+                    const e = Math.exp(r * x0);
+                    
+                    // y0 = (C1 + C2*x0)*e
+                    // y1 = (C2 + r*(C1 + C2*x0))*e
+                    
+                    const C1 = y0 / e - C2 * x0;
+                    const C2 = (y1 - r*y0) / e;
+                    
+                    solution = `(${C1.toFixed(4)} + ${C2.toFixed(4)}x)e^(${r.toFixed(4)}x)`;
+                    
+                    steps = `
+                        <p>Method: Analytical solution (homogeneous linear second-order equation with constant coefficients)</p>
+                        <p>Steps:</p>
+                        <div class="step-result">1. Identify the equation as d²y/dx² + ${a}dy/dx + ${b}y = 0</div>
+                        <div class="step-result">2. Form the characteristic equation: r² + ${a}r + ${b} = 0</div>
+                        <div class="step-result">3. Calculate the discriminant: Δ = ${a}² - 4(${b}) = ${discriminant}</div>
+                        <div class="step-result">4. Since Δ = 0, there is a repeated root: r = ${r.toFixed(4)}</div>
+                        <div class="step-result">5. General solution: y = (C₁ + C₂x)e^(${r.toFixed(4)}x)</div>
+                        <div class="step-result">6. Apply initial conditions y(${x0}) = ${y0}, y'(${x0}) = ${y1}</div>
+                        <div class="step-result">7. Solve for constants: C₁ = ${C1.toFixed(4)}, C₂ = ${C2.toFixed(4)}</div>
+                        <div class="step-result">8. Final solution: y(x) = ${solution}</div>
+                    `;
+                } else {
+                    // Complex conjugate roots
+                    const alpha = -a / 2;
+                    const beta = Math.sqrt(-discriminant) / 2;
+                    
+                    // General solution: y = e^(alpha*x)*(C1*cos(beta*x) + C2*sin(beta*x))
+                    // Apply initial conditions to find C1 and C2
+                    const x0 = initialConditions.x0;
+                    const y0 = initialConditions.y0;
+                    const y1 = initialConditions.y1;
+                    
+                    const e = Math.exp(alpha * x0);
+                    const cos = Math.cos(beta * x0);
+                    const sin = Math.sin(beta * x0);
+                    
+                    // y0 = e*(C1*cos + C2*sin)
+                    // y1 = e*((alpha*C1 - beta*C2)*cos + (alpha*C2 + beta*C1)*sin)
+                    
+                    const C1 = y0 / (e * cos);
+                    const C2 = (y1 - alpha*y0) / (beta * e * cos);
+                    
+                    solution = `e^(${alpha.toFixed(4)}x)(${C1.toFixed(4)}cos(${beta.toFixed(4)}x) + ${C2.toFixed(4)}sin(${beta.toFixed(4)}x))`;
+                    
+                    steps = `
+                        <p>Method: Analytical solution (homogeneous linear second-order equation with constant coefficients)</p>
+                        <p>Steps:</p>
+                        <div class="step-result">1. Identify the equation as d²y/dx² + ${a}dy/dx + ${b}y = 0</div>
+                        <div class="step-result">2. Form the characteristic equation: r² + ${a}r + ${b} = 0</div>
+                        <div class="step-result">3. Calculate the discriminant: Δ = ${a}² - 4(${b}) = ${discriminant}</div>
+                        <div class="step-result">4. Since Δ < 0, the roots are complex conjugates: r = ${alpha.toFixed(4)} ± ${beta.toFixed(4)}i</div>
+                        <div class="step-result">5. General solution: y = e^(${alpha.toFixed(4)}x)(C₁cos(${beta.toFixed(4)}x) + C₂sin(${beta.toFixed(4)}x))</div>
+                        <div class="step-result">6. Apply initial conditions y(${x0}) = ${y0}, y'(${x0}) = ${y1}</div>
+                        <div class="step-result">7. Solve for constants: C₁ = ${C1.toFixed(4)}, C₂ = ${C2.toFixed(4)}</div>
+                        <div class="step-result">8. Final solution: y(x) = ${solution}</div>
+                    `;
+                }
+                
+                return { solution, steps };
+            } else {
+                // Non-homogeneous equation - fall back to numerical solution
+                return { 
+                    solution: "Numerical solution required", 
+                    steps: "<p>This non-homogeneous equation requires numerical solution.</p>" 
+                };
+            }
+        }
+        
+        // Solve second-order ODE numerically
+        function solveSecondOrderNumerically(equation, initialConditions) {
+            // Convert to system of first-order equations
+            // Let y1 = y, y2 = y'
+            // Then y1' = y2, y2' = f(x, y1, y2)
+            
+            // Extract the right-hand side of the equation
+            const match = equation.match(/d2y\/dx2\s*([+-]\s*\d*\.?\d*\s*\*?\s*dy\/dx)?\s*([+-]\s*\d*\.?\d*\s*\*?\s*y)?\s*=\s*(.*)/);
+            
+            if (!match) {
+                throw new Error("Invalid equation format");
+            }
+            
+            let a = 0;
+            if (match[1]) {
+                const aMatch = match[1].match(/([-+]?\d*\.?\d*)\s*\*?\s*dy\/dx/);
+                a = aMatch ? parseFloat(aMatch[1]) : (match[1].includes('+') ? 1 : -1);
+            }
+            
+            let b = 0;
+            if (match[2]) {
+                const bMatch = match[2].match(/([-+]?\d*\.?\d*)\s*\*?\s*y/);
+                b = bMatch ? parseFloat(bMatch[1]) : (match[2].includes('+') ? 1 : -1);
+            }
+            
+            const rhs = match[3].trim();
+            
+            // Create functions for the system
+            const f1 = (x, y1, y2) => y2;
+            const f2 = (x, y1, y2) => {
+                try {
+                    // d2y/dx2 = -a*dy/dx - b*y + rhs
+                    // d2y/dx2 = -a*y2 - b*y1 + rhs
+                    return -a * y2 - b * y1 + math.evaluate(rhs, { x, y: y1, 'dy/dx': y2 });
+                } catch (err) {
+                    throw new Error(`Error evaluating equation: ${err.message}`);
+                }
+            };
+            
+            // Implement fourth-order Runge-Kutta method for the system
+            const x = [];
+            const y = [];
+            const yPrime = [];
+            
+            let currentX = initialConditions.x0;
+            let currentY1 = initialConditions.y0;
+            let currentY2 = initialConditions.y1;
+            
+            const h = (xMax - xMin) / numPoints;
+            
+            x.push(currentX);
+            y.push(currentY1);
+            yPrime.push(currentY2);
+            
+            for (let i = 1; i <= numPoints; i++) {
+                const k1_1 = h * f1(currentX, currentY1, currentY2);
+                const k1_2 = h * f2(currentX, currentY1, currentY2);
+                
+                const k2_1 = h * f1(currentX + h/2, currentY1 + k1_1/2, currentY2 + k1_2/2);
+                const k2_2 = h * f2(currentX + h/2, currentY1 + k1_1/2, currentY2 + k1_2/2);
+                
+                const k3_1 = h * f1(currentX + h/2, currentY1 + k2_1/2, currentY2 + k2_2/2);
+                const k3_2 = h * f2(currentX + h/2, currentY1 + k2_1/2, currentY2 + k2_2/2);
+                
+                const k4_1 = h * f1(currentX + h, currentY1 + k3_1, currentY2 + k3_2);
+                const k4_2 = h * f2(currentX + h, currentY1 + k3_1, currentY2 + k3_2);
+                
+                currentY1 += (k1_1 + 2*k2_1 + 2*k3_1 + k4_1) / 6;
+                currentY2 += (k1_2 + 2*k2_2 + 2*k3_2 + k4_2) / 6;
+                currentX += h;
+                
+                x.push(currentX);
+                y.push(currentY1);
+                yPrime.push(currentY2);
+            }
+            
+            return { x, y, yPrime };
+        }
+        
+        // Solve system of ODEs numerically
+        function solveSystemNumerically(equationX, equationY, initialConditions) {
+            // Extract the right-hand sides of the equations
+            const rhsXMatch = equationX.match(/dx\/dt\s*=\s*(.*)/);
+            const rhsYMatch = equationY.match(/dy\/dt\s*=\s*(.*)/);
+            
+            if (!rhsXMatch || !rhsYMatch) {
+                throw new Error("Invalid equation format");
+            }
+            
+            const rhsX = rhsXMatch[1].trim();
+            const rhsY = rhsYMatch[1].trim();
+            
+            // Create functions from the right-hand sides
+            const fx = (t, x, y) => {
+                try {
+                    return math.evaluate(rhsX, { t, x, y });
+                } catch (err) {
+                    throw new Error(`Error evaluating equation: ${err.message}`);
+                }
+            };
+            
+            const fy = (t, x, y) => {
+                try {
+                    return math.evaluate(rhsY, { t, x, y });
+                } catch (err) {
+                    throw new Error(`Error evaluating equation: ${err.message}`);
+                }
+            };
+            
+            // Implement fourth-order Runge-Kutta method
+            const t = [];
+            const x = [];
+            const y = [];
+            
+            let currentT = initialConditions.t0;
+            let currentX = initialConditions.x0;
+            let currentY = initialConditions.y0;
+            
+            const h = (xMax - xMin) / numPoints;
+            
+            t.push(currentT);
+            x.push(currentX);
+            y.push(currentY);
+            
+            for (let i = 1; i <= numPoints; i++) {
+                const k1_x = h * fx(currentT, currentX, currentY);
+                const k1_y = h * fy(currentT, currentX, currentY);
+                
+                const k2_x = h * fx(currentT + h/2, currentX + k1_x/2, currentY + k1_y/2);
+                const k2_y = h * fy(currentT + h/2, currentX + k1_x/2, currentY + k1_y/2);
+                
+                const k3_x = h * fx(currentT + h/2, currentX + k2_x/2, currentY + k2_y/2);
+                const k3_y = h * fy(currentT + h/2, currentX + k2_x/2, currentY + k2_y/2);
+                
+                const k4_x = h * fx(currentT + h, currentX + k3_x, currentY + k3_y);
+                const k4_y = h * fy(currentT + h, currentX + k3_x, currentY + k3_y);
+                
+                currentX += (k1_x + 2*k2_x + 2*k3_x + k4_x) / 6;
+                currentY += (k1_y + 2*k2_y + 2*k3_y + k4_y) / 6;
+                currentT += h;
+                
+                t.push(currentT);
+                x.push(currentX);
+                y.push(currentY);
+            }
+            
+            return { t, x, y };
+        }
+        
+        // Plot analytical solution
+        function plotAnalyticalSolution(solutionText) {
+            // Generate data points for the solution
+            const x = [];
+            const y = [];
+            
+            const step = (xMax - xMin) / numPoints;
+            
+            try {
+                // Convert solution text to a function
+                // This is a simplified approach and won't work for all solutions
+                let funcStr = solutionText
+                    .replace(/e\^/g, 'Math.exp(')
+                    .replace(/\^/g, '**')
+                    .replace(/cos/g, 'Math.cos')
+                    .replace(/sin/g, 'Math.sin')
+                    .replace(/\(/g, '*(')
+                    .replace(/x\*/g, 'x*');
+                
+                // Add closing parentheses for exp
+                const openCount = (funcStr.match(/Math.exp\(/g) || []).length;
+                const closeCount = (funcStr.match(/\)/g) || []).length;
+                for (let i = 0; i < openCount; i++) {
+                    funcStr += ')';
+                }
+                
+                // Create the function
+                const func = new Function('x', `return ${funcStr};`);
+                
+                // Generate data points
+                for (let i = 0; i <= numPoints; i++) {
+                    const xVal = xMin + i * step;
+                    x.push(xVal);
+                    
+                    try {
+                        const yVal = func(xVal);
+                        y.push(yVal);
+                    } catch (err) {
+                        y.push(null); // Handle errors in function evaluation
+                    }
+                }
+                
+                // Plot the solution
+                plotSolution(x, y);
+            } catch (err) {
+                console.error('Error plotting analytical solution:', err);
+                // Fall back to numerical solution
+                solveEquation();
+            }
+        }
+        
+        // Plot numerical solution
+        function plotNumericalSolution(x, y) {
+            plotSolution(x, y);
+        }
+        
+        // Plot system solution
+        function plotSystemSolution(t, x, y) {
+            // Create a 2D phase plot
+            const trace1 = {
+                x: x,
+                y: y,
+                mode: 'lines',
+                type: 'scatter',
+                name: 'Phase Trajectory',
+                line: {
+                    color: 'blue',
+                    width: 2
+                }
+            };
+            
+            const trace2 = {
+                x: [x[0]],
+                y: [y[0]],
+                mode: 'markers',
+                type: 'scatter',
+                name: 'Initial Point',
+                marker: {
+                    color: 'red',
+                    size: 10
+                }
+            };
+            
+            const layout = {
+                title: 'Phase Plane Plot',
+                xaxis: {
+                    title: 'x'
+                },
+                yaxis: {
+                    title: 'y'
+                },
+                showlegend: true
+            };
+            
+            const config = {
+                responsive: true
+            };
+            
+            Plotly.newPlot('visualization', [trace1, trace2], layout, config);
+            
+            // Also create time series plots
+            document.getElementById('solution-info').innerHTML += `
+                <div id="time-series-plot" style="width:100%;height:300px;margin-top:20px;"></div>
+            `;
+            
+            const traceX = {
+                x: t,
+                y: x,
+                mode: 'lines',
+                type: 'scatter',
+                name: 'x(t)',
+                line: {
+                    color: 'blue',
+                    width: 2
+                }
+            };
+            
+            const traceY = {
+                x: t,
+                y: y,
+                mode: 'lines',
+                type: 'scatter',
+                name: 'y(t)',
+                line: {
+                    color: 'red',
+                    width: 2
+                }
+            };
+            
+            const timeLayout = {
+                title: 'Time Series Plot',
+                xaxis: {
+                    title: 't'
+                },
+                yaxis: {
+                    title: 'Value'
+                },
+                showlegend: true
+            };
+            
+            Plotly.newPlot('time-series-plot', [traceX, traceY], timeLayout, config);
+        }
+        
+        // Plot solution
+        function plotSolution(x, y) {
+            const trace = {
+                x: x,
+                y: y,
+                mode: 'lines',
+                type: 'scatter',
+                line: {
+                    color: 'blue',
+                    width: 2
+                }
+            };
+            
+            const layout = {
+                title: 'Solution Plot',
+                xaxis: {
+                    title: 'x',
+                    range: [xMin, xMax]
+                },
+                yaxis: {
+                    title: 'y',
+                    autorange: true
+                }
+            };
+            
+            const config = {
+                responsive: true
+            };
+            
+            Plotly.newPlot('visualization', [trace], layout, config);
+        }
+        
+        // Tab switching functionality
+        function setupTabs() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons and content
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding content
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab') + '-tab';
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (currentPlot) {
+                Plotly.relayout('visualization', {
+                    width: document.getElementById('visualization').clientWidth,
+                    height: document.getElementById('visualization').clientHeight
+                });
+            }
+        });
+        
+        // Initialize when the page loads
+        window.onload = init;
+    </script>
+</body>
+</html>
