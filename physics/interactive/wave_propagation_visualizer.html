@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wave Propagation Visualizer - AstroCourse</title>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@11.0.0/lib/browser/math.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --background-color: #f9f9f9;
+            --text-color: #333;
+            --border-color: #ddd;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .visualization-container {
+            padding: 20px;
+            min-height: 500px;
+            position: relative;
+        }
+
+        #visualization-canvas {
+            width: 100%;
+            height: 500px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .controls-container {
+            padding: 20px;
+            background-color: #f5f5f5;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .control-item {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        select, input, button {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        input[type="range"] {
+            padding: 0;
+        }
+
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .preset-button {
+            flex: 1;
+            min-width: 150px;
+            padding: 8px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+
+        .preset-button:hover {
+            background-color: #34495e;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            background-color: #f5f5f5;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            background-color: #f5f5f5;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background-color: white;
+            border-bottom: 3px solid var(--secondary-color);
+            color: var(--secondary-color);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .info-section {
+            margin-bottom: 20px;
+        }
+
+        .info-section h3 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+
+        .info-section p {
+            margin-bottom: 15px;
+        }
+
+        .info-section ul, .info-section ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .info-section li {
+            margin-bottom: 5px;
+        }
+
+        .equation {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-left: 3px solid var(--secondary-color);
+            margin: 15px 0;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: auto;
+        }
+
+        .data-display {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .data-label {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .data-value {
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            display: none;
+        }
+
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--secondary-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .wave-parameter {
+            margin-top: 10px;
+        }
+
+        .parameter-value {
+            display: inline-block;
+            width: 50px;
+            text-align: center;
+        }
+
+        .responsive-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            overflow-x: auto;
+            display: block;
+        }
+
+        .responsive-table th, .responsive-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border: 1px solid var(--border-color);
+        }
+
+        .responsive-table th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .responsive-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        @media (max-width: 768px) {
+            .control-item {
+                min-width: 100%;
+            }
+            
+            .preset-button {
+                min-width: 100%;
+            }
+            
+            .tab {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+        }
+
+        .footnote {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Wave Propagation Visualizer</h1>
+            <div class="subtitle">Explore wave phenomena in physics and astronomy</div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="visualizer">Visualizer</button>
+            <button class="tab" data-tab="wave-basics">Wave Basics</button>
+            <button class="tab" data-tab="wave-types">Wave Types</button>
+            <button class="tab" data-tab="astronomy-applications">Astronomy Applications</button>
+            <button class="tab" data-tab="advanced-topics">Advanced Topics</button>
+        </div>
+
+        <div class="tab-content active" id="visualizer">
+            <div class="main-content">
+                <div class="visualization-container">
+                    <div id="visualization-canvas"></div>
+                    <div class="loading-overlay">
+                        <div class="spinner"></div>
+                    </div>
+                    <div class="data-display">
+                        <div class="data-row">
+                            <span class="data-label">Wave Type:</span>
+                            <span class="data-value" id="wave-type-display">Mechanical Wave</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Wavelength (λ):</span>
+                            <span class="data-value" id="wavelength-display">1.0 m</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Frequency (f):</span>
+                            <span class="data-value" id="frequency-display">1.0 Hz</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Wave Speed (v):</span>
+                            <span class="data-value" id="speed-display">1.0 m/s</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Amplitude (A):</span>
+                            <span class="data-value" id="amplitude-display">1.0 m</span>
+                        </div>
+                        <div class="data-row" id="medium-density-row">
+                            <span class="data-label">Medium Density:</span>
+                            <span class="data-value" id="medium-density-display">1.0 kg/m³</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="controls-container">
+                    <div class="control-group">
+                        <div class="control-row">
+                            <div class="control-item">
+                                <label for="wave-type">Wave Type</label>
+                                <select id="wave-type">
+                                    <option value="mechanical">Mechanical Wave</option>
+                                    <option value="electromagnetic">Electromagnetic Wave</option>
+                                    <option value="matter">Matter Wave</option>
+                                    <option value="gravitational">Gravitational Wave</option>
+                                </select>
+                            </div>
+                            <div class="control-item">
+                                <label for="visualization-mode">Visualization Mode</label>
+                                <select id="visualization-mode">
+                                    <option value="1d">1D Wave</option>
+                                    <option value="2d">2D Wave (Surface)</option>
+                                    <option value="3d">3D Wave Propagation</option>
+                                    <option value="particles">Particle Motion</option>
+                                </select>
+                            </div>
+                            <div class="control-item">
+                                <label for="wave-pattern">Wave Pattern</label>
+                                <select id="wave-pattern">
+                                    <option value="sine">Sine Wave</option>
+                                    <option value="square">Square Wave</option>
+                                    <option value="sawtooth">Sawtooth Wave</option>
+                                    <option value="triangular">Triangular Wave</option>
+                                    <option value="gaussian">Gaussian Pulse</option>
+                                    <option value="custom">Custom Superposition</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="control-row">
+                            <div class="control-item">
+                                <label for="amplitude">Amplitude <span id="amplitude-value">1.0</span></label>
+                                <input type="range" id="amplitude" min="0.1" max="2" step="0.1" value="1.0">
+                            </div>
+                            <div class="control-item">
+                                <label for="wavelength">Wavelength <span id="wavelength-value">1.0</span></label>
+                                <input type="range" id="wavelength" min="0.1" max="5" step="0.1" value="1.0">
+                            </div>
+                            <div class="control-item">
+                                <label for="frequency">Frequency <span id="frequency-value">1.0</span> Hz</label>
+                                <input type="range" id="frequency" min="0.1" max="5" step="0.1" value="1.0">
+                            </div>
+                        </div>
+
+                        <div class="control-row">
+                            <div class="control-item">
+                                <label for="medium-density">Medium Density <span id="medium-density-value">1.0</span> kg/m³</label>
+                                <input type="range" id="medium-density" min="0.1" max="10" step="0.1" value="1.0">
+                            </div>
+                            <div class="control-item">
+                                <label for="damping">Damping <span id="damping-value">0.0</span></label>
+                                <input type="range" id="damping" min="0" max="1" step="0.01" value="0">
+                            </div>
+                            <div class="control-item">
+                                <label for="boundary">Boundary Conditions</label>
+                                <select id="boundary">
+                                    <option value="open">Open (Free)</option>
+                                    <option value="fixed">Fixed Ends</option>
+                                    <option value="periodic">Periodic</option>
+                                    <option value="reflective">Reflective</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="control-row">
+                            <div class="control-item">
+                                <button id="play-pause">Pause</button>
+                            </div>
+                            <div class="control-item">
+                                <button id="reset">Reset</button>
+                            </div>
+                            <div class="control-item">
+                                <button id="add-source">Add Secondary Source</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Astronomical Presets</label>
+                        <div class="preset-buttons">
+                            <button class="preset-button" data-preset="sound-waves">Sound Waves in Stellar Interior</button>
+                            <button class="preset-button" data-preset="solar-seismic">Solar Seismic Waves</button>
+                            <button class="preset-button" data-preset="radio-waves">Radio Waves from Pulsar</button>
+                            <button class="preset-button" data-preset="light-waves">Light Waves through Interstellar Medium</button>
+                            <button class="preset-button" data-preset="gravitational-waves">Gravitational Waves from Binary System</button>
+                            <button class="preset-button" data-preset="shock-waves">Supernova Shock Waves</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="wave-basics">
+            <div class="info-section">
+                <h3>Fundamental Wave Properties</h3>
+                <p>Waves are disturbances that transfer energy through matter or space. Unlike particles, waves can travel through a medium without causing any permanent displacement of the medium itself. Understanding waves is crucial for many astronomical phenomena, from light and radio waves to gravitational waves and stellar oscillations.</p>
+                
+                <h4>Key Wave Parameters</h4>
+                <ul>
+                    <li><strong>Amplitude (A):</strong> The maximum displacement from equilibrium, determining the wave's energy and intensity.</li>
+                    <li><strong>Wavelength (λ):</strong> The distance between consecutive corresponding points on the wave, such as from crest to crest.</li>
+                    <li><strong>Frequency (f):</strong> The number of complete oscillations per unit time, measured in hertz (Hz).</li>
+                    <li><strong>Period (T):</strong> The time required for one complete oscillation, T = 1/f.</li>
+                    <li><strong>Wave Speed (v):</strong> The rate at which the wave propagates through space, v = λf.</li>
+                    <li><strong>Phase (φ):</strong> The position within a cycle of a waveform, measured as an angle in radians.</li>
+                </ul>
+
+                <div class="equation">
+                    y(x,t) = A sin(kx - ωt + φ)
+                </div>
+
+                <p>Where:</p>
+                <ul>
+                    <li>y is the displacement at position x and time t</li>
+                    <li>A is the amplitude</li>
+                    <li>k is the wave number (k = 2π/λ)</li>
+                    <li>ω is the angular frequency (ω = 2πf)</li>
+                    <li>φ is the phase constant</li>
+                </ul>
+            </div>
+
+            <div class="info-section">
+                <h3>Wave Behaviors</h3>
+                
+                <h4>Reflection</h4>
+                <p>When a wave encounters a boundary between different media, part or all of the wave may bounce back. The angle of reflection equals the angle of incidence. Reflection is responsible for echoes, mirror images, and radar detection.</p>
+                
+                <h4>Refraction</h4>
+                <p>When a wave passes from one medium to another, it may change direction due to a change in wave speed. This bending of waves is described by Snell's Law:</p>
+                <div class="equation">
+                    n₁sin(θ₁) = n₂sin(θ₂)
+                </div>
+                <p>Refraction causes optical phenomena like mirages, gravitational lensing, and the twinkling of stars.</p>
+                
+                <h4>Diffraction</h4>
+                <p>The bending of waves around obstacles or through openings. Diffraction is most pronounced when the wavelength is comparable to the size of the obstacle or opening. It explains how waves can spread out after passing through a narrow gap and limits the resolution of optical instruments.</p>
+                
+                <h4>Interference</h4>
+                <p>When two or more waves overlap, they combine through superposition:</p>
+                <ul>
+                    <li><strong>Constructive interference:</strong> Waves in phase add together, increasing amplitude</li>
+                    <li><strong>Destructive interference:</strong> Waves out of phase cancel each other, decreasing amplitude</li>
+                </ul>
+                <p>Interference creates patterns like those seen in double-slit experiments and is the basis for interferometry in astronomy.</p>
+                
+                <h4>Doppler Effect</h4>
+                <p>The change in observed frequency due to relative motion between source and observer:</p>
+                <div class="equation">
+                    f' = f(v ± v_observer)/(v ∓ v_source)
+                </div>
+                <p>The Doppler effect explains redshift and blueshift in astronomical observations, allowing measurements of radial velocities and cosmic expansion.</p>
+            </div>
+
+            <div class="info-section">
+                <h3>Wave Equations</h3>
+                <p>The general wave equation describes how waves propagate through space and time:</p>
+                <div class="equation">
+                    ∂²y/∂t² = v² ∂²y/∂x²
+                </div>
+                <p>For three-dimensional waves:</p>
+                <div class="equation">
+                    ∂²y/∂t² = v² ∇²y
+                </div>
+                <p>Where ∇² is the Laplacian operator.</p>
+                
+                <p>Solutions to the wave equation include:</p>
+                <ul>
+                    <li>Traveling waves: y(x,t) = f(x ± vt)</li>
+                    <li>Standing waves: y(x,t) = 2A sin(kx)cos(ωt)</li>
+                </ul>
+                
+                <p>Standing waves occur in bounded systems and have specific allowed frequencies (normal modes), which are important in understanding stellar oscillations and quantum mechanical systems.</p>
+            </div>
+        </div>
+
+        <div class="tab-content" id="wave-types">
+            <div class="info-section">
+                <h3>Mechanical Waves</h3>
+                <p>Mechanical waves require a medium for propagation and involve the oscillation of matter. They cannot travel through a vacuum.</p>
+                
+                <h4>Transverse Waves</h4>
+                <p>In transverse waves, the particles of the medium oscillate perpendicular to the direction of wave propagation. Examples include:</p>
+                <ul>
+                    <li>Waves on a string or rope</li>
+                    <li>Surface waves on water</li>
+                    <li>S-waves (secondary waves) in earthquakes</li>
+                    <li>Oscillations in stellar atmospheres</li>
+                </ul>
+                
+                <h4>Longitudinal Waves</h4>
+                <p>In longitudinal waves, particles oscillate parallel to the direction of wave propagation, creating compressions and rarefactions. Examples include:</p>
+                <ul>
+                    <li>Sound waves in air, liquids, and solids</li>
+                    <li>P-waves (primary waves) in earthquakes</li>
+                    <li>Acoustic waves in stellar interiors</li>
+                    <li>Pressure waves in interstellar gas</li>
+                </ul>
+                
+                <h4>Surface Waves</h4>
+                <p>Surface waves travel along the interface between different media and typically combine both transverse and longitudinal motion. Examples include:</p>
+                <ul>
+                    <li>Ocean waves</li>
+                    <li>Rayleigh waves in earthquakes</li>
+                    <li>Waves on the solar surface (solar tsunamis)</li>
+                </ul>
+            </div>
+
+            <div class="info-section">
+                <h3>Electromagnetic Waves</h3>
+                <p>Electromagnetic waves consist of oscillating electric and magnetic fields that propagate through space. They can travel through a vacuum and all move at the speed of light (c ≈ 3 × 10⁸ m/s) in vacuum.</p>
+                
+                <h4>The Electromagnetic Spectrum</h4>
+                <table class="responsive-table">
+                    <tr>
+                        <th>Type</th>
+                        <th>Wavelength Range</th>
+                        <th>Astronomical Sources</th>
+                        <th>Detection Methods</th>
+                    </tr>
+                    <tr>
+                        <td>Radio Waves</td>
+                        <td>1 mm - 100 km</td>
+                        <td>Pulsars, quasars, cosmic microwave background</td>
+                        <td>Radio telescopes, interferometers</td>
+                    </tr>
+                    <tr>
+                        <td>Microwaves</td>
+                        <td>1 mm - 1 m</td>
+                        <td>Cosmic microwave background, molecular clouds</td>
+                        <td>Microwave receivers, space observatories</td>
+                    </tr>
+                    <tr>
+                        <td>Infrared</td>
+                        <td>700 nm - 1 mm</td>
+                        <td>Cool stars, protoplanetary disks, dust clouds</td>
+                        <td>Infrared telescopes, space observatories</td>
+                    </tr>
+                    <tr>
+                        <td>Visible Light</td>
+                        <td>400 - 700 nm</td>
+                        <td>Stars, nebulae, galaxies</td>
+                        <td>Optical telescopes, CCDs</td>
+                    </tr>
+                    <tr>
+                        <td>Ultraviolet</td>
+                        <td>10 - 400 nm</td>
+                        <td>Hot stars, active galactic nuclei</td>
+                        <td>Space-based UV telescopes</td>
+                    </tr>
+                    <tr>
+                        <td>X-rays</td>
+                        <td>0.01 - 10 nm</td>
+                        <td>Neutron stars, black hole accretion disks</td>
+                        <td>X-ray telescopes in space</td>
+                    </tr>
+                    <tr>
+                        <td>Gamma Rays</td>
+                        <td>< 0.01 nm</td>
+                        <td>Supernovae, gamma-ray bursts, pulsars</td>
+                        <td>Gamma-ray detectors in space</td>
+                    </tr>
+                </table>
+                
+                <p>Electromagnetic waves are described by Maxwell's equations and propagate as transverse waves. The electric and magnetic fields oscillate perpendicular to each other and to the direction of propagation.</p>
+                
+                <h4>Wave-Particle Duality</h4>
+                <p>Electromagnetic radiation exhibits both wave-like and particle-like properties. The energy of a photon (the particle aspect) is related to its frequency by:</p>
+                <div class="equation">
+                    E = hf = hc/λ
+                </div>
+                <p>Where h is Planck's constant (6.626 × 10⁻³⁴ J·s).</p>
+            </div>
+
+            <div class="info-section">
+                <h3>Matter Waves</h3>
+                <p>According to quantum mechanics, particles like electrons, protons, and even entire atoms can exhibit wave-like properties. This wave-particle duality is described by the de Broglie wavelength:</p>
+                <div class="equation">
+                    λ = h/p = h/(mv)
+                </div>
+                <p>Where:</p>
+                <ul>
+                    <li>λ is the de Broglie wavelength</li>
+                    <li>h is Planck's constant</li>
+                    <li>p is the momentum</li>
+                    <li>m is the mass</li>
+                    <li>v is the velocity</li>
+                </ul>
+                
+                <p>Matter waves are described by the Schrödinger equation and are fundamental to understanding atomic structure, electron microscopy, and neutron diffraction. In astronomy, matter waves are relevant to:</p>
+                <ul>
+                    <li>Neutron star physics</li>
+                    <li>Degenerate matter in white dwarfs</li>
+                    <li>Bose-Einstein condensates in laboratory analogs of astronomical systems</li>
+                    <li>Dark matter wave properties in some theoretical models</li>
+                </ul>
+            </div>
+
+            <div class="info-section">
+                <h3>Gravitational Waves</h3>
+                <p>Gravitational waves are ripples in the fabric of spacetime caused by accelerating masses. Predicted by Einstein's general theory of relativity, they were first directly detected in 2015 by LIGO (Laser Interferometer Gravitational-Wave Observatory).</p>
+                
+                <p>Key properties of gravitational waves include:</p>
+                <ul>
+                    <li>They travel at the speed of light</li>
+                    <li>They stretch and compress space perpendicular to their direction of travel</li>
+                    <li>They are extremely weak, requiring extremely sensitive detectors</li>
+                    <li>They pass through matter with minimal interaction</li>
+                </ul>
+                
+                <p>Astronomical sources of gravitational waves include:</p>
+                <ul>
+                    <li>Merging black holes and neutron stars</li>
+                    <li>Supernovae with asymmetric explosions</li>
+                    <li>Rapidly rotating neutron stars with asymmetries</li>
+                    <li>The early universe (primordial gravitational waves)</li>
+                </ul>
+                
+                <p>Gravitational wave astronomy provides a new window into the universe, allowing us to observe phenomena that may be invisible in electromagnetic radiation.</p>
+            </div>
+        </div>
+
+        <div class="tab-content" id="astronomy-applications">
+            <div class="info-section">
+                <h3>Stellar Oscillations and Helioseismology</h3>
+                <p>Stars, including our Sun, oscillate with various wave modes that propagate through their interiors. These oscillations provide valuable information about stellar structure and properties.</p>
+                
+                <h4>Solar Oscillations</h4>
+                <p>The Sun oscillates in millions of different modes simultaneously, with periods around 5 minutes. These oscillations are caused by acoustic waves (p-modes) trapped in the solar interior. By analyzing these oscillations through helioseismology, astronomers can:</p>
+                <ul>
+                    <li>Determine the Sun's internal rotation profile</li>
+                    <li>Map the sound speed throughout the solar interior</li>
+                    <li>Measure the depth of the convection zone</li>
+                    <li>Detect large-scale flows and structures beneath the surface</li>
+                    <li>Study the solar dynamo that generates magnetic fields</li>
+                </ul>
+                
+                <h4>Asteroseismology</h4>
+                <p>The study of oscillations in other stars provides similar insights into stellar interiors. Different types of oscillation modes include:</p>
+                <ul>
+                    <li><strong>p-modes (pressure modes):</strong> Acoustic waves where pressure is the restoring force</li>
+                    <li><strong>g-modes (gravity modes):</strong> Internal gravity waves where buoyancy is the restoring force</li>
+                    <li><strong>f-modes (fundamental modes):</strong> Surface gravity waves</li>
+                </ul>
+                
+                <p>Missions like COROT, Kepler, and TESS have revolutionized asteroseismology by providing high-precision photometry that reveals stellar oscillations.</p>
+            </div>
+
+            <div class="info-section">
+                <h3>Electromagnetic Waves in Astronomy</h3>
+                <p>Electromagnetic waves are our primary source of information about the universe. Different wavelengths reveal different aspects of astronomical objects and processes.</p>
+                
+                <h4>Spectroscopy</h4>
+                <p>Analyzing the spectrum of electromagnetic radiation from astronomical sources reveals:</p>
+                <ul>
+                    <li>Chemical composition through absorption and emission lines</li>
+                    <li>Temperature from the continuum spectrum and line ratios</li>
+                    <li>Density from pressure-broadened spectral lines</li>
+                    <li>Magnetic field strength from Zeeman splitting</li>
+                    <li>Radial velocity from Doppler shifts</li>
+                    <li>Rotation rates from line broadening</li>
+                </ul>
+                
+                <h4>Cosmic Microwave Background (CMB)</h4>
+                <p>The CMB is thermal radiation left over from the early universe, with a nearly perfect blackbody spectrum at a temperature of 2.725 K. Tiny temperature fluctuations in the CMB (about 1 part in 100,000) reveal the seeds of cosmic structure and provide crucial information about the composition, geometry, and evolution of the universe.</p>
+                
+                <h4>Radio Astronomy</h4>
+                <p>Radio waves penetrate dust clouds that block visible light, revealing:</p>
+                <ul>
+                    <li>The structure of our galaxy and others</li>
+                    <li>Pulsars and their precise timing</li>
+                    <li>Active galactic nuclei and quasars</li>
+                    <li>Molecular clouds through spectral lines</li>
+                    <li>The cosmic microwave background</li>
+                </ul>
+                
+                <h4>Multi-Messenger Astronomy</h4>
+                <p>Combining electromagnetic observations with other messengers (gravitational waves, neutrinos, cosmic rays) provides a more complete picture of astronomical events. For example, the neutron star merger GW170817 was observed in gravitational waves, gamma rays, X-rays, ultraviolet, optical, infrared, and radio waves, revealing unprecedented details about the event.</p>
+            </div>
+
+            <div class="info-section">
+                <h3>Wave Phenomena in the Interstellar Medium</h3>
+                
+                <h4>Shock Waves</h4>
+                <p>Shock waves are abrupt, nearly discontinuous changes in the properties of a medium. In astronomy, they occur in:</p>
+                <ul>
+                    <li>Supernova explosions, creating expanding shells</li>
+                    <li>Stellar winds interacting with the interstellar medium</li>
+                    <li>Jets from young stars and active galactic nuclei</li>
+                    <li>Colliding galaxies and galaxy clusters</li>
+                </ul>
+                <p>Shock waves compress and heat the medium, triggering star formation and accelerating cosmic rays.</p>
+                
+                <h4>Magnetohydrodynamic (MHD) Waves</h4>
+                <p>The interstellar medium is a plasma permeated by magnetic fields, supporting various types of MHD waves:</p>
+                <ul>
+                    <li><strong>Alfvén waves:</strong> Transverse waves along magnetic field lines</li>
+                    <li><strong>Magnetosonic waves:</strong> Compressional waves that combine magnetic and acoustic effects</li>
+                    <li><strong>Slow and fast modes:</strong> Different propagation speeds depending on the relationship between magnetic and gas pressure</li>
+                </ul>
+                <p>These waves play important roles in heating the interstellar medium, transporting angular momentum in accretion disks, and accelerating solar and stellar winds.</p>
+                
+                <h4>Density Waves</h4>
+                <p>Spiral arms in galaxies can be explained as density waves—regions of compression that propagate through the galactic disk. As gas clouds pass through these density waves, they are compressed, triggering star formation. This explains why spiral arms appear bright with young stars despite the differential rotation of the galaxy that would otherwise wind them up.</p>
+            </div>
+
+            <div class="info-section">
+                <h3>Gravitational Wave Astronomy</h3>
+                <p>The detection of gravitational waves has opened a new window on the universe, allowing us to observe phenomena that may be invisible in electromagnetic radiation.</p>
+                
+                <h4>Sources and Detections</h4>
+                <p>Confirmed gravitational wave detections include:</p>
+                <ul>
+                    <li>Merging black hole binaries (first detection: GW150914)</li>
+                    <li>Merging neutron star binaries (GW170817, also observed electromagnetically)</li>
+                    <li>Mixed neutron star-black hole mergers</li>
+                </ul>
+                
+                <h4>Future Prospects</h4>
+                <p>Future gravitational wave observatories aim to detect:</p>
+                <ul>
+                    <li>Continuous waves from rotating neutron stars</li>
+                    <li>Stochastic gravitational wave background from the early universe</li>
+                    <li>Supermassive black hole mergers (with space-based detectors like LISA)</li>
+                    <li>Gravitational waves from supernovae</li>
+                </ul>
+                
+                <h4>Scientific Impact</h4>
+                <p>Gravitational wave astronomy provides unique insights into:</p>
+                <ul>
+                    <li>The properties of black holes and neutron stars</li>
+                    <li>The behavior of matter at nuclear densities</li>
+                    <li>The expansion rate of the universe (standard sirens)</li>
+                    <li>Tests of general relativity in strong gravity regimes</li>
+                    <li>The physics of the early universe</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="tab-content" id="advanced-topics">
+            <div class="info-section">
+                <h3>Wave Optics and Interferometry</h3>
+                <p>Wave optics considers the wave nature of light, explaining phenomena that geometric optics cannot, such as interference and diffraction. These principles are crucial for modern astronomical instrumentation.</p>
+                
+                <h4>Astronomical Interferometry</h4>
+                <p>Interferometry combines light from multiple telescopes to achieve the resolution of a much larger telescope. The angular resolution is determined by:</p>
+                <div class="equation">
+                    θ = λ/B
+                </div>
+                <p>Where B is the maximum separation (baseline) between telescopes.</p>
+                
+                <p>Major interferometric facilities include:</p>
+                <ul>
+                    <li>Very Large Array (VLA) and Very Long Baseline Array (VLBA) for radio waves</li>
+                    <li>Atacama Large Millimeter/submillimeter Array (ALMA) for millimeter waves</li>
+                    <li>Very Large Telescope Interferometer (VLTI) for infrared</li>
+                    <li>CHARA Array for optical interferometry</li>
+                </ul>
+                
+                <p>Interferometry has enabled groundbreaking observations such as:</p>
+                <ul>
+                    <li>Images of the supermassive black hole in M87 (Event Horizon Telescope)</li>
+                    <li>Direct detection of exoplanets and protoplanetary disks</li>
+                    <li>Precise measurements of stellar diameters and binary star orbits</li>
+                    <li>Mapping of radio emission from jets and active galactic nuclei</li>
+                </ul>
+            </div>
+
+            <div class="info-section">
+                <h3>Nonlinear Waves and Solitons</h3>
+                <p>Nonlinear waves occur when the principle of superposition no longer applies, leading to complex behaviors not seen in linear waves.</p>
+                
+                <h4>Solitons</h4>
+                <p>Solitons are localized wave packets that maintain their shape while propagating at constant velocity, even after colliding with other solitons. They arise from a balance between nonlinear and dispersive effects.</p>
+                
+                <p>Astronomical examples and applications include:</p>
+                <ul>
+                    <li>Pulsar emission mechanisms</li>
+                    <li>Nonlinear waves in accretion disks</li>
+                    <li>Solitons in Bose-Einstein condensates as analogs for cosmic structures</li>
+                    <li>Possible dark matter solitons in galactic halos</li>
+                    <li>Nonlinear waves in solar and stellar atmospheres</li>
+                </ul>
+                
+                <h4>Shock Waves in Astrophysics</h4>
+                <p>Shock waves are nonlinear waves characterized by abrupt changes in medium properties. They form when wave speed depends on amplitude, causing wave crests to catch up with troughs.</p>
+                
+                <p>Astrophysical shock waves include:</p>
+                <ul>
+                    <li>Supernova remnant shocks, accelerating cosmic rays</li>
+                    <li>Bow shocks around stars moving through the interstellar medium</li>
+                    <li>Accretion shocks in galaxy clusters</li>
+                    <li>Interplanetary shocks from coronal mass ejections</li>
+                </ul>
+            </div>
+
+            <div class="info-section">
+                <h3>Quantum Field Theory and Vacuum Fluctuations</h3>
+                <p>Quantum field theory describes particles as excitations of underlying quantum fields. Even in vacuum, these fields have zero-point energy, leading to vacuum fluctuations.</p>
+                
+                <h4>Vacuum Energy and the Casimir Effect</h4>
+                <p>Vacuum fluctuations create a pressure that can be observed in the Casimir effect, where two closely spaced conducting plates are pushed together. This demonstrates that vacuum is not empty but filled with virtual particles constantly appearing and disappearing.</p>
+                
+                <h4>Hawking Radiation</h4>
+                <p>Near a black hole's event horizon, vacuum fluctuations can lead to particle-antiparticle pairs where one falls into the black hole while the other escapes as Hawking radiation. This process causes black holes to slowly evaporate, connecting quantum mechanics, thermodynamics, and general relativity.</p>
+                
+                <h4>Cosmological Constant</h4>
+                <p>Vacuum energy may contribute to the cosmological constant and dark energy, driving the accelerated expansion of the universe. However, theoretical predictions for vacuum energy density exceed observational constraints by many orders of magnitude—one of the greatest unsolved problems in physics.</p>
+            </div>
+
+            <div class="info-section">
+                <h3>Relativistic Wave Phenomena</h3>
+                
+                <h4>Gravitational Lensing</h4>
+                <p>According to general relativity, mass curves spacetime, causing light to follow curved paths. This gravitational lensing can create multiple images, arcs, or Einstein rings of distant sources. Gravitational lensing provides:</p>
+                <ul>
+                    <li>Measurements of mass distributions in galaxies and clusters</li>
+                    <li>Magnification of distant sources, acting as a "cosmic telescope"</li>
+                    <li>Constraints on cosmological parameters</li>
+                    <li>Tests of general relativity</li>
+                </ul>
+                
+                <h4>Frame Dragging</h4>
+                <p>Rotating masses drag spacetime around them, affecting the propagation of waves. This frame-dragging effect has been measured by satellite experiments and influences:</p>
+                <ul>
+                    <li>Precession of orbits around rotating bodies</li>
+                    <li>Behavior of accretion disks around spinning black holes</li>
+                    <li>Propagation of gravitational waves from rotating sources</li>
+                </ul>
+                
+                <h4>Gravitational Wave Polarization</h4>
+                <p>Unlike electromagnetic waves, which have two polarization states, general relativity predicts that gravitational waves have two tensor polarization modes (plus and cross). Alternative theories of gravity predict additional polarization modes. Detecting these polarizations provides tests of gravitational theories.</p>
+            </div>
+        </div>
+
+        <div class="footnote">
+            <p>Wave Propagation Visualizer - Part of the AstroCourse Physics Module</p>
+        </div>
+    </div>
+
+    <script>
+        // Main application code
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching functionality
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // Update active tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Update active content
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === tabId) {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+
+            // Initialize visualization
+            let scene, camera, renderer, waveObject;
+            let isPlaying = true;
+            let waveType = 'mechanical';
+            let visualizationMode = '1d';
+            let wavePattern = 'sine';
+            let amplitude = 1.0;
+            let wavelength = 1.0;
+            let frequency = 1.0;
+            let mediumDensity = 1.0;
+            let damping = 0.0;
+            let boundary = 'open';
+            let clock = new THREE.Clock();
+            let additionalSources = [];
+
+            // Initialize visualization canvas
+            function initVisualization() {
+                const container = document.getElementById('visualization-canvas');
+                
+                // Create scene
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xf0f0f0);
+                
+                // Create camera
+                camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+                camera.position.set(0, 5, 10);
+                camera.lookAt(0, 0, 0);
+                
+                // Create renderer
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                container.innerHTML = '';
+                container.appendChild(renderer.domElement);
+                
+                // Add lights
+                const ambientLight = new THREE.AmbientLight(0x404040);
+                scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(1, 1, 1);
+                scene.add(directionalLight);
+                
+                // Add grid
+                const gridHelper = new THREE.GridHelper(20, 20);
+                scene.add(gridHelper);
+                
+                // Create wave object based on visualization mode
+                createWaveObject();
+                
+                // Start animation loop
+                animate();
+                
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    camera.aspect = container.clientWidth / container.clientHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(container.clientWidth, container.clientHeight);
+                });
+            }
+
+            // Create wave object based on current settings
+            function createWaveObject() {
+                // Remove existing wave object if any
+                if (waveObject) {
+                    scene.remove(waveObject);
+                }
+                
+                waveObject = new THREE.Group();
+                
+                if (visualizationMode === '1d') {
+                    create1DWave();
+                } else if (visualizationMode === '2d') {
+                    create2DWave();
+                } else if (visualizationMode === '3d') {
+                    create3DWave();
+                } else if (visualizationMode === 'particles') {
+                    createParticleSystem();
+                }
+                
+                scene.add(waveObject);
+            }
+
+            // Create 1D wave visualization
+            function create1DWave() {
+                const points = [];
+                const segments = 100;
+                const length = 20;
+                
+                for (let i = 0; i <= segments; i++) {
+                    const x = (i / segments) * length - length / 2;
+                    points.push(new THREE.Vector3(x, 0, 0));
+                }
+                
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const material = new THREE.LineBasicMaterial({ 
+                    color: getWaveColor(),
+                    linewidth: 2
+                });
+                
+                const line = new THREE.Line(geometry, material);
+                waveObject.add(line);
+                
+                // Add axis
+                const axisPoints = [
+                    new THREE.Vector3(-length/2, 0, 0),
+                    new THREE.Vector3(length/2, 0, 0)
+                ];
+                const axisGeometry = new THREE.BufferGeometry().setFromPoints(axisPoints);
+                const axisMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 1 });
+                const axis = new THREE.Line(axisGeometry, axisMaterial);
+                waveObject.add(axis);
+            }
+
+            // Create 2D wave visualization (surface)
+            function create2DWave() {
+                const size = 20;
+                const resolution = 50;
+                
+                const geometry = new THREE.PlaneGeometry(size, size, resolution, resolution);
+                const material = new THREE.MeshPhongMaterial({
+                    color: getWaveColor(),
+                    side: THREE.DoubleSide,
+                    wireframe: false,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const plane = new THREE.Mesh(geometry, material);
+                plane.rotation.x = -Math.PI / 2;
+                waveObject.add(plane);
+                
+                // Add wireframe
+                const wireframeMaterial = new THREE.MeshBasicMaterial({
+                    color: 0x000000,
+                    wireframe: true,
+                    transparent: true,
+                    opacity: 0.1
+                });
+                const wireframe = new THREE.Mesh(geometry.clone(), wireframeMaterial);
+                wireframe.rotation.x = -Math.PI / 2;
+                waveObject.add(wireframe);
+            }
+
+            // Create 3D wave propagation visualization
+            function create3DWave() {
+                // Create a sphere to represent the wave source
+                const sourceGeometry = new THREE.SphereGeometry(0.3, 32, 32);
+                const sourceMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 });
+                const source = new THREE.Mesh(sourceGeometry, sourceMaterial);
+                waveObject.add(source);
+                
+                // Create expanding spheres to represent wave fronts
+                const wavefronts = 5;
+                for (let i = 0; i < wavefronts; i++) {
+                    const radius = 1 + i * 2;
+                    const waveGeometry = new THREE.SphereGeometry(radius, 32, 32);
+                    const waveMaterial = new THREE.MeshBasicMaterial({
+                        color: getWaveColor(),
+                        transparent: true,
+                        opacity: 0.1,
+                        wireframe: true
+                    });
+                    const wave = new THREE.Mesh(waveGeometry, waveMaterial);
+                    waveObject.add(wave);
+                }
+            }
+
+            // Create particle system visualization
+            function createParticleSystem() {
+                const particleCount = 1000;
+                const particles = new THREE.BufferGeometry();
+                const positions = new Float32Array(particleCount * 3);
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const i3 = i * 3;
+                    positions[i3] = (Math.random() - 0.5) * 20;
+                    positions[i3 + 1] = 0;
+                    positions[i3 + 2] = (Math.random() - 0.5) * 20;
+                }
+                
+                particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                
+                const particleMaterial = new THREE.PointsMaterial({
+                    color: getWaveColor(),
+                    size: 0.1,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const particleSystem = new THREE.Points(particles, particleMaterial);
+                waveObject.add(particleSystem);
+            }
+
+            // Get color based on wave type
+            function getWaveColor() {
+                switch (waveType) {
+                    case 'mechanical': return 0x3498db;
+                    case 'electromagnetic': return 0xe74c3c;
+                    case 'matter': return 0x2ecc71;
+                    case 'gravitational': return 0x9b59b6;
+                    default: return 0x3498db;
+                }
+            }
+
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                if (isPlaying) {
+                    updateWave();
+                }
+                
+                renderer.render(scene, camera);
+            }
+
+            // Update wave based on current parameters
+            function updateWave() {
+                const time = clock.getElapsedTime();
+                
+                if (visualizationMode === '1d') {
+                    update1DWave(time);
+                } else if (visualizationMode === '2d') {
+                    update2DWave(time);
+                } else if (visualizationMode === '3d') {
+                    update3DWave(time);
+                } else if (visualizationMode === 'particles') {
+                    updateParticleSystem(time);
+                }
+            }
+
+            // Update 1D wave
+            function update1DWave(time) {
+                const line = waveObject.children[0];
+                const positions = line.geometry.attributes.position.array;
+                const segments = positions.length / 3;
+                const length = 20;
+                
+                for (let i = 0; i < segments; i++) {
+                    const x = (i / (segments - 1)) * length - length / 2;
+                    let y = 0;
+                    
+                    // Calculate wave height based on pattern
+                    if (wavePattern === 'sine') {
+                        y = amplitude * Math.sin(2 * Math.PI * (x / wavelength + frequency * time));
+                    } else if (wavePattern === 'square') {
+                        const phase = (x / wavelength + frequency * time) % 1;
+                        y = amplitude * (phase < 0.5 ? 1 : -1);
+                    } else if (wavePattern === 'sawtooth') {
+                        const phase = (x / wavelength + frequency * time) % 1;
+                        y = amplitude * (2 * phase - 1);
+                    } else if (wavePattern === 'triangular') {
+                        const phase = (x / wavelength + frequency * time) % 1;
+                        y = amplitude * (phase < 0.5 ? 4 * phase - 1 : 3 - 4 * phase);
+                    } else if (wavePattern === 'gaussian') {
+                        const center = (frequency * time) % 20 - 10;
+                        y = amplitude * Math.exp(-Math.pow(x - center, 2) / (2 * Math.pow(wavelength/2, 2)));
+                    } else if (wavePattern === 'custom') {
+                        // Superposition of multiple waves
+                        y = amplitude * Math.sin(2 * Math.PI * (x / wavelength + frequency * time));
+                        
+                        // Add contributions from additional sources
+                        for (const source of additionalSources) {
+                            y += source.amplitude * Math.sin(2 * Math.PI * (x / source.wavelength + source.frequency * time + source.phase));
+                        }
+                    }
+                    
+                    // Apply damping
+                    if (damping > 0) {
+                        const distanceFromCenter = Math.abs(x);
+                        y *= Math.exp(-damping * distanceFromCenter);
+                    }
+                    
+                    // Apply boundary conditions
+                    if (boundary === 'fixed' && (x <= -length/2 + 0.2 || x >= length/2 - 0.2)) {
+                        y = 0;
+                    }
+                    
+                    positions[i * 3 + 1] = y;
+                }
+                
+                line.geometry.attributes.position.needsUpdate = true;
+            }
+
+            // Update 2D wave
+            function update2DWave(time) {
+                const plane = waveObject.children[0];
+                const wireframe = waveObject.children[1];
+                const positions = plane.geometry.attributes.position.array;
+                const size = 20;
+                const resolution = Math.sqrt(positions.length / 3) - 1;
+                
+                for (let i = 0; i <= resolution; i++) {
+                    for (let j = 0; j <= resolution; j++) {
+                        const index = (i * (resolution + 1) + j) * 3;
+                        const x = positions[index] = (i / resolution) * size - size / 2;
+                        const z = positions[index + 2] = (j / resolution) * size - size / 2;
+                        let y = 0;
+                        
+                        const distance = Math.sqrt(x * x + z * z);
+                        
+                        // Calculate wave height based on pattern and distance from center
+                        if (wavePattern === 'sine') {
+                            y = amplitude * Math.sin(2 * Math.PI * (distance / wavelength - frequency * time));
+                        } else if (wavePattern === 'gaussian') {
+                            y = amplitude * Math.exp(-Math.pow(distance - frequency * time * 5, 2) / (2 * Math.pow(wavelength, 2)));
+                        } else if (wavePattern === 'custom') {
+                            // Interference pattern from multiple sources
+                            const center1 = { x: -5, z: -5 };
+                            const center2 = { x: 5, z: 5 };
+                            
+                            const distance1 = Math.sqrt(Math.pow(x - center1.x, 2) + Math.pow(z - center1.z, 2));
+                            const distance2 = Math.sqrt(Math.pow(x - center2.x, 2) + Math.pow(z - center2.z, 2));
+                            
+                            const wave1 = amplitude * Math.sin(2 * Math.PI * (distance1 / wavelength - frequency * time));
+                            const wave2 = amplitude * Math.sin(2 * Math.PI * (distance2 / wavelength - frequency * time));
+                            
+                            y = wave1 + wave2;
+                            
+                            // Add contributions from additional sources
+                            for (const source of additionalSources) {
+                                const sourceDistance = Math.sqrt(Math.pow(x - source.x, 2) + Math.pow(z - source.z, 2));
+                                y += source.amplitude * Math.sin(2 * Math.PI * (sourceDistance / source.wavelength - source.frequency * time));
+                            }
+                        } else {
+                            y = amplitude * Math.sin(2 * Math.PI * (distance / wavelength - frequency * time));
+                        }
+                        
+                        // Apply damping
+                        if (damping > 0) {
+                            y *= Math.exp(-damping * distance);
+                        }
+                        
+                        // Apply boundary conditions
+                        if (boundary === 'fixed' && distance >= size/2 - 1) {
+                            y = 0;
+                        }
+                        
+                        positions[index + 1] = y;
+                    }
+                }
+                
+                plane.geometry.attributes.position.needsUpdate = true;
+                
+                // Update wireframe to match
+                wireframe.geometry.attributes.position.array.set(positions);
+                wireframe.geometry.attributes.position.needsUpdate = true;
+            }
+
+            // Update 3D wave
+            function update3DWave(time) {
+                const wavefronts = waveObject.children.length - 1; // Subtract the source
+                
+                for (let i = 0; i < wavefronts; i++) {
+                    const wave = waveObject.children[i + 1];
+                    const baseRadius = 1 + i * 2;
+                    
+                    // Calculate radius based on time and wave parameters
+                    let radius = baseRadius;
+                    
+                    if (wavePattern === 'sine') {
+                        radius = baseRadius + amplitude * 0.2 * Math.sin(2 * Math.PI * frequency * time);
+                    } else if (wavePattern === 'gaussian') {
+                        const pulsePosition = (frequency * time) % 10;
+                        const distanceFromPulse = Math.abs(baseRadius - pulsePosition);
+                        radius = baseRadius + amplitude * Math.exp(-Math.pow(distanceFromPulse, 2) / (2 * Math.pow(wavelength/5, 2)));
+                    } else {
+                        radius = baseRadius + amplitude * 0.2 * Math.sin(2 * Math.PI * frequency * time);
+                    }
+                    
+                    // Apply damping
+                    if (damping > 0) {
+                        const scale = Math.exp(-damping * baseRadius / 5);
+                        wave.scale.set(scale, scale, scale);
+                    } else {
+                        wave.scale.set(1, 1, 1);
+                    }
+                    
+                    // Update radius
+                    wave.scale.multiplyScalar(radius / baseRadius);
+                    
+                    // Update opacity based on wave type
+                    if (waveType === 'electromagnetic') {
+                        wave.material.opacity = 0.1 + 0.1 * Math.sin(2 * Math.PI * frequency * time + i * Math.PI / wavefronts);
+                    } else if (waveType === 'gravitational') {
+                        // Alternating stretching and squeezing for gravitational waves
+                        wave.scale.x = radius / baseRadius * (1 + 0.2 * Math.sin(2 * Math.PI * frequency * time));
+                        wave.scale.z = radius / baseRadius * (1 - 0.2 * Math.sin(2 * Math.PI * frequency * time));
+                    }
+                }
+            }
+
+            // Update particle system
+            function updateParticleSystem(time) {
+                const particles = waveObject.children[0];
+                const positions = particles.geometry.attributes.position.array;
+                const particleCount = positions.length / 3;
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const i3 = i * 3;
+                    const x = positions[i3];
+                    const z = positions[i3 + 2];
+                    let y = 0;
+                    
+                    // Calculate particle height based on pattern
+                    if (wavePattern === 'sine') {
+                        const distance = Math.sqrt(x * x + z * z);
+                        y = amplitude * Math.sin(2 * Math.PI * (distance / wavelength - frequency * time));
+                    } else if (wavePattern === 'gaussian') {
+                        const distance = Math.sqrt(x * x + z * z);
+                        const pulsePosition = (frequency * time * 5) % 20;
+                        y = amplitude * Math.exp(-Math.pow(distance - pulsePosition, 2) / (2 * Math.pow(wavelength, 2)));
+                    } else if (wavePattern === 'custom') {
+                        // Longitudinal wave motion for particles
+                        const angle = Math.atan2(z, x);
+                        const distance = Math.sqrt(x * x + z * z);
+                        const radialDisplacement = amplitude * 0.5 * Math.sin(2 * Math.PI * (distance / wavelength - frequency * time));
+                        
+                        positions[i3] = (distance + radialDisplacement) * Math.cos(angle);
+                        positions[i3 + 2] = (distance + radialDisplacement) * Math.sin(angle);
+                        y = 0;
+                    } else {
+                        const distance = Math.sqrt(x * x + z * z);
+                        y = amplitude * Math.sin(2 * Math.PI * (distance / wavelength - frequency * time));
+                    }
+                    
+                    // Apply damping
+                    if (damping > 0) {
+                        const distance = Math.sqrt(x * x + z * z);
+                        y *= Math.exp(-damping * distance / 10);
+                    }
+                    
+                    positions[i3 + 1] = y;
+                }
+                
+                particles.geometry.attributes.position.needsUpdate = true;
+            }
+
+            // Initialize UI controls
+            function initControls() {
+                // Wave type selector
+                const waveTypeSelect = document.getElementById('wave-type');
+                waveTypeSelect.addEventListener('change', function() {
+                    waveType = this.value;
+                    updateDisplays();
+                    createWaveObject();
+                });
+                
+                // Visualization mode selector
+                const visualizationModeSelect = document.getElementById('visualization-mode');
+                visualizationModeSelect.addEventListener('change', function() {
+                    visualizationMode = this.value;
+                    createWaveObject();
+                });
+                
+                // Wave pattern selector
+                const wavePatternSelect = document.getElementById('wave-pattern');
+                wavePatternSelect.addEventListener('change', function() {
+                    wavePattern = this.value;
+                });
+                
+                // Amplitude slider
+                const amplitudeSlider = document.getElementById('amplitude');
+                const amplitudeValue = document.getElementById('amplitude-value');
+                amplitudeSlider.addEventListener('input', function() {
+                    amplitude = parseFloat(this.value);
+                    amplitudeValue.textContent = amplitude.toFixed(1);
+                    updateDisplays();
+                });
+                
+                // Wavelength slider
+                const wavelengthSlider = document.getElementById('wavelength');
+                const wavelengthValue = document.getElementById('wavelength-value');
+                wavelengthSlider.addEventListener('input', function() {
+                    wavelength = parseFloat(this.value);
+                    wavelengthValue.textContent = wavelength.toFixed(1);
+                    updateDisplays();
+                });
+                
+                // Frequency slider
+                const frequencySlider = document.getElementById('frequency');
+                const frequencyValue = document.getElementById('frequency-value');
+                frequencySlider.addEventListener('input', function() {
+                    frequency = parseFloat(this.value);
+                    frequencyValue.textContent = frequency.toFixed(1);
+                    updateDisplays();
+                });
+                
+                // Medium density slider
+                const mediumDensitySlider = document.getElementById('medium-density');
+                const mediumDensityValue = document.getElementById('medium-density-value');
+                mediumDensitySlider.addEventListener('input', function() {
+                    mediumDensity = parseFloat(this.value);
+                    mediumDensityValue.textContent = mediumDensity.toFixed(1);
+                    updateDisplays();
+                });
+                
+                // Damping slider
+                const dampingSlider = document.getElementById('damping');
+                const dampingValue = document.getElementById('damping-value');
+                dampingSlider.addEventListener('input', function() {
+                    damping = parseFloat(this.value);
+                    dampingValue.textContent = damping.toFixed(2);
+                });
+                
+                // Boundary conditions selector
+                const boundarySelect = document.getElementById('boundary');
+                boundarySelect.addEventListener('change', function() {
+                    boundary = this.value;
+                });
+                
+                // Play/pause button
+                const playPauseButton = document.getElementById('play-pause');
+                playPauseButton.addEventListener('click', function() {
+                    isPlaying = !isPlaying;
+                    this.textContent = isPlaying ? 'Pause' : 'Play';
+                });
+                
+                // Reset button
+                const resetButton = document.getElementById('reset');
+                resetButton.addEventListener('click', function() {
+                    clock = new THREE.Clock();
+                    additionalSources = [];
+                    createWaveObject();
+                });
+                
+                // Add secondary source button
+                const addSourceButton = document.getElementById('add-source');
+                addSourceButton.addEventListener('click', function() {
+                    if (wavePattern === 'custom') {
+                        const newSource = {
+                            amplitude: amplitude * 0.5,
+                            wavelength: wavelength * 1.5,
+                            frequency: frequency * 0.8,
+                            phase: Math.random() * Math.PI * 2,
+                            x: (Math.random() - 0.5) * 10,
+                            z: (Math.random() - 0.5) * 10
+                        };
+                        additionalSources.push(newSource);
+                    }
+                });
+                
+                // Preset buttons
+                const presetButtons = document.querySelectorAll('.preset-button');
+                presetButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const preset = this.getAttribute('data-preset');
+                        applyPreset(preset);
+                    });
+                });
+            }
+
+            // Apply preset configuration
+            function applyPreset(preset) {
+                // Reset additional sources
+                additionalSources = [];
+                
+                switch (preset) {
+                    case 'sound-waves':
+                        waveType = 'mechanical';
+                        visualizationMode = '1d';
+                        wavePattern = 'sine';
+                        amplitude = 1.0;
+                        wavelength = 2.0;
+                        frequency = 1.5;
+                        mediumDensity = 3.0;
+                        damping = 0.05;
+                        boundary = 'open';
+                        break;
+                        
+                    case 'solar-seismic':
+                        waveType = 'mechanical';
+                        visualizationMode = '2d';
+                        wavePattern = 'custom';
+                        amplitude = 0.8;
+                        wavelength = 1.2;
+                        frequency = 0.7;
+                        mediumDensity = 5.0;
+                        damping = 0.02;
+                        boundary = 'reflective';
+                        // Add multiple sources for interference pattern
+                        additionalSources = [
+                            {
+                                amplitude: 0.6,
+                                wavelength: 1.5,
+                                frequency: 0.8,
+                                phase: Math.PI / 3,
+                                x: 3,
+                                z: -2
+                            },
+                            {
+                                amplitude: 0.4,
+                                wavelength: 0.9,
+                                frequency: 1.2,
+                                phase: Math.PI / 6,
+                                x: -4,
+                                z: 1
+                            }
+                        ];
+                        break;
+                        
+                    case 'radio-waves':
+                        waveType = 'electromagnetic';
+                        visualizationMode = '3d';
+                        wavePattern = 'sine';
+                        amplitude = 1.2;
+                        wavelength = 0.8;
+                        frequency = 2.0;
+                        mediumDensity = 0.1;
+                        damping = 0.01;
+                        boundary = 'open';
+                        break;
+                        
+                    case 'light-waves':
+                        waveType = 'electromagnetic';
+                        visualizationMode = '1d';
+                        wavePattern = 'sine';
+                        amplitude = 0.7;
+                        wavelength = 0.3;
+                        frequency = 3.0;
+                        mediumDensity = 0.5;
+                        damping = 0.03;
+                        boundary = 'open';
+                        break;
+                        
+                    case 'gravitational-waves':
+                        waveType = 'gravitational';
+                        visualizationMode = '3d';
+                        wavePattern = 'sine';
+                        amplitude = 0.5;
+                        wavelength = 3.0;
+                        frequency = 0.3;
+                        mediumDensity = 0.1;
+                        damping = 0.01;
+                        boundary = 'open';
+                        break;
+                        
+                    case 'shock-waves':
+                        waveType = 'mechanical';
+                        visualizationMode = '2d';
+                        wavePattern = 'gaussian';
+                        amplitude = 1.5;
+                        wavelength = 0.5;
+                        frequency = 0.8;
+                        mediumDensity = 2.0;
+                        damping = 0.1;
+                        boundary = 'open';
+                        break;
+                }
+                
+                // Update UI controls to match preset
+                document.getElementById('wave-type').value = waveType;
+                document.getElementById('visualization-mode').value = visualizationMode;
+                document.getElementById('wave-pattern').value = wavePattern;
+                
+                document.getElementById('amplitude').value = amplitude;
+                document.getElementById('amplitude-value').textContent = amplitude.toFixed(1);
+                
+                document.getElementById('wavelength').value = wavelength;
+                document.getElementById('wavelength-value').textContent = wavelength.toFixed(1);
+                
+                document.getElementById('frequency').value = frequency;
+                document.getElementById('frequency-value').textContent = frequency.toFixed(1);
+                
+                document.getElementById('medium-density').value = mediumDensity;
+                document.getElementById('medium-density-value').textContent = mediumDensity.toFixed(1);
+                
+                document.getElementById('damping').value = damping;
+                document.getElementById('damping-value').textContent = damping.toFixed(2);
+                
+                document.getElementById('boundary').value = boundary;
+                
+                // Update displays
+                updateDisplays();
+                
+                // Recreate visualization
+                createWaveObject();
+            }
+
+            // Update information displays
+            function updateDisplays() {
+                document.getElementById('wave-type-display').textContent = getWaveTypeName();
+                document.getElementById('wavelength-display').textContent = wavelength.toFixed(1) + ' m';
+                document.getElementById('frequency-display').textContent = frequency.toFixed(1) + ' Hz';
+                document.getElementById('speed-display').textContent = (wavelength * frequency).toFixed(1) + ' m/s';
+                document.getElementById('amplitude-display').textContent = amplitude.toFixed(1) + ' m';
+                document.getElementById('medium-density-display').textContent = mediumDensity.toFixed(1) + ' kg/m³';
+                
+                // Show/hide medium density based on wave type
+                const mediumDensityRow = document.getElementById('medium-density-row');
+                mediumDensityRow.style.display = (waveType === 'electromagnetic' || waveType === 'gravitational') ? 'none' : 'flex';
+            }
+
+            // Get descriptive name for wave type
+            function getWaveTypeName() {
+                switch (waveType) {
+                    case 'mechanical': return 'Mechanical Wave';
+                    case 'electromagnetic': return 'Electromagnetic Wave';
+                    case 'matter': return 'Matter Wave';
+                    case 'gravitational': return 'Gravitational Wave';
+                    default: return 'Mechanical Wave';
+                }
+            }
+
+            // Initialize the application
+            initVisualization();
+            initControls();
+            updateDisplays();
+        });
+    </script>
+</body>
+</html>
