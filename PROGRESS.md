@@ -24,11 +24,20 @@
 - ✅ Created detailed lesson content for Section 1: Introduction to Calculus in Astronomy
 - ✅ Created detailed lesson content for Section 2: Limits and Continuity
 - ✅ Created detailed lesson content for Section 3: Differentiation
+- ✅ Created detailed lesson content for Section 4: Applications of Differentiation
+- ✅ Created detailed lesson content for Section 5: Integration
 - ✅ Implemented Derivative Explorer interactive element
   - Interactive visualization of derivatives with adjustable functions
   - Real-time display of function, derivative, tangent line, and secant lines
   - Preset functions for common mathematical expressions
   - Comprehensive information tabs on derivative concepts and astronomical applications
+- ✅ Implemented Integral Visualizer interactive element
+  - Interactive visualization of integrals as area under a curve
+  - Riemann sum approximation with adjustable number of rectangles
+  - Support for left, right, and midpoint Riemann sums
+  - Real-time calculation of exact integral and approximation error
+  - Preset examples of common integrals
+  - Astronomical applications tab with examples from astrophysics
 
 ## Known Issues/Challenges
 
@@ -44,8 +53,8 @@
    - ✅ Create module development plan (COMPLETED)
    - ✅ Create content for Sections 1-3 (COMPLETED)
    - ✅ Implement Derivative Explorer (COMPLETED)
-   - Create content for Sections 4-5 (Applications of Differentiation, Integration)
-   - Implement Integral Visualizer
+   - ✅ Create content for Sections 4-5 (Applications of Differentiation, Integration) (COMPLETED)
+   - ✅ Implement Integral Visualizer (COMPLETED)
    - Create content for Sections 6-7 (Applications of Integration, Differential Equations)
    - Implement Differential Equation Solver
    - Create content for Sections 8-10 (Vector Calculus, Series and Approximations, Summary)
@@ -62,7 +71,19 @@
 
 ## Recent Updates
 
-**March 22, 2025**
+**March 22, 2025 (Latest)**
+- Continued development of the Calculus module
+- Completed content for Sections 4-5:
+  - Section 4: Applications of Differentiation - Covering optimization problems, related rates, linear approximation, Mean Value Theorem, and L'Hôpital's rule with astronomical applications
+  - Section 5: Integration - Covering definite integrals, Fundamental Theorem of Calculus, integration techniques, improper integrals, and applications in astronomy
+- Implemented the Integral Visualizer interactive element with features for:
+  - Visualizing integrals as area under a curve
+  - Exploring Riemann sum approximations
+  - Demonstrating integration techniques
+  - Connecting integration concepts to astronomical applications
+- All components have been committed to the repository with detailed commit messages
+
+**March 22, 2025 (Earlier)**
 - Started development of the Calculus module
 - Created comprehensive module development plan with 10 content sections and 5 interactive elements
 - Completed content for the first three sections:
@@ -72,7 +93,7 @@
 - Implemented the Derivative Explorer interactive element
 - All components have been committed to the repository with detailed commit messages
 
-**March 22, 2025 (Earlier)**
+**March 22, 2025 (First Update)**
 - Completed and pushed all six sections of the Trigonometry and Geometry module content
 - Implemented and tested all five interactive elements:
   - Trigonometric Function Explorer
