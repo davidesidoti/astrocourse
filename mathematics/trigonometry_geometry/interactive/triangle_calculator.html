@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Triangle Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .control-panel {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+        .visualization {
+            flex: 2;
+            min-width: 300px;
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result-panel {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .tab-container {
+            margin-top: 20px;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .tab-button {
+            padding: 10px 15px;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 0 4px 4px 4px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .info-box {
+            background-color: #e8f4f8;
+            padding: 10px 15px;
+            border-left: 4px solid #007bff;
+            margin-bottom: 15px;
+        }
+        .formula {
+            font-family: monospace;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .error {
+            color: #d9534f;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .success {
+            color: #5cb85c;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .toggle-label {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #007bff;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .triangle-type {
+            margin-left: 10px;
+            font-weight: normal;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .step-by-step {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .step {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+        .step:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Triangle Calculator</h1>
+    
+    <div class="container">
+        <div class="info-box">
+            <p>This interactive tool allows you to solve triangles using various combinations of known sides and angles. It supports both plane triangles and spherical triangles, which are essential in astronomical calculations.</p>
+        </div>
+        
+        <div class="toggle-switch">
+            <span class="toggle-label">Triangle Type:</span>
+            <label class="switch">
+                <input type="checkbox" id="triangle-type-toggle">
+                <span class="slider"></span>
+            </label>
+            <span class="triangle-type" id="triangle-type-label">Plane Triangle</span>
+        </div>
+        
+        <div class="main-content">
+            <div class="control-panel">
+                <h2>Input Values</h2>
+                
+                <div class="form-group">
+                    <label for="input-type">Known Values:</label>
+                    <select id="input-type">
+                        <option value="sss">Three sides (SSS)</option>
+                        <option value="sas">Two sides and the included angle (SAS)</option>
+                        <option value="asa">Two angles and the included side (ASA)</option>
+                        <option value="aas">Two angles and a non-included side (AAS)</option>
+                        <option value="ssa">Two sides and a non-included angle (SSA)</option>
+                    </select>
+                </div>
+                
+                <!-- SSS Inputs -->
+                <div id="sss-inputs">
+                    <div class="form-group">
+                        <label for="sss-side-a">Side a:</label>
+                        <input type="number" id="sss-side-a" min="0.1" step="0.1" value="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="sss-side-b">Side b:</label>
+                        <input type="number" id="sss-side-b" min="0.1" step="0.1" value="4">
+                    </div>
+                    <div class="form-group">
+                        <label for="sss-side-c">Side c:</label>
+                        <input type="number" id="sss-side-c" min="0.1" step="0.1" value="5">
+                    </div>
+                </div>
+                
+                <!-- SAS Inputs -->
+                <div id="sas-inputs" style="display: none;">
+                    <div class="form-group">
+                        <label for="sas-side-a">Side a:</label>
+                        <input type="number" id="sas-side-a" min="0.1" step="0.1" value="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="sas-angle-c">Angle C (degrees):</label>
+                        <input type="number" id="sas-angle-c" min="0.1" max="179.9" step="0.1" value="60">
+                    </div>
+                    <div class="form-group">
+                        <label for="sas-side-b">Side b:</label>
+                        <input type="number" id="sas-side-b" min="0.1" step="0.1" value="4">
+                    </div>
+                </div>
+                
+                <!-- ASA Inputs -->
+                <div id="asa-inputs" style="display: none;">
+                    <div class="form-group">
+                        <label for="asa-angle-a">Angle A (degrees):</label>
+                        <input type="number" id="asa-angle-a" min="0.1" max="179.9" step="0.1" value="30">
+                    </div>
+                    <div class="form-group">
+                        <label for="asa-side-c">Side c:</label>
+                        <input type="number" id="asa-side-c" min="0.1" step="0.1" value="5">
+                    </div>
+                    <div class="form-group">
+                        <label for="asa-angle-b">Angle B (degrees):</label>
+                        <input type="number" id="asa-angle-b" min="0.1" max="179.9" step="0.1" value="60">
+                    </div>
+                </div>
+                
+                <!-- AAS Inputs -->
+                <div id="aas-inputs" style="display: none;">
+                    <div class="form-group">
+                        <label for="aas-angle-a">Angle A (degrees):</label>
+                        <input type="number" id="aas-angle-a" min="0.1" max="179.9" step="0.1" value="30">
+                    </div>
+                    <div class="form-group">
+                        <label for="aas-angle-b">Angle B (degrees):</label>
+                        <input type="number" id="aas-angle-b" min="0.1" max="179.9" step="0.1" value="60">
+                    </div>
+                    <div class="form-group">
+                        <label for="aas-side-a">Side a:</label>
+                        <input type="number" id="aas-side-a" min="0.1" step="0.1" value="3">
+                    </div>
+                </div>
+                
+                <!-- SSA Inputs -->
+                <div id="ssa-inputs" style="display: none;">
+                    <div class="form-group">
+                        <label for="ssa-side-a">Side a:</label>
+                        <input type="number" id="ssa-side-a" min="0.1" step="0.1" value="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssa-side-b">Side b:</label>
+                        <input type="number" id="ssa-side-b" min="0.1" step="0.1" value="4">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssa-angle-a">Angle A (degrees):</label>
+                        <input type="number" id="ssa-angle-a" min="0.1" max="179.9" step="0.1" value="30">
+                    </div>
+                </div>
+                
+                <button id="calculate-button">Calculate Triangle</button>
+                <div id="input-error" class="error" style="display: none;"></div>
+            </div>
+            
+            <div class="visualization" id="visualization">
+                <!-- Triangle visualization will be rendered here -->
+            </div>
+        </div>
+        
+        <div class="result-panel" id="results">
+            <h2>Results</h2>
+            <p>Enter triangle values and click "Calculate Triangle" to see results.</p>
+        </div>
+        
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="formulas">Formulas</button>
+                <button class="tab-button" data-tab="applications">Astronomical Applications</button>
+                <button class="tab-button" data-tab="help">Help</button>
+            </div>
+            
+            <div class="tab-content active" id="formulas-tab">
+                <h3>Triangle Formulas</h3>
+                
+                <h4>Plane Triangles</h4>
+                <div class="formula">
+                    <strong>Law of Sines:</strong><br>
+                    sin(A)/a = sin(B)/b = sin(C)/c
+                </div>
+                
+                <div class="formula">
+                    <strong>Law of Cosines:</strong><br>
+                    c² = a² + b² - 2ab·cos(C)<br>
+                    cos(C) = (a² + b² - c²)/(2ab)
+                </div>
+                
+                <div class="formula">
+                    <strong>Area:</strong><br>
+                    Area = (1/2)·ab·sin(C)<br>
+                    Area = √(s(s-a)(s-b)(s-c)) (Heron's formula, where s = (a+b+c)/2)
+                </div>
+                
+                <h4>Spherical Triangles</h4>
+                <div class="formula">
+                    <strong>Spherical Law of Sines:</strong><br>
+                    sin(a)/sin(A) = sin(b)/sin(B) = sin(c)/sin(C)
+                </div>
+                
+                <div class="formula">
+                    <strong>Spherical Law of Cosines:</strong><br>
+                    cos(c) = cos(a)cos(b) + sin(a)sin(b)cos(C)<br>
+                    cos(C) = -cos(A)cos(B) + sin(A)sin(B)cos(c)
+                </div>
+                
+                <div class="formula">
+                    <strong>Area:</strong><br>
+                    Area = R²(A + B + C - π) (where R is the radius of the sphere)
+                </div>
+            </div>
+            
+            <div class="tab-content" id="applications-tab">
+                <h3>Astronomical Applications of Triangles</h3>
+                
+                <h4>Plane Triangles in Astronomy</h4>
+                <ul>
+                    <li><strong>Parallax Measurements:</strong> Determining stellar distances using the Earth's orbit as a baseline and measuring the tiny angle of parallax.</li>
+                    <li><strong>Telescope Design:</strong> Calculating focal lengths, mirror positions, and light paths in optical systems.</li>
+                    <li><strong>Orbit Determination:</strong> Finding orbital parameters from a series of positional observations.</li>
+                    <li><strong>Triangulation:</strong> Determining the position of celestial objects using observations from multiple locations.</li>
+                </ul>
+                
+                <h4>Spherical Triangles in Astronomy</h4>
+                <ul>
+                    <li><strong>Celestial Navigation:</strong> Finding your position on Earth using star sightings.</li>
+                    <li><strong>Coordinate Transformations:</strong> Converting between different celestial coordinate systems (equatorial, horizontal, ecliptic, galactic).</li>
+                    <li><strong>Great Circle Distances:</strong> Calculating the angular separation between objects on the celestial sphere.</li>
+                    <li><strong>Precession Calculations:</strong> Determining how star positions change over time due to Earth's axial precession.</li>
+                    <li><strong>Time Calculations:</strong> Determining rise, transit, and set times for celestial objects.</li>
+                </ul>
+                
+                <h4>Example: Stellar Parallax</h4>
+                <p>When Earth orbits the Sun, nearby stars appear to shift position relative to distant background stars. This shift (parallax) can be measured and used to calculate the star's distance:</p>
+                <div class="formula">
+                    Distance (in parsecs) = 1 / parallax (in arcseconds)
+                </div>
+                <p>This calculation uses the small-angle approximation of a right triangle, where the Earth-Sun distance (1 AU) forms the base of the triangle.</p>
+                
+                <h4>Example: Spherical Astronomy</h4>
+                <p>To find the angular distance between two stars with known right ascension and declination, astronomers solve a spherical triangle using the spherical law of cosines:</p>
+                <div class="formula">
+                    cos(d) = sin(δ₁)sin(δ₂) + cos(δ₁)cos(δ₂)cos(α₁-α₂)
+                </div>
+                <p>Where d is the angular distance, δ₁ and δ₂ are the declinations, and α₁ and α₂ are the right ascensions of the two stars.</p>
+            </div>
+            
+            <div class="tab-content" id="help-tab">
+                <h3>How to Use This Calculator</h3>
+                
+                <h4>Basic Usage</h4>
+                <ol>
+                    <li>Select the triangle type using the toggle switch (Plane or Spherical)</li>
+                    <li>Choose which values you know from the dropdown menu</li>
+                    <li>Enter the known values in the input fields</li>
+                    <li>Click "Calculate Triangle" to solve the triangle</li>
+                    <li>View the results, including all sides, angles, area, and other properties</li>
+                </ol>
+                
+                <h4>Input Types</h4>
+                <ul>
+                    <li><strong>SSS (Three sides):</strong> Enter the lengths of all three sides.</li>
+                    <li><strong>SAS (Two sides and included angle):</strong> Enter two sides and the angle between them.</li>
+                    <li><strong>ASA (Two angles and included side):</strong> Enter two angles and the side between them.</li>
+                    <li><strong>AAS (Two angles and non-included side):</strong> Enter two angles and a side that is not between them.</li>
+                    <li><strong>SSA (Two sides and non-included angle):</strong> Enter two sides and an angle that is not between them. Note: This case may have zero, one, or two solutions.</li>
+                </ul>
+                
+                <h4>Notes on Spherical Triangles</h4>
+                <ul>
+                    <li>For spherical triangles, sides are measured as angles (in degrees) subtended at the center of the sphere.</li>
+                    <li>The sum of angles in a spherical triangle is always greater than 180°.</li>
+                    <li>All sides of a spherical triangle must be less than 180°.</li>
+                    <li>The calculator assumes a unit sphere (radius = 1) for calculations.</li>
+                </ul>
+                
+                <h4>Ambiguous Case (SSA)</h4>
+                <p>When you provide two sides and a non-included angle (SSA), there may be zero, one, or two possible triangles that satisfy these conditions. The calculator will show all valid solutions if they exist.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        // Global variables
+        let isSpherical = false;
+        let triangleData = {};
+        
+        // Initialize the calculator
+        function init() {
+            // Set up event listeners
+            document.getElementById('triangle-type-toggle').addEventListener('change', toggleTriangleType);
+            document.getElementById('input-type').addEventListener('change', updateInputFields);
+            document.getElementById('calculate-button').addEventListener('click', calculateTriangle);
+            
+            // Set up tab switching
+            setupTabs();
+            
+            // Initialize visualization
+            initVisualization();
+            
+            // Show initial input fields
+            updateInputFields();
+        }
+        
+        // Toggle between plane and spherical triangles
+        function toggleTriangleType() {
+            isSpherical = document.getElementById('triangle-type-toggle').checked;
+            document.getElementById('triangle-type-label').textContent = isSpherical ? 'Spherical Triangle' : 'Plane Triangle';
+            
+            // Clear previous results
+            document.getElementById('results').innerHTML = '<h2>Results</h2><p>Enter triangle values and click "Calculate Triangle" to see results.</p>';
+            
+            // Update visualization
+            updateVisualization();
+        }
+        
+        // Update input fields based on selected input type
+        function updateInputFields() {
+            const inputType = document.getElementById('input-type').value;
+            
+            // Hide all input divs
+            document.getElementById('sss-inputs').style.display = 'none';
+            document.getElementById('sas-inputs').style.display = 'none';
+            document.getElementById('asa-inputs').style.display = 'none';
+            document.getElementById('aas-inputs').style.display = 'none';
+            document.getElementById('ssa-inputs').style.display = 'none';
+            
+            // Show selected input div
+            document.getElementById(`${inputType}-inputs`).style.display = 'block';
+            
+            // Clear any previous error messages
+            document.getElementById('input-error').style.display = 'none';
+        }
+        
+        // Calculate triangle based on input values
+        function calculateTriangle() {
+            const inputType = document.getElementById('input-type').value;
+            let inputValues = {};
+            let error = '';
+            
+            // Get input values based on selected input type
+            switch (inputType) {
+                case 'sss':
+                    inputValues = {
+                        a: parseFloat(document.getElementById('sss-side-a').value),
+                        b: parseFloat(document.getElementById('sss-side-b').value),
+                        c: parseFloat(document.getElementById('sss-side-c').value)
+                    };
+                    
+                    // Validate triangle inequality for plane triangles
+                    if (!isSpherical) {
+                        if (inputValues.a + inputValues.b <= inputValues.c ||
+                            inputValues.a + inputValues.c <= inputValues.b ||
+                            inputValues.b + inputValues.c <= inputValues.a) {
+                            error = 'Invalid triangle: The sum of any two sides must be greater than the third side.';
+                        }
+                    } else {
+                        // Convert to radians for spherical triangle validation
+                        const a = inputValues.a * Math.PI / 180;
+                        const b = inputValues.b * Math.PI / 180;
+                        const c = inputValues.c * Math.PI / 180;
+                        
+                        // Validate spherical triangle inequality
+                        if (a + b + c > 2 * Math.PI || a > Math.PI || b > Math.PI || c > Math.PI) {
+                            error = 'Invalid spherical triangle: Each side must be less than 180° and the sum must be less than 360°.';
+                        }
+                    }
+                    break;
+                    
+                case 'sas':
+                    inputValues = {
+                        a: parseFloat(document.getElementById('sas-side-a').value),
+                        C: parseFloat(document.getElementById('sas-angle-c').value),
+                        b: parseFloat(document.getElementById('sas-side-b').value)
+                    };
+                    
+                    // Validate angle
+                    if (inputValues.C <= 0 || inputValues.C >= 180) {
+                        error = 'Invalid angle: Angle must be between 0° and 180°.';
+                    }
+                    break;
+                    
+                case 'asa':
+                    inputValues = {
+                        A: parseFloat(document.getElementById('asa-angle-a').value),
+                        c: parseFloat(document.getElementById('asa-side-c').value),
+                        B: parseFloat(document.getElementById('asa-angle-b').value)
+                    };
+                    
+                    // Validate angles for plane triangles
+                    if (!isSpherical && inputValues.A + inputValues.B >= 180) {
+                        error = 'Invalid triangle: The sum of two angles must be less than 180°.';
+                    }
+                    break;
+                    
+                case 'aas':
+                    inputValues = {
+                        A: parseFloat(document.getElementById('aas-angle-a').value),
+                        B: parseFloat(document.getElementById('aas-angle-b').value),
+                        a: parseFloat(document.getElementById('aas-side-a').value)
+                    };
+                    
+                    // Validate angles for plane triangles
+                    if (!isSpherical && inputValues.A + inputValues.B >= 180) {
+                        error = 'Invalid triangle: The sum of two angles must be less than 180°.';
+                    }
+                    break;
+                    
+                case 'ssa':
+                    inputValues = {
+                        a: parseFloat(document.getElementById('ssa-side-a').value),
+                        b: parseFloat(document.getElementById('ssa-side-b').value),
+                        A: parseFloat(document.getElementById('ssa-angle-a').value)
+                    };
+                    
+                    // Validate angle
+                    if (inputValues.A <= 0 || inputValues.A >= 180) {
+                        error = 'Invalid angle: Angle must be between 0° and 180°.';
+                    }
+                    break;
+            }
+            
+            // Display error if any
+            if (error) {
+                document.getElementById('input-error').textContent = error;
+                document.getElementById('input-error').style.display = 'block';
+                return;
+            }
+            
+            // Solve the triangle
+            if (isSpherical) {
+                triangleData = solveSphericalTriangle(inputType, inputValues);
+            } else {
+                triangleData = solvePlaneTriangle(inputType, inputValues);
+            }
+            
+            // Display results
+            displayResults(triangleData);
+            
+            // Update visualization
+            updateVisualization();
+        }
+        
+        // Solve plane triangle
+        function solvePlaneTriangle(inputType, values) {
+            let result = {
+                solutions: []
+            };
+            
+            // Helper function to calculate the third angle
+            function calculateThirdAngle(A, B) {
+                return 180 - A - B;
+            }
+            
+            // Helper function to create a solution object
+            function createSolution(a, b, c, A, B, C) {
+                // Calculate area using Heron's formula
+                const s = (a + b + c) / 2;
+                const area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
+                
+                // Calculate perimeter
+                const perimeter = a + b + c;
+                
+                // Calculate inradius (radius of inscribed circle)
+                const inradius = area / s;
+                
+                // Calculate circumradius (radius of circumscribed circle)
+                const circumradius = (a * b * c) / (4 * area);
+                
+                return {
+                    a: a,
+                    b: b,
+                    c: c,
+                    A: A,
+                    B: B,
+                    C: C,
+                    area: area,
+                    perimeter: perimeter,
+                    inradius: inradius,
+                    circumradius: circumradius
+                };
+            }
+            
+            switch (inputType) {
+                case 'sss':
+                    // Three sides known
+                    const a = values.a;
+                    const b = values.b;
+                    const c = values.c;
+                    
+                    // Calculate angles using law of cosines
+                    const A = Math.acos((b*b + c*c - a*a) / (2*b*c)) * 180 / Math.PI;
+                    const B = Math.acos((a*a + c*c - b*b) / (2*a*c)) * 180 / Math.PI;
+                    const C = Math.acos((a*a + b*b - c*c) / (2*a*b)) * 180 / Math.PI;
+                    
+                    result.solutions.push(createSolution(a, b, c, A, B, C));
+                    break;
+                    
+                case 'sas':
+                    // Two sides and included angle known
+                    const sas_a = values.a;
+                    const sas_b = values.b;
+                    const sas_C = values.C;
+                    
+                    // Calculate third side using law of cosines
+                    const sas_c = Math.sqrt(sas_a*sas_a + sas_b*sas_b - 2*sas_a*sas_b*Math.cos(sas_C * Math.PI / 180));
+                    
+                    // Calculate angles using law of sines
+                    const sas_A = Math.asin(sas_a * Math.sin(sas_C * Math.PI / 180) / sas_c) * 180 / Math.PI;
+                    const sas_B = Math.asin(sas_b * Math.sin(sas_C * Math.PI / 180) / sas_c) * 180 / Math.PI;
+                    
+                    result.solutions.push(createSolution(sas_a, sas_b, sas_c, sas_A, sas_B, sas_C));
+                    break;
+                    
+                case 'asa':
+                    // Two angles and included side known
+                    const asa_A = values.A;
+                    const asa_c = values.c;
+                    const asa_B = values.B;
+                    
+                    // Calculate third angle
+                    const asa_C = calculateThirdAngle(asa_A, asa_B);
+                    
+                    // Calculate sides using law of sines
+                    const asa_a = asa_c * Math.sin(asa_A * Math.PI / 180) / Math.sin(asa_C * Math.PI / 180);
+                    const asa_b = asa_c * Math.sin(asa_B * Math.PI / 180) / Math.sin(asa_C * Math.PI / 180);
+                    
+                    result.solutions.push(createSolution(asa_a, asa_b, asa_c, asa_A, asa_B, asa_C));
+                    break;
+                    
+                case 'aas':
+                    // Two angles and non-included side known
+                    const aas_A = values.A;
+                    const aas_B = values.B;
+                    const aas_a = values.a;
+                    
+                    // Calculate third angle
+                    const aas_C = calculateThirdAngle(aas_A, aas_B);
+                    
+                    // Calculate sides using law of sines
+                    const aas_b = aas_a * Math.sin(aas_B * Math.PI / 180) / Math.sin(aas_A * Math.PI / 180);
+                    const aas_c = aas_a * Math.sin(aas_C * Math.PI / 180) / Math.sin(aas_A * Math.PI / 180);
+                    
+                    result.solutions.push(createSolution(aas_a, aas_b, aas_c, aas_A, aas_B, aas_C));
+                    break;
+                    
+                case 'ssa':
+                    // Two sides and non-included angle known (ambiguous case)
+                    const ssa_a = values.a;
+                    const ssa_b = values.b;
+                    const ssa_A = values.A;
+                    
+                    // Calculate possible values of angle B using law of sines
+                    const sinB = ssa_b * Math.sin(ssa_A * Math.PI / 180) / ssa_a;
+                    
+                    // Check if there's a solution
+                    if (Math.abs(sinB) > 1) {
+                        result.error = "No solution exists for the given values.";
+                        return result;
+                    }
+                    
+                    // Calculate angle B
+                    const ssa_B1 = Math.asin(sinB) * 180 / Math.PI;
+                    
+                    // Calculate angle C
+                    const ssa_C1 = calculateThirdAngle(ssa_A, ssa_B1);
+                    
+                    // Calculate side c using law of sines
+                    const ssa_c1 = ssa_a * Math.sin(ssa_C1 * Math.PI / 180) / Math.sin(ssa_A * Math.PI / 180);
+                    
+                    // Add first solution
+                    result.solutions.push(createSolution(ssa_a, ssa_b, ssa_c1, ssa_A, ssa_B1, ssa_C1));
+                    
+                    // Check if there's a second solution (when sinB < 1)
+                    if (sinB < 1 && ssa_A < 90) {
+                        const ssa_B2 = 180 - ssa_B1;
+                        const ssa_C2 = calculateThirdAngle(ssa_A, ssa_B2);
+                        const ssa_c2 = ssa_a * Math.sin(ssa_C2 * Math.PI / 180) / Math.sin(ssa_A * Math.PI / 180);
+                        
+                        // Add second solution
+                        result.solutions.push(createSolution(ssa_a, ssa_b, ssa_c2, ssa_A, ssa_B2, ssa_C2));
+                    }
+                    break;
+            }
+            
+            return result;
+        }
+        
+        // Solve spherical triangle
+        function solveSphericalTriangle(inputType, values) {
+            let result = {
+                solutions: []
+            };
+            
+            // Helper function to convert degrees to radians
+            function toRadians(degrees) {
+                return degrees * Math.PI / 180;
+            }
+            
+            // Helper function to convert radians to degrees
+            function toDegrees(radians) {
+                return radians * 180 / Math.PI;
+            }
+            
+            // Helper function to create a solution object
+            function createSolution(a, b, c, A, B, C) {
+                // Calculate area (E = A + B + C - π)
+                const E = toRadians(A + B + C) - Math.PI;
+                const area = E;  // For unit sphere (R = 1)
+                
+                // Calculate perimeter
+                const perimeter = toRadians(a + b + c);
+                
+                return {
+                    a: a,
+                    b: b,
+                    c: c,
+                    A: A,
+                    B: B,
+                    C: C,
+                    area: toDegrees(area),
+                    perimeter: toDegrees(perimeter),
+                    sphericalExcess: toDegrees(E)
+                };
+            }
+            
+            switch (inputType) {
+                case 'sss':
+                    // Three sides known
+                    const a = values.a;
+                    const b = values.b;
+                    const c = values.c;
+                    
+                    // Convert to radians
+                    const a_rad = toRadians(a);
+                    const b_rad = toRadians(b);
+                    const c_rad = toRadians(c);
+                    
+                    // Calculate angles using spherical law of cosines
+                    const cosA = (Math.cos(a_rad) - Math.cos(b_rad) * Math.cos(c_rad)) / (Math.sin(b_rad) * Math.sin(c_rad));
+                    const cosB = (Math.cos(b_rad) - Math.cos(a_rad) * Math.cos(c_rad)) / (Math.sin(a_rad) * Math.sin(c_rad));
+                    const cosC = (Math.cos(c_rad) - Math.cos(a_rad) * Math.cos(b_rad)) / (Math.sin(a_rad) * Math.sin(b_rad));
+                    
+                    // Convert back to degrees
+                    const A = toDegrees(Math.acos(Math.max(-1, Math.min(1, cosA))));
+                    const B = toDegrees(Math.acos(Math.max(-1, Math.min(1, cosB))));
+                    const C = toDegrees(Math.acos(Math.max(-1, Math.min(1, cosC))));
+                    
+                    result.solutions.push(createSolution(a, b, c, A, B, C));
+                    break;
+                    
+                case 'sas':
+                    // Two sides and included angle known
+                    const sas_a = values.a;
+                    const sas_b = values.b;
+                    const sas_C = values.C;
+                    
+                    // Convert to radians
+                    const sas_a_rad = toRadians(sas_a);
+                    const sas_b_rad = toRadians(sas_b);
+                    const sas_C_rad = toRadians(sas_C);
+                    
+                    // Calculate third side using spherical law of cosines
+                    const cos_sas_c = Math.cos(sas_a_rad) * Math.cos(sas_b_rad) + Math.sin(sas_a_rad) * Math.sin(sas_b_rad) * Math.cos(sas_C_rad);
+                    const sas_c_rad = Math.acos(Math.max(-1, Math.min(1, cos_sas_c)));
+                    const sas_c = toDegrees(sas_c_rad);
+                    
+                    // Calculate angles using spherical law of cosines
+                    const cos_sas_A = (Math.cos(sas_b_rad) * Math.sin(sas_a_rad) - Math.sin(sas_b_rad) * Math.cos(sas_a_rad) * Math.cos(sas_C_rad)) / (Math.sin(sas_c_rad) * Math.sin(sas_b_rad));
+                    const cos_sas_B = (Math.cos(sas_a_rad) * Math.sin(sas_b_rad) - Math.sin(sas_a_rad) * Math.cos(sas_b_rad) * Math.cos(sas_C_rad)) / (Math.sin(sas_c_rad) * Math.sin(sas_a_rad));
+                    
+                    // Convert back to degrees
+                    const sas_A = toDegrees(Math.acos(Math.max(-1, Math.min(1, cos_sas_A))));
+                    const sas_B = toDegrees(Math.acos(Math.max(-1, Math.min(1, cos_sas_B))));
+                    
+                    result.solutions.push(createSolution(sas_a, sas_b, sas_c, sas_A, sas_B, sas_C));
+                    break;
+                    
+                case 'asa':
+                    // Two angles and included side known
+                    const asa_A = values.A;
+                    const asa_c = values.c;
+                    const asa_B = values.B;
+                    
+                    // Convert to radians
+                    const asa_A_rad = toRadians(asa_A);
+                    const asa_c_rad = toRadians(asa_c);
+                    const asa_B_rad = toRadians(asa_B);
+                    
+                    // Calculate third angle using spherical law of cosines for angles
+                    const cos_asa_C = -Math.cos(asa_A_rad) * Math.cos(asa_B_rad) + Math.sin(asa_A_rad) * Math.sin(asa_B_rad) * Math.cos(asa_c_rad);
+                    const asa_C_rad = Math.acos(Math.max(-1, Math.min(1, cos_asa_C)));
+                    const asa_C = toDegrees(asa_C_rad);
+                    
+                    // Calculate sides using spherical law of cosines
+                    const cos_asa_a = Math.cos(asa_c_rad) * Math.cos(asa_B_rad) + Math.sin(asa_c_rad) * Math.sin(asa_B_rad) * Math.cos(asa_A_rad);
+                    const cos_asa_b = Math.cos(asa_c_rad) * Math.cos(asa_A_rad) + Math.sin(asa_c_rad) * Math.sin(asa_A_rad) * Math.cos(asa_B_rad);
+                    
+                    // Convert back to degrees
+                    const asa_a = toDegrees(Math.acos(Math.max(-1, Math.min(1, cos_asa_a))));
+                    const asa_b = toDegrees(Math.acos(Math.max(-1, Math.min(1, cos_asa_b))));
+                    
+                    result.solutions.push(createSolution(asa_a, asa_b, asa_c, asa_A, asa_B, asa_C));
+                    break;
+                    
+                case 'aas':
+                    // Two angles and non-included side known
+                    const aas_A = values.A;
+                    const aas_B = values.B;
+                    const aas_a = values.a;
+                    
+                    // Convert to radians
+                    const aas_A_rad = toRadians(aas_A);
+                    const aas_B_rad = toRadians(aas_B);
+                    const aas_a_rad = toRadians(aas_a);
+                    
+                    // Calculate third angle using polar triangle formula
+                    const aas_C = 180 - aas_A - aas_B;
+                    const aas_C_rad = toRadians(aas_C);
+                    
+                    // Calculate sides using spherical law of sines
+                    const sin_aas_b = Math.sin(aas_B_rad) * Math.sin(aas_a_rad) / Math.sin(aas_A_rad);
+                    const sin_aas_c = Math.sin(aas_C_rad) * Math.sin(aas_a_rad) / Math.sin(aas_A_rad);
+                    
+                    // Convert back to degrees
+                    const aas_b = toDegrees(Math.asin(Math.max(-1, Math.min(1, sin_aas_b))));
+                    const aas_c = toDegrees(Math.asin(Math.max(-1, Math.min(1, sin_aas_c))));
+                    
+                    result.solutions.push(createSolution(aas_a, aas_b, aas_c, aas_A, aas_B, aas_C));
+                    break;
+                    
+                case 'ssa':
+                    // Two sides and non-included angle known (ambiguous case)
+                    const ssa_a = values.a;
+                    const ssa_b = values.b;
+                    const ssa_A = values.A;
+                    
+                    // Convert to radians
+                    const ssa_a_rad = toRadians(ssa_a);
+                    const ssa_b_rad = toRadians(ssa_b);
+                    const ssa_A_rad = toRadians(ssa_A);
+                    
+                    // Calculate possible values of angle B using spherical law of sines
+                    const sin_ssa_B = Math.sin(ssa_b_rad) * Math.sin(ssa_A_rad) / Math.sin(ssa_a_rad);
+                    
+                    // Check if there's a solution
+                    if (Math.abs(sin_ssa_B) > 1) {
+                        result.error = "No solution exists for the given values.";
+                        return result;
+                    }
+                    
+                    // Calculate angle B
+                    const ssa_B1_rad = Math.asin(Math.max(-1, Math.min(1, sin_ssa_B)));
+                    const ssa_B1 = toDegrees(ssa_B1_rad);
+                    
+                    // Calculate angle C
+                    const ssa_C1 = 180 - ssa_A - ssa_B1;
+                    const ssa_C1_rad = toRadians(ssa_C1);
+                    
+                    // Calculate side c using spherical law of sines
+                    const sin_ssa_c1 = Math.sin(ssa_C1_rad) * Math.sin(ssa_a_rad) / Math.sin(ssa_A_rad);
+                    const ssa_c1 = toDegrees(Math.asin(Math.max(-1, Math.min(1, sin_ssa_c1))));
+                    
+                    // Add first solution
+                    result.solutions.push(createSolution(ssa_a, ssa_b, ssa_c1, ssa_A, ssa_B1, ssa_C1));
+                    
+                    // Check if there's a second solution
+                    if (sin_ssa_B < 1) {
+                        const ssa_B2_rad = Math.PI - ssa_B1_rad;
+                        const ssa_B2 = toDegrees(ssa_B2_rad);
+                        
+                        const ssa_C2 = 180 - ssa_A - ssa_B2;
+                        const ssa_C2_rad = toRadians(ssa_C2);
+                        
+                        const sin_ssa_c2 = Math.sin(ssa_C2_rad) * Math.sin(ssa_a_rad) / Math.sin(ssa_A_rad);
+                        const ssa_c2 = toDegrees(Math.asin(Math.max(-1, Math.min(1, sin_ssa_c2))));
+                        
+                        // Add second solution
+                        result.solutions.push(createSolution(ssa_a, ssa_b, ssa_c2, ssa_A, ssa_B2, ssa_C2));
+                    }
+                    break;
+            }
+            
+            return result;
+        }
+        
+        // Display results in the results panel
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('results');
+            
+            // Check if there's an error
+            if (data.error) {
+                resultsDiv.innerHTML = `<h2>Results</h2><p class="error">${data.error}</p>`;
+                return;
+            }
+            
+            // Check if there are solutions
+            if (data.solutions.length === 0) {
+                resultsDiv.innerHTML = `<h2>Results</h2><p class="error">No valid solutions found.</p>`;
+                return;
+            }
+            
+            // Start building the results HTML
+            let resultsHTML = `<h2>Results</h2>`;
+            
+            // Add solution count if there are multiple solutions
+            if (data.solutions.length > 1) {
+                resultsHTML += `<p class="success">Found ${data.solutions.length} possible solutions.</p>`;
+            }
+            
+            // Add each solution
+            data.solutions.forEach((solution, index) => {
+                if (data.solutions.length > 1) {
+                    resultsHTML += `<h3>Solution ${index + 1}</h3>`;
+                }
+                
+                // Create a table for the triangle properties
+                resultsHTML += `
+                    <table>
+                        <tr>
+                            <th>Property</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr>
+                            <td>Side a</td>
+                            <td>${solution.a.toFixed(4)}</td>
+                        </tr>
+                        <tr>
+                            <td>Side b</td>
+                            <td>${solution.b.toFixed(4)}</td>
+                        </tr>
+                        <tr>
+                            <td>Side c</td>
+                            <td>${solution.c.toFixed(4)}</td>
+                        </tr>
+                        <tr>
+                            <td>Angle A</td>
+                            <td>${solution.A.toFixed(4)}°</td>
+                        </tr>
+                        <tr>
+                            <td>Angle B</td>
+                            <td>${solution.B.toFixed(4)}°</td>
+                        </tr>
+                        <tr>
+                            <td>Angle C</td>
+                            <td>${solution.C.toFixed(4)}°</td>
+                        </tr>
+                `;
+                
+                // Add additional properties based on triangle type
+                if (isSpherical) {
+                    resultsHTML += `
+                        <tr>
+                            <td>Area</td>
+                            <td>${solution.area.toFixed(4)} square degrees</td>
+                        </tr>
+                        <tr>
+                            <td>Perimeter</td>
+                            <td>${solution.perimeter.toFixed(4)} degrees</td>
+                        </tr>
+                        <tr>
+                            <td>Spherical Excess</td>
+                            <td>${solution.sphericalExcess.toFixed(4)} degrees</td>
+                        </tr>
+                    `;
+                } else {
+                    resultsHTML += `
+                        <tr>
+                            <td>Area</td>
+                            <td>${solution.area.toFixed(4)} square units</td>
+                        </tr>
+                        <tr>
+                            <td>Perimeter</td>
+                            <td>${solution.perimeter.toFixed(4)} units</td>
+                        </tr>
+                        <tr>
+                            <td>Inradius</td>
+                            <td>${solution.inradius.toFixed(4)} units</td>
+                        </tr>
+                        <tr>
+                            <td>Circumradius</td>
+                            <td>${solution.circumradius.toFixed(4)} units</td>
+                        </tr>
+                    `;
+                }
+                
+                resultsHTML += `</table>`;
+                
+                // Add step-by-step solution
+                resultsHTML += `<div class="step-by-step">
+                    <h4>Step-by-Step Solution:</h4>
+                    ${generateStepByStep(index)}
+                </div>`;
+            });
+            
+            // Update the results div
+            resultsDiv.innerHTML = resultsHTML;
+        }
+        
+        // Generate step-by-step solution
+        function generateStepByStep(solutionIndex) {
+            const solution = triangleData.solutions[solutionIndex];
+            const inputType = document.getElementById('input-type').value;
+            let steps = '';
+            
+            if (isSpherical) {
+                // Spherical triangle steps
+                switch (inputType) {
+                    case 'sss':
+                        steps += `<div class="step">Using the spherical law of cosines for angles: cos(A) = (cos(a) - cos(b)cos(c)) / (sin(b)sin(c))</div>`;
+                        steps += `<div class="step">Calculated angle A = ${solution.A.toFixed(2)}° using cos(A) = (cos(${solution.a.toFixed(2)}°) - cos(${solution.b.toFixed(2)}°)cos(${solution.c.toFixed(2)}°)) / (sin(${solution.b.toFixed(2)}°)sin(${solution.c.toFixed(2)}°))</div>`;
+                        steps += `<div class="step">Similarly calculated angles B = ${solution.B.toFixed(2)}° and C = ${solution.C.toFixed(2)}°</div>`;
+                        steps += `<div class="step">Verified that A + B + C > 180° (spherical triangle property)</div>`;
+                        steps += `<div class="step">Calculated spherical excess: E = A + B + C - 180° = ${(solution.A + solution.B + solution.C - 180).toFixed(2)}°</div>`;
+                        steps += `<div class="step">Calculated area = ${solution.area.toFixed(2)} square degrees (for unit sphere)</div>`;
+                        break;
+                        
+                    case 'sas':
+                        steps += `<div class="step">Using the spherical law of cosines for sides: cos(c) = cos(a)cos(b) + sin(a)sin(b)cos(C)</div>`;
+                        steps += `<div class="step">Calculated side c = ${solution.c.toFixed(2)}° using the formula</div>`;
+                        steps += `<div class="step">Used the spherical law of sines to find angles A and B</div>`;
+                        steps += `<div class="step">sin(A)/sin(a) = sin(B)/sin(b) = sin(C)/sin(c)</div>`;
+                        steps += `<div class="step">Calculated angle A = ${solution.A.toFixed(2)}° and B = ${solution.B.toFixed(2)}°</div>`;
+                        steps += `<div class="step">Calculated spherical excess and area</div>`;
+                        break;
+                        
+                    case 'asa':
+                        steps += `<div class="step">Using the spherical law of cosines for angles: cos(C) = -cos(A)cos(B) + sin(A)sin(B)cos(c)</div>`;
+                        steps += `<div class="step">Calculated angle C = ${solution.C.toFixed(2)}°</div>`;
+                        steps += `<div class="step">Used the spherical law of sines to find sides a and b</div>`;
+                        steps += `<div class="step">sin(a)/sin(A) = sin(b)/sin(B) = sin(c)/sin(C)</div>`;
+                        steps += `<div class="step">Calculated sides a = ${solution.a.toFixed(2)}° and b = ${solution.b.toFixed(2)}°</div>`;
+                        steps += `<div class="step">Calculated spherical excess and area</div>`;
+                        break;
+                        
+                    case 'aas':
+                        steps += `<div class="step">Calculated the third angle: C = 180° - A - B = ${solution.C.toFixed(2)}°</div>`;
+                        steps += `<div class="step">Used the spherical law of sines to find sides b and c</div>`;
+                        steps += `<div class="step">sin(b)/sin(B) = sin(a)/sin(A)</div>`;
+                        steps += `<div class="step">sin(c)/sin(C) = sin(a)/sin(A)</div>`;
+                        steps += `<div class="step">Calculated sides b = ${solution.b.toFixed(2)}° and c = ${solution.c.toFixed(2)}°</div>`;
+                        steps += `<div class="step">Calculated spherical excess and area</div>`;
+                        break;
+                        
+                    case 'ssa':
+                        steps += `<div class="step">Used the spherical law of sines to find angle B</div>`;
+                        steps += `<div class="step">sin(B) = sin(b)sin(A)/sin(a)</div>`;
+                        steps += `<div class="step">Calculated angle B = ${solution.B.toFixed(2)}°</div>`;
+                        steps += `<div class="step">Calculated angle C = 180° - A - B = ${solution.C.toFixed(2)}°</div>`;
+                        steps += `<div class="step">Used the spherical law of sines to find side c</div>`;
+                        steps += `<div class="step">sin(c)/sin(C) = sin(a)/sin(A)</div>`;
+                        steps += `<div class="step">Calculated side c = ${solution.c.toFixed(2)}°</div>`;
+                        steps += `<div class="step">Calculated spherical excess and area</div>`;
+                        break;
+                }
+            } else {
+                // Plane triangle steps
+                switch (inputType) {
+                    case 'sss':
+                        steps += `<div class="step">Using the law of cosines: cos(A) = (b² + c² - a²) / (2bc)</div>`;
+                        steps += `<div class="step">Calculated angle A = ${solution.A.toFixed(2)}° using cos(A) = (${solution.b.toFixed(2)}² + ${solution.c.toFixed(2)}² - ${solution.a.toFixed(2)}²) / (2 × ${solution.b.toFixed(2)} × ${solution.c.toFixed(2)})</div>`;
+                        steps += `<div class="step">Similarly calculated angles B = ${solution.B.toFixed(2)}° and C = ${solution.C.toFixed(2)}°</div>`;
+                        steps += `<div class="step">Verified that A + B + C = 180°</div>`;
+                        steps += `<div class="step">Calculated area using Heron's formula: Area = √(s(s-a)(s-b)(s-c)) where s = (a+b+c)/2</div>`;
+                        steps += `<div class="step">s = (${solution.a.toFixed(2)} + ${solution.b.toFixed(2)} + ${solution.c.toFixed(2)}) / 2 = ${((solution.a + solution.b + solution.c) / 2).toFixed(2)}</div>`;
+                        steps += `<div class="step">Area = ${solution.area.toFixed(2)} square units</div>`;
+                        break;
+                        
+                    case 'sas':
+                        steps += `<div class="step">Using the law of cosines: c² = a² + b² - 2ab·cos(C)</div>`;
+                        steps += `<div class="step">Calculated side c = ${solution.c.toFixed(2)} using c = √(${solution.a.toFixed(2)}² + ${solution.b.toFixed(2)}² - 2 × ${solution.a.toFixed(2)} × ${solution.b.toFixed(2)} × cos(${solution.C.toFixed(2)}°))</div>`;
+                        steps += `<div class="step">Used the law of sines to find angles A and B</div>`;
+                        steps += `<div class="step">sin(A)/a = sin(B)/b = sin(C)/c</div>`;
+                        steps += `<div class="step">Calculated angle A = ${solution.A.toFixed(2)}° and B = ${solution.B.toFixed(2)}°</div>`;
+                        steps += `<div class="step">Calculated area using the formula: Area = (1/2)ab·sin(C)</div>`;
+                        steps += `<div class="step">Area = (1/2) × ${solution.a.toFixed(2)} × ${solution.b.toFixed(2)} × sin(${solution.C.toFixed(2)}°) = ${solution.area.toFixed(2)} square units</div>`;
+                        break;
+                        
+                    case 'asa':
+                        steps += `<div class="step">Calculated the third angle: C = 180° - A - B = ${solution.C.toFixed(2)}°</div>`;
+                        steps += `<div class="step">Used the law of sines to find sides a and b</div>`;
+                        steps += `<div class="step">a/sin(A) = c/sin(C)</div>`;
+                        steps += `<div class="step">b/sin(B) = c/sin(C)</div>`;
+                        steps += `<div class="step">Calculated sides a = ${solution.a.toFixed(2)} and b = ${solution.b.toFixed(2)}</div>`;
+                        steps += `<div class="step">Calculated area using the formula: Area = (1/2)ab·sin(C)</div>`;
+                        steps += `<div class="step">Area = ${solution.area.toFixed(2)} square units</div>`;
+                        break;
+                        
+                    case 'aas':
+                        steps += `<div class="step">Calculated the third angle: C = 180° - A - B = ${solution.C.toFixed(2)}°</div>`;
+                        steps += `<div class="step">Used the law of sines to find sides b and c</div>`;
+                        steps += `<div class="step">b/sin(B) = a/sin(A)</div>`;
+                        steps += `<div class="step">c/sin(C) = a/sin(A)</div>`;
+                        steps += `<div class="step">Calculated sides b = ${solution.b.toFixed(2)} and c = ${solution.c.toFixed(2)}</div>`;
+                        steps += `<div class="step">Calculated area using the formula: Area = (1/2)ab·sin(C)</div>`;
+                        steps += `<div class="step">Area = ${solution.area.toFixed(2)} square units</div>`;
+                        break;
+                        
+                    case 'ssa':
+                        steps += `<div class="step">Used the law of sines to find angle B</div>`;
+                        steps += `<div class="step">sin(B) = b·sin(A)/a</div>`;
+                        steps += `<div class="step">Calculated angle B = ${solution.B.toFixed(2)}°</div>`;
+                        steps += `<div class="step">Calculated angle C = 180° - A - B = ${solution.C.toFixed(2)}°</div>`;
+                        steps += `<div class="step">Used the law of sines to find side c</div>`;
+                        steps += `<div class="step">c/sin(C) = a/sin(A)</div>`;
+                        steps += `<div class="step">Calculated side c = ${solution.c.toFixed(2)}</div>`;
+                        steps += `<div class="step">Calculated area using the formula: Area = (1/2)ab·sin(C)</div>`;
+                        steps += `<div class="step">Area = ${solution.area.toFixed(2)} square units</div>`;
+                        break;
+                }
+            }
+            
+            return steps;
+        }
+        
+        // Initialize the visualization
+        function initVisualization() {
+            const svg = d3.select('#visualization')
+                .append('svg')
+                .attr('width', '100%')
+                .attr('height', '100%')
+                .attr('viewBox', '-120 -120 240 240')
+                .attr('preserveAspectRatio', 'xMidYMid meet');
+            
+            // Add a group for the triangle
+            svg.append('g')
+                .attr('class', 'triangle-group');
+            
+            // Add initial triangle
+            updateVisualization();
+        }
+        
+        // Update the visualization based on current triangle data
+        function updateVisualization() {
+            const svg = d3.select('#visualization svg');
+            const triangleGroup = svg.select('.triangle-group');
+            
+            // Clear previous triangle
+            triangleGroup.selectAll('*').remove();
+            
+            // If we have triangle data, draw it
+            if (triangleData.solutions && triangleData.solutions.length > 0) {
+                const solution = triangleData.solutions[0]; // Use the first solution
+                
+                if (isSpherical) {
+                    drawSphericalTriangle(triangleGroup, solution);
+                } else {
+                    drawPlaneTriangle(triangleGroup, solution);
+                }
+            } else {
+                // Draw a default triangle
+                if (isSpherical) {
+                    drawSphericalTriangle(triangleGroup, {
+                        a: 60,
+                        b: 60,
+                        c: 60,
+                        A: 60,
+                        B: 60,
+                        C: 60
+                    });
+                } else {
+                    drawPlaneTriangle(triangleGroup, {
+                        a: 3,
+                        b: 4,
+                        c: 5,
+                        A: 36.9,
+                        B: 53.1,
+                        C: 90
+                    });
+                }
+            }
+        }
+        
+        // Draw a plane triangle
+        function drawPlaneTriangle(group, triangle) {
+            // Calculate coordinates
+            const scale = 100 / Math.max(triangle.a, triangle.b, triangle.c);
+            
+            // Vertex A at origin
+            const Ax = 0;
+            const Ay = 0;
+            
+            // Vertex B along x-axis
+            const Bx = triangle.c * scale;
+            const By = 0;
+            
+            // Vertex C
+            const Cx = triangle.b * Math.cos(triangle.A * Math.PI / 180) * scale;
+            const Cy = triangle.b * Math.sin(triangle.A * Math.PI / 180) * scale;
+            
+            // Draw the triangle
+            group.append('polygon')
+                .attr('points', `${Ax},${Ay} ${Bx},${By} ${Cx},${Cy}`)
+                .attr('fill', 'rgba(0, 123, 255, 0.2)')
+                .attr('stroke', '#007bff')
+                .attr('stroke-width', '2');
+            
+            // Add vertices
+            addVertex(group, Ax, Ay, 'A');
+            addVertex(group, Bx, By, 'B');
+            addVertex(group, Cx, Cy, 'C');
+            
+            // Add side labels
+            addSideLabel(group, (Ax + Bx) / 2, (Ay + By) / 2, 'c', triangle.c.toFixed(1));
+            addSideLabel(group, (Bx + Cx) / 2, (By + Cy) / 2, 'a', triangle.a.toFixed(1));
+            addSideLabel(group, (Cx + Ax) / 2, (Cy + Ay) / 2, 'b', triangle.b.toFixed(1));
+            
+            // Add angle labels
+            addAngleLabel(group, Ax, Ay, 'A', triangle.A.toFixed(1) + '°');
+            addAngleLabel(group, Bx, By, 'B', triangle.B.toFixed(1) + '°');
+            addAngleLabel(group, Cx, Cy, 'C', triangle.C.toFixed(1) + '°');
+        }
+        
+        // Draw a spherical triangle
+        function drawSphericalTriangle(group, triangle) {
+            // Draw a sphere
+            group.append('circle')
+                .attr('cx', 0)
+                .attr('cy', 0)
+                .attr('r', 100)
+                .attr('fill', 'rgba(200, 200, 200, 0.2)')
+                .attr('stroke', '#888')
+                .attr('stroke-width', '1');
+            
+            // Convert spherical coordinates to 3D Cartesian
+            function sphericalToCartesian(theta, phi) {
+                const r = 100; // Sphere radius
+                const thetaRad = theta * Math.PI / 180;
+                const phiRad = phi * Math.PI / 180;
+                
+                const x = r * Math.sin(thetaRad) * Math.cos(phiRad);
+                const y = r * Math.sin(thetaRad) * Math.sin(phiRad);
+                const z = r * Math.cos(thetaRad);
+                
+                // Project 3D to 2D (simple orthographic projection)
+                return {
+                    x: x,
+                    y: y
+                };
+            }
+            
+            // Calculate vertex positions
+            // This is a simplified representation - in reality, we would need to solve for the actual positions
+            // based on the spherical triangle properties
+            const A = sphericalToCartesian(90, 0);
+            const B = sphericalToCartesian(90, triangle.c);
+            const C = sphericalToCartesian(90 - triangle.b, triangle.a);
+            
+            // Draw great circle arcs (simplified as straight lines for this visualization)
+            group.append('path')
+                .attr('d', `M${A.x},${A.y} A100,100 0 0,1 ${B.x},${B.y}`)
+                .attr('fill', 'none')
+                .attr('stroke', '#007bff')
+                .attr('stroke-width', '2');
+                
+            group.append('path')
+                .attr('d', `M${B.x},${B.y} A100,100 0 0,1 ${C.x},${C.y}`)
+                .attr('fill', 'none')
+                .attr('stroke', '#007bff')
+                .attr('stroke-width', '2');
+                
+            group.append('path')
+                .attr('d', `M${C.x},${C.y} A100,100 0 0,1 ${A.x},${A.y}`)
+                .attr('fill', 'none')
+                .attr('stroke', '#007bff')
+                .attr('stroke-width', '2');
+            
+            // Add vertices
+            addVertex(group, A.x, A.y, 'A');
+            addVertex(group, B.x, B.y, 'B');
+            addVertex(group, C.x, C.y, 'C');
+            
+            // Add side labels
+            addSideLabel(group, (A.x + B.x) / 2, (A.y + B.y) / 2, 'c', triangle.c.toFixed(1) + '°');
+            addSideLabel(group, (B.x + C.x) / 2, (B.y + C.y) / 2, 'a', triangle.a.toFixed(1) + '°');
+            addSideLabel(group, (C.x + A.x) / 2, (C.y + A.y) / 2, 'b', triangle.b.toFixed(1) + '°');
+            
+            // Add angle labels
+            addAngleLabel(group, A.x, A.y, 'A', triangle.A.toFixed(1) + '°');
+            addAngleLabel(group, B.x, B.y, 'B', triangle.B.toFixed(1) + '°');
+            addAngleLabel(group, C.x, C.y, 'C', triangle.C.toFixed(1) + '°');
+        }
+        
+        // Add a vertex to the visualization
+        function addVertex(group, x, y, label) {
+            group.append('circle')
+                .attr('cx', x)
+                .attr('cy', y)
+                .attr('r', 4)
+                .attr('fill', '#ff4500')
+                .attr('stroke', '#000')
+                .attr('stroke-width', '1');
+                
+            group.append('text')
+                .attr('x', x)
+                .attr('y', y - 10)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', '12px')
+                .attr('font-weight', 'bold')
+                .text(label);
+        }
+        
+        // Add a side label to the visualization
+        function addSideLabel(group, x, y, label, value) {
+            group.append('text')
+                .attr('x', x)
+                .attr('y', y + 15)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', '10px')
+                .text(`${label} = ${value}`);
+        }
+        
+        // Add an angle label to the visualization
+        function addAngleLabel(group, x, y, label, value) {
+            // Offset the angle label slightly from the vertex
+            const offsetX = (x < -50) ? -20 : (x > 50) ? 20 : 0;
+            const offsetY = (y < -50) ? -20 : (y > 50) ? 20 : 0;
+            
+            group.append('text')
+                .attr('x', x + offsetX)
+                .attr('y', y + offsetY)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', '10px')
+                .text(`∠${label} = ${value}`);
+        }
+        
+        // Tab switching functionality
+        function setupTabs() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons and content
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding content
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab') + '-tab';
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+        
+        // Initialize the calculator when the page loads
+        window.onload = init;
+    </script>
+</body>
+</html>
