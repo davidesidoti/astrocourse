@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vector Operations Visualizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .control-panel {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+        .visualization {
+            flex: 2;
+            min-width: 300px;
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result-panel {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .tab-container {
+            margin-top: 20px;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .tab-button {
+            padding: 10px 15px;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            background-color: #007bff;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 0 4px 4px 4px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .info-box {
+            background-color: #e8f4f8;
+            padding: 10px 15px;
+            border-left: 4px solid #007bff;
+            margin-bottom: 15px;
+        }
+        .formula {
+            font-family: monospace;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .vector-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .vector-input input {
+            flex: 1;
+        }
+        .vector-label {
+            font-weight: bold;
+            color: #007bff;
+            width: 20px;
+            text-align: center;
+        }
+        .vector-component {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .vector-component label {
+            width: 20px;
+            font-weight: normal;
+            margin-bottom: 0;
+        }
+        .operation-result {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+        .coordinate-display {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Vector Operations Visualizer</h1>
+    
+    <div class="container">
+        <div class="info-box">
+            <p>This interactive tool allows you to visualize vector operations in 3D space. You can perform addition, subtraction, dot products, cross products, and other vector operations, which are essential in astronomy and physics.</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="control-panel">
+                <h2>Vector Inputs</h2>
+                
+                <div class="form-group">
+                    <label for="operation-type">Operation:</label>
+                    <select id="operation-type">
+                        <option value="addition">Vector Addition (a + b)</option>
+                        <option value="subtraction">Vector Subtraction (a - b)</option>
+                        <option value="scalar-multiplication">Scalar Multiplication (k * a)</option>
+                        <option value="dot-product">Dot Product (a · b)</option>
+                        <option value="cross-product">Cross Product (a × b)</option>
+                        <option value="projection">Vector Projection (proj_b a)</option>
+                        <option value="triple-product">Triple Scalar Product (a · (b × c))</option>
+                    </select>
+                </div>
+                
+                <!-- Vector A Input -->
+                <div class="form-group">
+                    <label>Vector a:</label>
+                    <div class="vector-input">
+                        <div class="vector-component">
+                            <label for="vector-a-x">x:</label>
+                            <input type="number" id="vector-a-x" value="1" step="0.1">
+                        </div>
+                        <div class="vector-component">
+                            <label for="vector-a-y">y:</label>
+                            <input type="number" id="vector-a-y" value="0" step="0.1">
+                        </div>
+                        <div class="vector-component">
+                            <label for="vector-a-z">z:</label>
+                            <input type="number" id="vector-a-z" value="0" step="0.1">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Vector B Input -->
+                <div class="form-group" id="vector-b-group">
+                    <label>Vector b:</label>
+                    <div class="vector-input">
+                        <div class="vector-component">
+                            <label for="vector-b-x">x:</label>
+                            <input type="number" id="vector-b-x" value="0" step="0.1">
+                        </div>
+                        <div class="vector-component">
+                            <label for="vector-b-y">y:</label>
+                            <input type="number" id="vector-b-y" value="1" step="0.1">
+                        </div>
+                        <div class="vector-component">
+                            <label for="vector-b-z">z:</label>
+                            <input type="number" id="vector-b-z" value="0" step="0.1">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Vector C Input (for triple product) -->
+                <div class="form-group" id="vector-c-group" style="display: none;">
+                    <label>Vector c:</label>
+                    <div class="vector-input">
+                        <div class="vector-component">
+                            <label for="vector-c-x">x:</label>
+                            <input type="number" id="vector-c-x" value="0" step="0.1">
+                        </div>
+                        <div class="vector-component">
+                            <label for="vector-c-y">y:</label>
+                            <input type="number" id="vector-c-y" value="0" step="0.1">
+                        </div>
+                        <div class="vector-component">
+                            <label for="vector-c-z">z:</label>
+                            <input type="number" id="vector-c-z" value="1" step="0.1">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Scalar Input (for scalar multiplication) -->
+                <div class="form-group" id="scalar-group" style="display: none;">
+                    <label for="scalar-value">Scalar value (k):</label>
+                    <input type="number" id="scalar-value" value="2" step="0.1">
+                </div>
+                
+                <button id="calculate-button">Calculate</button>
+                
+                <div class="operation-result" id="result">
+                    <h3>Result:</h3>
+                    <p>Select an operation and click Calculate to see the result.</p>
+                </div>
+            </div>
+            
+            <div class="visualization" id="visualization">
+                <!-- Vector visualization will be rendered here -->
+                <div class="coordinate-display" id="coordinate-display"></div>
+            </div>
+        </div>
+        
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="formulas">Vector Formulas</button>
+                <button class="tab-button" data-tab="applications">Astronomical Applications</button>
+                <button class="tab-button" data-tab="help">Help</button>
+            </div>
+            
+            <div class="tab-content active" id="formulas-tab">
+                <h3>Vector Operation Formulas</h3>
+                
+                <h4>Vector Addition</h4>
+                <div class="formula">
+                    a + b = (a₁ + b₁, a₂ + b₂, a₃ + b₃)
+                </div>
+                
+                <h4>Vector Subtraction</h4>
+                <div class="formula">
+                    a - b = (a₁ - b₁, a₂ - b₂, a₃ - b₃)
+                </div>
+                
+                <h4>Scalar Multiplication</h4>
+                <div class="formula">
+                    k * a = (k·a₁, k·a₂, k·a₃)
+                </div>
+                
+                <h4>Vector Magnitude</h4>
+                <div class="formula">
+                    |a| = √(a₁² + a₂² + a₃²)
+                </div>
+                
+                <h4>Dot Product</h4>
+                <div class="formula">
+                    a · b = a₁·b₁ + a₂·b₂ + a₃·b₃ = |a|·|b|·cos(θ)
+                </div>
+                
+                <h4>Cross Product</h4>
+                <div class="formula">
+                    a × b = (a₂·b₃ - a₃·b₂, a₃·b₁ - a₁·b₃, a₁·b₂ - a₂·b₁) = |a|·|b|·sin(θ)·n
+                </div>
+                
+                <h4>Vector Projection</h4>
+                <div class="formula">
+                    proj_b a = (a · b / |b|²) · b
+                </div>
+                
+                <h4>Triple Scalar Product</h4>
+                <div class="formula">
+                    a · (b × c) = b · (c × a) = c · (a × b) = det([a b c])
+                </div>
+            </div>
+            
+            <div class="tab-content" id="applications-tab">
+                <h3>Astronomical Applications of Vectors</h3>
+                
+                <h4>Orbital Mechanics</h4>
+                <p>Vectors are fundamental in describing the motion of celestial bodies:</p>
+                <ul>
+                    <li><strong>Position and Velocity Vectors:</strong> Describe the location and movement of objects in space.</li>
+                    <li><strong>Angular Momentum:</strong> Calculated using the cross product r × p, where r is the position vector and p is the momentum vector.</li>
+                    <li><strong>Orbital Elements:</strong> Vectors help define the shape, size, and orientation of orbits.</li>
+                </ul>
+                
+                <h4>Celestial Coordinate Transformations</h4>
+                <p>Vector operations are essential for converting between different coordinate systems:</p>
+                <ul>
+                    <li><strong>Rotation Matrices:</strong> Use vector operations to transform coordinates between reference frames.</li>
+                    <li><strong>Precession and Nutation:</strong> Vector calculations model how Earth's rotational axis changes over time.</li>
+                </ul>
+                
+                <h4>Gravitational Interactions</h4>
+                <p>Vector calculations are used to model gravitational forces between celestial bodies:</p>
+                <ul>
+                    <li><strong>N-body Problems:</strong> Vector addition of gravitational forces from multiple bodies.</li>
+                    <li><strong>Tidal Forces:</strong> Calculated using vector derivatives of the gravitational field.</li>
+                </ul>
+                
+                <h4>Electromagnetic Phenomena in Astronomy</h4>
+                <ul>
+                    <li><strong>Magnetic Fields:</strong> Described using vector fields, with the cross product determining the Lorentz force.</li>
+                    <li><strong>Radiation Pressure:</strong> Vector calculations determine how light exerts pressure on objects in space.</li>
+                </ul>
+                
+                <h4>Example: Angular Momentum in Planetary Motion</h4>
+                <p>The conservation of angular momentum explains why planets move faster when closer to the Sun:</p>
+                <div class="formula">
+                    L = r × p = r × mv
+                </div>
+                <p>As the radius vector r decreases, the velocity vector v must increase to keep L constant.</p>
+                
+                <h4>Example: Stellar Aberration</h4>
+                <p>The apparent position of stars is affected by Earth's velocity through space, calculated using vector addition:</p>
+                <div class="formula">
+                    s' = s + v/c
+                </div>
+                <p>Where s is the true direction to the star, v is Earth's velocity, and c is the speed of light.</p>
+            </div>
+            
+            <div class="tab-content" id="help-tab">
+                <h3>How to Use This Tool</h3>
+                
+                <h4>Basic Usage</h4>
+                <ol>
+                    <li>Select the vector operation you want to perform from the dropdown menu</li>
+                    <li>Enter the components of vector a (and vector b, c, or scalar k as needed)</li>
+                    <li>Click "Calculate" to perform the operation</li>
+                    <li>View the result and the visualization in the 3D space</li>
+                </ol>
+                
+                <h4>Available Operations</h4>
+                <table>
+                    <tr>
+                        <th>Operation</th>
+                        <th>Description</th>
+                        <th>Inputs Required</th>
+                    </tr>
+                    <tr>
+                        <td>Vector Addition</td>
+                        <td>Adds two vectors component-wise</td>
+                        <td>Vectors a and b</td>
+                    </tr>
+                    <tr>
+                        <td>Vector Subtraction</td>
+                        <td>Subtracts vector b from vector a</td>
+                        <td>Vectors a and b</td>
+                    </tr>
+                    <tr>
+                        <td>Scalar Multiplication</td>
+                        <td>Multiplies vector a by scalar k</td>
+                        <td>Vector a and scalar k</td>
+                    </tr>
+                    <tr>
+                        <td>Dot Product</td>
+                        <td>Calculates the scalar product of two vectors</td>
+                        <td>Vectors a and b</td>
+                    </tr>
+                    <tr>
+                        <td>Cross Product</td>
+                        <td>Calculates the vector perpendicular to both input vectors</td>
+                        <td>Vectors a and b</td>
+                    </tr>
+                    <tr>
+                        <td>Vector Projection</td>
+                        <td>Projects vector a onto vector b</td>
+                        <td>Vectors a and b</td>
+                    </tr>
+                    <tr>
+                        <td>Triple Scalar Product</td>
+                        <td>Calculates the scalar triple product, which equals the volume of the parallelepiped</td>
+                        <td>Vectors a, b, and c</td>
+                    </tr>
+                </table>
+                
+                <h4>Visualization Controls</h4>
+                <ul>
+                    <li>Click and drag to rotate the 3D view</li>
+                    <li>Scroll to zoom in and out</li>
+                    <li>Right-click and drag to pan the view</li>
+                </ul>
+                
+                <h4>Tips</h4>
+                <ul>
+                    <li>The coordinate system uses the right-hand rule: x-axis (red), y-axis (green), z-axis (blue)</li>
+                    <li>Vector a is shown in orange, vector b in purple, vector c in cyan, and result vectors in yellow</li>
+                    <li>For scalar results (dot product, triple product), the numerical value is displayed in the result panel</li>
+                    <li>The "Vector Formulas" tab provides the mathematical formulas for all operations</li>
+                    <li>The "Astronomical Applications" tab explains how these vector operations are used in astronomy</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        // Global variables
+        let scene, camera, renderer, controls;
+        let vectorA, vectorB, vectorC, resultVector;
+        let vectorAArrow, vectorBArrow, vectorCArrow, resultArrow;
+        let operationType = 'addition';
+        
+        // Initialize the visualization
+        function init() {
+            // Set up event listeners
+            document.getElementById('operation-type').addEventListener('change', updateInputFields);
+            document.getElementById('calculate-button').addEventListener('click', calculateVectors);
+            
+            // Set up tab switching
+            setupTabs();
+            
+            // Initialize 3D visualization
+            initVisualization();
+            
+            // Show initial input fields
+            updateInputFields();
+            
+            // Calculate initial vectors
+            calculateVectors();
+        }
+        
+        // Update input fields based on selected operation
+        function updateInputFields() {
+            operationType = document.getElementById('operation-type').value;
+            
+            // Show/hide vector B input
+            document.getElementById('vector-b-group').style.display = 
+                ['addition', 'subtraction', 'dot-product', 'cross-product', 'projection'].includes(operationType) ? 'block' : 'none';
+            
+            // Show/hide vector C input
+            document.getElementById('vector-c-group').style.display = 
+                operationType === 'triple-product' ? 'block' : 'none';
+            
+            // Show/hide scalar input
+            document.getElementById('scalar-group').style.display = 
+                operationType === 'scalar-multiplication' ? 'block' : 'none';
+        }
+        
+        // Initialize the 3D visualization
+        function initVisualization() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f0f0);
+            
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, document.getElementById('visualization').clientWidth / document.getElementById('visualization').clientHeight, 0.1, 1000);
+            camera.position.set(3, 3, 3);
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(document.getElementById('visualization').clientWidth, document.getElementById('visualization').clientHeight);
+            document.getElementById('visualization').appendChild(renderer.domElement);
+            
+            // Add orbit controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.25;
+            
+            // Add axes
+            addAxes();
+            
+            // Add grid
+            addGrid();
+            
+            // Animation loop
+            animate();
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+        }
+        
+        // Add coordinate axes to the scene
+        function addAxes() {
+            // X axis (red)
+            const xAxisGeometry = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(2, 0, 0)
+            ]);
+            const xAxisMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+            const xAxis = new THREE.Line(xAxisGeometry, xAxisMaterial);
+            scene.add(xAxis);
+            
+            // X axis label
+            const xLabel = createTextSprite("X");
+            xLabel.position.set(2.2, 0, 0);
+            scene.add(xLabel);
+            
+            // Y axis (green)
+            const yAxisGeometry = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, 2, 0)
+            ]);
+            const yAxisMaterial = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+            const yAxis = new THREE.Line(yAxisGeometry, yAxisMaterial);
+            scene.add(yAxis);
+            
+            // Y axis label
+            const yLabel = createTextSprite("Y");
+            yLabel.position.set(0, 2.2, 0);
+            scene.add(yLabel);
+            
+            // Z axis (blue)
+            const zAxisGeometry = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0, 0, 2)
+            ]);
+            const zAxisMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });
+            const zAxis = new THREE.Line(zAxisGeometry, zAxisMaterial);
+            scene.add(zAxis);
+            
+            // Z axis label
+            const zLabel = createTextSprite("Z");
+            zLabel.position.set(0, 0, 2.2);
+            scene.add(zLabel);
+        }
+        
+        // Add grid to the scene
+        function addGrid() {
+            // XY grid
+            const gridXY = new THREE.GridHelper(4, 10);
+            gridXY.rotation.x = Math.PI / 2;
+            gridXY.material.opacity = 0.2;
+            gridXY.material.transparent = true;
+            scene.add(gridXY);
+            
+            // XZ grid
+            const gridXZ = new THREE.GridHelper(4, 10);
+            gridXZ.material.opacity = 0.2;
+            gridXZ.material.transparent = true;
+            scene.add(gridXZ);
+            
+            // YZ grid
+            const gridYZ = new THREE.GridHelper(4, 10);
+            gridYZ.rotation.z = Math.PI / 2;
+            gridYZ.material.opacity = 0.2;
+            gridYZ.material.transparent = true;
+            scene.add(gridYZ);
+        }
+        
+        // Create a text sprite for labels
+        function createTextSprite(text) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 64;
+            canvas.height = 64;
+            
+            context.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            
+            context.font = '24px Arial';
+            context.fillStyle = 'black';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillText(text, canvas.width / 2, canvas.height / 2);
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            const material = new THREE.SpriteMaterial({ map: texture });
+            const sprite = new THREE.Sprite(material);
+            sprite.scale.set(0.5, 0.5, 1);
+            
+            return sprite;
+        }
+        
+        // Create an arrow to represent a vector
+        function createVectorArrow(origin, direction, color) {
+            // Normalize direction and scale it
+            const length = Math.sqrt(direction.x * direction.x + direction.y * direction.y + direction.z * direction.z);
+            
+            // If length is zero, return a small point instead of an arrow
+            if (length < 0.001) {
+                const geometry = new THREE.SphereGeometry(0.05, 16, 16);
+                const material = new THREE.MeshBasicMaterial({ color: color });
+                const sphere = new THREE.Mesh(geometry, material);
+                sphere.position.copy(origin);
+                return sphere;
+            }
+            
+            // Create arrow
+            const arrowHelper = new THREE.ArrowHelper(
+                new THREE.Vector3(direction.x / length, direction.y / length, direction.z / length),
+                new THREE.Vector3(origin.x, origin.y, origin.z),
+                length,
+                color,
+                0.2 * length,
+                0.1 * length
+            );
+            
+            return arrowHelper;
+        }
+        
+        // Calculate vector operations
+        function calculateVectors() {
+            // Get input values
+            vectorA = {
+                x: parseFloat(document.getElementById('vector-a-x').value),
+                y: parseFloat(document.getElementById('vector-a-y').value),
+                z: parseFloat(document.getElementById('vector-a-z').value)
+            };
+            
+            vectorB = {
+                x: parseFloat(document.getElementById('vector-b-x').value),
+                y: parseFloat(document.getElementById('vector-b-y').value),
+                z: parseFloat(document.getElementById('vector-b-z').value)
+            };
+            
+            vectorC = {
+                x: parseFloat(document.getElementById('vector-c-x').value),
+                y: parseFloat(document.getElementById('vector-c-y').value),
+                z: parseFloat(document.getElementById('vector-c-z').value)
+            };
+            
+            const scalarValue = parseFloat(document.getElementById('scalar-value').value);
+            
+            // Perform the selected operation
+            let result;
+            let resultHTML = '<h3>Result:</h3>';
+            
+            switch (operationType) {
+                case 'addition':
+                    result = {
+                        x: vectorA.x + vectorB.x,
+                        y: vectorA.y + vectorB.y,
+                        z: vectorA.z + vectorB.z
+                    };
+                    resultHTML += `<p>a + b = (${result.x.toFixed(2)}, ${result.y.toFixed(2)}, ${result.z.toFixed(2)})</p>`;
+                    resultHTML += `<p>Magnitude: ${calculateMagnitude(result).toFixed(2)}</p>`;
+                    break;
+                    
+                case 'subtraction':
+                    result = {
+                        x: vectorA.x - vectorB.x,
+                        y: vectorA.y - vectorB.y,
+                        z: vectorA.z - vectorB.z
+                    };
+                    resultHTML += `<p>a - b = (${result.x.toFixed(2)}, ${result.y.toFixed(2)}, ${result.z.toFixed(2)})</p>`;
+                    resultHTML += `<p>Magnitude: ${calculateMagnitude(result).toFixed(2)}</p>`;
+                    break;
+                    
+                case 'scalar-multiplication':
+                    result = {
+                        x: vectorA.x * scalarValue,
+                        y: vectorA.y * scalarValue,
+                        z: vectorA.z * scalarValue
+                    };
+                    resultHTML += `<p>${scalarValue} * a = (${result.x.toFixed(2)}, ${result.y.toFixed(2)}, ${result.z.toFixed(2)})</p>`;
+                    resultHTML += `<p>Magnitude: ${calculateMagnitude(result).toFixed(2)}</p>`;
+                    break;
+                    
+                case 'dot-product':
+                    const dotProduct = vectorA.x * vectorB.x + vectorA.y * vectorB.y + vectorA.z * vectorB.z;
+                    const magnitudeA = calculateMagnitude(vectorA);
+                    const magnitudeB = calculateMagnitude(vectorB);
+                    const angle = Math.acos(dotProduct / (magnitudeA * magnitudeB)) * (180 / Math.PI);
+                    
+                    resultHTML += `<p>a · b = ${dotProduct.toFixed(2)}</p>`;
+                    resultHTML += `<p>|a| = ${magnitudeA.toFixed(2)}, |b| = ${magnitudeB.toFixed(2)}</p>`;
+                    resultHTML += `<p>Angle between vectors: ${angle.toFixed(2)}°</p>`;
+                    
+                    // For visualization, we'll show both vectors but no result vector
+                    result = null;
+                    break;
+                    
+                case 'cross-product':
+                    result = {
+                        x: vectorA.y * vectorB.z - vectorA.z * vectorB.y,
+                        y: vectorA.z * vectorB.x - vectorA.x * vectorB.z,
+                        z: vectorA.x * vectorB.y - vectorA.y * vectorB.x
+                    };
+                    resultHTML += `<p>a × b = (${result.x.toFixed(2)}, ${result.y.toFixed(2)}, ${result.z.toFixed(2)})</p>`;
+                    resultHTML += `<p>Magnitude: ${calculateMagnitude(result).toFixed(2)}</p>`;
+                    resultHTML += `<p>This vector is perpendicular to both a and b.</p>`;
+                    break;
+                    
+                case 'projection':
+                    const dotProd = vectorA.x * vectorB.x + vectorA.y * vectorB.y + vectorA.z * vectorB.z;
+                    const magnitudeBSquared = vectorB.x * vectorB.x + vectorB.y * vectorB.y + vectorB.z * vectorB.z;
+                    
+                    if (magnitudeBSquared < 0.0001) {
+                        resultHTML += `<p>Error: Cannot project onto a zero vector.</p>`;
+                        result = null;
+                    } else {
+                        const scalar = dotProd / magnitudeBSquared;
+                        result = {
+                            x: scalar * vectorB.x,
+                            y: scalar * vectorB.y,
+                            z: scalar * vectorB.z
+                        };
+                        resultHTML += `<p>proj_b a = (${result.x.toFixed(2)}, ${result.y.toFixed(2)}, ${result.z.toFixed(2)})</p>`;
+                        resultHTML += `<p>Magnitude: ${calculateMagnitude(result).toFixed(2)}</p>`;
+                        resultHTML += `<p>Scalar projection: ${scalar.toFixed(2)}</p>`;
+                    }
+                    break;
+                    
+                case 'triple-product':
+                    const crossProduct = {
+                        x: vectorB.y * vectorC.z - vectorB.z * vectorC.y,
+                        y: vectorB.z * vectorC.x - vectorB.x * vectorC.z,
+                        z: vectorB.x * vectorC.y - vectorB.y * vectorC.x
+                    };
+                    
+                    const tripleProduct = vectorA.x * crossProduct.x + vectorA.y * crossProduct.y + vectorA.z * crossProduct.z;
+                    
+                    resultHTML += `<p>a · (b × c) = ${tripleProduct.toFixed(2)}</p>`;
+                    resultHTML += `<p>This equals the volume of the parallelepiped formed by the three vectors.</p>`;
+                    
+                    // For visualization, we'll show all three vectors
+                    result = null;
+                    break;
+            }
+            
+            // Update the result display
+            document.getElementById('result').innerHTML = resultHTML;
+            
+            // Update the visualization
+            updateVectorVisualization(result);
+        }
+        
+        // Calculate the magnitude of a vector
+        function calculateMagnitude(vector) {
+            return Math.sqrt(vector.x * vector.x + vector.y * vector.y + vector.z * vector.z);
+        }
+        
+        // Update the vector visualization
+        function updateVectorVisualization(result) {
+            // Remove existing arrows
+            if (vectorAArrow) scene.remove(vectorAArrow);
+            if (vectorBArrow) scene.remove(vectorBArrow);
+            if (vectorCArrow) scene.remove(vectorCArrow);
+            if (resultArrow) scene.remove(resultArrow);
+            
+            // Create origin point
+            const origin = { x: 0, y: 0, z: 0 };
+            
+            // Add vector A arrow
+            vectorAArrow = createVectorArrow(origin, vectorA, 0xff8800); // Orange
+            scene.add(vectorAArrow);
+            
+            // Add vector B arrow if needed
+            if (['addition', 'subtraction', 'dot-product', 'cross-product', 'projection'].includes(operationType)) {
+                vectorBArrow = createVectorArrow(origin, vectorB, 0x8800ff); // Purple
+                scene.add(vectorBArrow);
+            }
+            
+            // Add vector C arrow if needed
+            if (operationType === 'triple-product') {
+                vectorCArrow = createVectorArrow(origin, vectorC, 0x00ccff); // Cyan
+                scene.add(vectorCArrow);
+            }
+            
+            // Add result arrow if applicable
+            if (result) {
+                resultArrow = createVectorArrow(origin, result, 0xffcc00); // Yellow
+                scene.add(resultArrow);
+            }
+            
+            // Special case for vector addition visualization
+            if (operationType === 'addition') {
+                // Also show vector B starting from the tip of vector A
+                const vectorBFromA = createVectorArrow(vectorA, vectorB, 0x8800ff); // Purple
+                scene.add(vectorBFromA);
+            }
+        }
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // Handle window resize
+        function onWindowResize() {
+            camera.aspect = document.getElementById('visualization').clientWidth / document.getElementById('visualization').clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(document.getElementById('visualization').clientWidth, document.getElementById('visualization').clientHeight);
+        }
+        
+        // Tab switching functionality
+        function setupTabs() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons and content
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding content
+                    this.classList.add('active');
+                    const tabId = this.getAttribute('data-tab') + '-tab';
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+        
+        // Initialize when the page loads
+        window.onload = init;
+    </script>
+</body>
+</html>
