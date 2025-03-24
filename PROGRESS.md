@@ -150,10 +150,17 @@
   10. Summary and Connections
 - All 5 interactive elements have been implemented:
   - Force Simulator
-  - Orbital Mechanics Explorer
+  - Wave Propagation Visualizer
   - Thermodynamics Explorer
   - Electromagnetic Field Visualizer
   - Relativity Demonstrator
+- Created TODO.md file outlining the next phases of development:
+  - Assessment tools (exercises, quizzes, projects)
+  - Learning support materials (Math Helper sidebars, concept maps, glossaries)
+  - Mathematics components (Basic and Advanced)
+  - Additional astrophysics modules (Stellar Astrophysics, Black Hole Physics, etc.)
+  - Interactive elements for new modules
+  - Course integration features
 - All components have been committed to the repository with detailed commit messages
 
 **March 24, 2025 (Earlier)**
