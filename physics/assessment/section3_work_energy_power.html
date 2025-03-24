@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Module Assessment Platform</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        /* CSS styles for the assessment platform */
+        /* (Existing styles would be here) */
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">AstroCourse Physics</div>
+        <div class="nav-links">
+            <a href="#" onclick="showDashboard()">Dashboard</a>
+            <a href="#" onclick="resetProgress()">Reset Progress</a>
+        </div>
+    </header>
+    
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3>Physics Module</h3>
+                <p>Assessment Sections</p>
+            </div>
+            
+            <div class="sidebar-content">
+                <div class="section-list">
+                    <a href="#" class="section-link" onclick="showSection('section1')">
+                        <span class="progress-indicator not-started" id="section1-indicator"></span>Introduction to Physics
+                    </a>
+                    <a href="#" class="section-link" onclick="showSection('section2')">
+                        <span class="progress-indicator not-started" id="section2-indicator"></span>Classical Mechanics
+                    </a>
+                    <a href="#" class="section-link" onclick="showSection('section3')">
+                        <span class="progress-indicator not-started" id="section3-indicator"></span>Work, Energy, Power
+                    </a>
+                    <a href="#" class="section-link" onclick="showSection('section4')">
+                        <span class="progress-indicator not-started" id="section4-indicator"></span>Rotational Dynamics
+                    </a>
+                    <a href="#" class="section-link" onclick="showSection('section5')">
+                        <span class="progress-indicator not-started" id="section5-indicator"></span>Oscillations and Waves
+                    </a>
+                    <a href="#" class="section-link" onclick="showSection('section6')">
+                        <span class="progress-indicator not-started" id="section6-indicator"></span>Fluid Mechanics and Thermodynamics
+                    </a>
+                    <a href="#" class="section-link" onclick="showSection('section7')">
+                        <span class="progress-indicator not-started" id="section7-indicator"></span>Electromagnetism
+                    </a>
+                    <a href="#" class="section-link" onclick="showSection('section8')">
+                        <span class="progress-indicator not-started" id="section8-indicator"></span>Optics and Light
+                    </a>
+                    <a href="#" class="section-link" onclick="showSection('section9')">
+                        <span class="progress-indicator not-started" id="section9-indicator"></span>Modern Physics
+                    </a>
+                    <a href="#" class="section-link" onclick="showSection('section10')">
+                        <span class="progress-indicator not-started" id="section10-indicator"></span>Summary and Connections
+                    </a>
+                    <a href="#" class="section-link" onclick="showSection('review-quizzes')">
+                        <span class="progress-indicator not-started" id="review-quizzes-indicator"></span>Review Quizzes
+                    </a>
+                    <a href="#" class="section-link" onclick="showSection('challenge-problems')">
+                        <span class="progress-indicator not-started" id="challenge-problems-indicator"></span>Challenge Problems
+                    </a>
+                </div>
+                
+                <div class="progress-summary">
+                    <h4>Overall Progress</h4>
+                    <p><span id="completed-sections">0</span> of 12 sections completed</p>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="overall-progress-bar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <!-- Dashboard -->
+            <div id="dashboard" class="section-content active">
+                <div class="dashboard-header">
+                    <h1>Physics Module Assessment Platform</h1>
+                    <p>Test your understanding of physics concepts and their applications in astronomy</p>
+                </div>
+                
+                <div class="dashboard-content">
+                    <div class="progress-overview">
+                        <h2>Your Progress</h2>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="dashboard-progress-bar"></div>
+                        </div>
+                        <p><span id="dashboard-completed-sections">0</span> of 12 sections completed</p>
+                    </div>
+                    
+                    <div class="section-grid">
+                        <h2>Content Sections</h2>
+                        <div class="grid">
+                            <div class="section-card" onclick="showSection('section1')">
+                                <div class="card-header">
+                                    <h3>1. Introduction to Physics</h3>
+                                    <span class="progress-indicator not-started" id="dashboard-section1-indicator"></span>
+                                </div>
+                                <div class="card-footer">
+                                    <span class="section-status status-not-started" id="section1-status">Not Started</span>
+                                    <a href="#" class="btn" onclick="showSection('section1'); event.stopPropagation();">Start</a>
+                                </div>
+                            </div>
+                            
+                            <div class="section-card" onclick="showSection('section2')">
+                                <div class="card-header">
+                                    <h3>2. Classical Mechanics</h3>
+                                    <span class="progress-indicator not-started" id="dashboard-section2-indicator"></span>
+                                </div>
+                                <div class="card-footer">
+                                    <span class="section-status status-not-started" id="section2-status">Not Started</span>
+                                    <a href="#" class="btn" onclick="showSection('section2'); event.stopPropagation();">Start</a>
+                                </div>
+                            </div>
+                            
+                            <div class="section-card" onclick="showSection('section3')">
+                                <div class="card-header">
+                                    <h3>3. Work, Energy, Power</h3>
+                                    <span class="progress-indicator not-started" id="dashboard-section3-indicator"></span>
+                                </div>
+                                <div class="card-footer">
+                                    <span class="section-status status-not-started" id="section3-status">Not Started</span>
+                                    <a href="#" class="btn" onclick="showSection('section3'); event.stopPropagation();">Start</a>
+                                </div>
+                            </div>
+                            
+                            <div class="section-card" onclick="showSection('section4')">
+                                <div class="card-header">
+                                    <h3>4. Rotational Dynamics</h3>
+                                    <span class="progress-indicator not-started" id="dashboard-section4-indicator"></span>
+                                </div>
+                                <div class="card-footer">
+                                    <span class="section-status status-not-started" id="section4-status">Not Started</span>
+                                    <a href="#" class="btn" onclick="showSection('section4'); event.stopPropagation();">Start</a>
+                                </div>
+                            </div>
+                            
+                            <div class="section-card" onclick="showSection('section5')">
+                                <div class="card-header">
+                                    <h3>5. Oscillations and Waves</h3>
+                                    <span class="progress-indicator not-started" id="dashboard-section5-indicator"></span>
+                                </div>
+                                <div class="card-footer">
+                                    <span class="section-status status-not-started" id="section5-status">Not Started</span>
+                                    <a href="#" class="btn" onclick="showSection('section5'); event.stopPropagation();">Start</a>
+                                </div>
+                            </div>
+                            
+                            <div class="section-card" onclick="showSection('section6')">
+                                <div class="card-header">
+                                    <h3>6. Fluid Mechanics and Thermodynamics</h3>
+                                    <span class="progress-indicator not-started" id="dashboard-section6-indicator"></span>
+                                </div>
+                                <div class="card-footer">
+                                    <span class="section-status status-not-started" id="section6-status">Not Started</span>
+                                    <a href="#" class="btn" onclick="showSection('section6'); event.stopPropagation();">Start</a>
+                                </div>
+                            </div>
+                            
+                            <div class="section-card" onclick="showSection('section7')">
+                                <div class="card-header">
+                                    <h3>7. Electromagnetism</h3>
+                                    <span class="progress-indicator not-started" id="dashboard-section7-indicator"></span>
+                                </div>
+                                <div class="card-footer">
+                                    <span class="section-status status-not-started" id="section7-status">Not Started</span>
+                                    <a href="#" class="btn" onclick="showSection('section7'); event.stopPropagation();">Start</a>
+                                </div>
+                            </div>
+                            
+                            <div class="section-card" onclick="showSection('section8')">
+                                <div class="card-header">
+                                    <h3>8. Optics and Light</h3>
+                                    <span class="progress-indicator not-started" id="dashboard-section8-indicator"></span>
+                                </div>
+                                <div class="card-footer">
+                                    <span class="section-status status-not-started" id="section8-status">Not Started</span>
+                                    <a href="#" class="btn" onclick="showSection('section8'); event.stopPropagation();">Start</a>
+                                </div>
+                            </div>
+                            
+                            <div class="section-card" onclick="showSection('section9')">
+                                <div class="card-header">
+                                    <h3>9. Modern Physics</h3>
+                                    <span class="progress-indicator not-started" id="dashboard-section9-indicator"></span>
+                                </div>
+                                <div class="card-footer">
+                                    <span class="section-status status-not-started" id="section9-status">Not Started</span>
+                                    <a href="#" class="btn" onclick="showSection('section9'); event.stopPropagation();">Start</a>
+                                </div>
+                            </div>
+                            
+                            <div class="section-card" onclick="showSection('section10')">
+                                <div class="card-header">
+                                    <h3>10. Summary and Connections</h3>
+                                    <span class="progress-indicator not-started" id="dashboard-section10-indicator"></span>
+                                </div>
+                                <div class="card-footer">
+                                    <span class="section-status status-not-started" id="section10-status">Not Started</span>
+                                    <a href="#" class="btn" onclick="showSection('section10'); event.stopPropagation();">Start</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="additional-assessments">
+                        <h2>Additional Assessments</h2>
+                        <div class="grid">
+                            <div class="section-card" onclick="showSection('review-quizzes')">
+                                <div class="card-header">
+                                    <h3>Review Quizzes</h3>
+                                    <span class="progress-indicator not-started" id="dashboard-review-quizzes-indicator"></span>
+                                </div>
+                                <div class="card-footer">
+                                    <span class="section-status status-not-started" id="review-quizzes-status">Not Started</span>
+                                    <a href="#" class="btn" onclick="showSection('review-quizzes'); event.stopPropagation();">Start</a>
+                                </div>
+                            </div>
+                            
+                            <div class="section-card" onclick="showSection('challenge-problems')">
+                                <div class="card-header">
+                                    <h3>Challenge Problems</h3>
+                                    <span class="progress-indicator not-started" id="dashboard-challenge-problems-indicator"></span>
+                                </div>
+                                <div class="card-footer">
+                                    <span class="section-status status-not-started" id="challenge-problems-status">Not Started</span>
+                                    <a href="#" class="btn" onclick="showSection('challenge-problems'); event.stopPropagation();">Start</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section 1: Introduction to Physics -->
+            <div id="section1" class="section-content">
+                <!-- Section 1 content would be here -->
+            </div>
+            
+            <!-- Section 2: Classical Mechanics -->
+            <div id="section2" class="section-content">
+                <!-- Section 2 content would be here -->
+            </div>
+            
+            <!-- Section 3: Work, Energy, Power -->
+            <div id="section3" class="section-content">
+                <div class="assessment-container">
+                    <div class="assessment-header">
+                        <h2>Work, Energy, Power</h2>
+                        <p>Quick Check Assessment</p>
+                    </div>
+                    
+                    <div class="instructions">
+                        <h3>Instructions</h3>
+                        <p>This quick check exercise covers the content from Section 3: Work, Energy, Power. Answer all questions to test your understanding of energy transformations and conservation in astronomical systems.</p>
+                        <p>The assessment includes conceptual questions, mathematical problems, and applied astronomy scenarios. Complete all questions and click "Submit Answers" to see your results.</p>
+                    </div>
+                    
+                    <div class="question-section">
+                        <h3>Conceptual Understanding Questions</h3>
+                        
+                        <div class="question" id="s3q1">
+                            <div class="question-header">
+                                <span>Question 1</span>
+                                <span class="question-type">Multiple Choice (Select the best answer)</span>
+                            </div>
+                            <p>Which of the following best describes the relationship between work and energy in a physical system?</p>
+                            <div class="options">
+                                <div class="option">
+                                    <input type="radio" name="s3q1" id="s3q1a" value="a">
+                                    <label for="s3q1a">Work is the rate at which energy is transferred</label>
+                                </div>
+                                <div class="option">
+                                    <input type="radio" name="s3q1" id="s3q1b" value="b">
+                                    <label for="s3q1b">Work is the transfer of energy from one form to another</label>
+                                </div>
+                                <div class="option">
+                                    <input type="radio" name="s3q1" id="s3q1c" value="c">
+                                    <label for="s3q1c">Work is the energy transferred to an object by applying a force through a displacement</label>
+                                </div>
+                                <div class="option">
+                                    <input type="radio" name="s3q1" id="s3q1d" value="d">
+                                    <label for="s3q1d">Work is the capacity to do energy</label>
+                                </div>
+                            </div>
+                            <div class="feedback" id="feedback-s3q1"></div>
+                            <div class="explanation" id="explanation-s3q1">
+                                <h4>Explanation:</h4>
+                                <p>Work is the energy transferred to an object by applying a force through a displacement. Mathematically, work is calculated as W = F·d·cos(θ), where F is the force, d is the displacement, and θ is the angle between the force and displacement vectors. When work is done on an object, energy is transferred to that object, which can change its kinetic energy, potential energy, or both. This relationship is formalized in the work-energy theorem, which states that the net work done on an object equals the change in its kinetic energy.</p>
+                                <p>The rate at which energy is transferred is power, not work. Work is the energy transfer itself, not the rate of transfer.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="question" id="s3q2">
+                            <div class="question-header">
+                                <span>Question 2</span>
+                                <span class="question-type">Multiple Choice (Select all that apply)</span>
+                            </div>
+                            <p>Which of the following are forms of energy important in astronomical systems? (Check all that apply)</p>
+                            <div class="options">
+                                <div class="option">
+                                    <input type="checkbox" name="s3q2" id="s3q2a" value="a">
+                                    <label for="s3q2a">Gravitational potential energy</label>
+                                </div>
+                                <div class="option">
+                                    <input type="checkbox" name="s3q2" id="s3q2b" value="b">
+                                    <label for="s3q2b">Kinetic energy</label>
+                                </div>
+                                <div class="option">
+                                    <input type="checkbox" name="s3q2" id="s3q2c" value="c">
+                                    <label for="s3q2c">Thermal energy</label>
+                                </div>
+                                <div class="option">
+                                    <input type="checkbox" name="s3q2" id="s3q2d" value="d">
+                                    <label for="s3q2d">Electromagnetic energy</label>
+                                </div>
+                                <div class="option">
+                                    <input type="checkbox" name="s3q2" id="s3q2e" value="e">
+                                    <label for="s3q2e">Nuclear energy</label>
+                                </div>
+                            </div>
+                            <div class="feedback" id="feedback-s3q2"></div>
+                            <div class="explanation" id="explanation-s3q2">
+                                <h4>Explanation:</h4>
+                                <p>All five forms of energy listed are important in astronomical systems:</p>
+                                <p>- <strong>Gravitational potential energy</strong> is crucial in orbital dynamics, star formation, and galaxy structure. It's the energy stored in the gravitational field between massive objects.</p>
+                                <p>- <strong>Kinetic energy</strong> is the energy of motion, present in all moving astronomical objects from planets orbiting stars to galaxies moving through space.</p>
+                                <p>- <strong>Thermal energy</strong> is the internal energy of a system due to the motion of its particles. It's essential in understanding stellar interiors, planetary atmospheres, and the interstellar medium.</p>
+                                <p>- <strong>Electromagnetic energy</strong> includes all forms of electromagnetic radiation (light, radio waves, X-rays, etc.) that carry information across space and are crucial for astronomical observations.</p>
+                                <p>- <strong>Nuclear energy</strong> powers stars through fusion reactions and is released in supernovae and other high-energy astrophysical events.</p>
+                                <p>The interplay between these different forms of energy drives the evolution of astronomical systems at all scales.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="question" id="s3q3">
+                            <div class="question-header">
+                                <span>Question 3</span>
+                                <span class="question-type">True/False</span>
+                            </div>
+                            <p>The total energy of an isolated system can change if work is done within the system, but the total energy plus work is always conserved.</p>
+                            <div class="options">
+                                <div class="option">
+                                    <input type="radio" name="s3q3" id="s3q3a" value="a">
+                                    <label for="s3q3a">True</label>
+                                </div>
+                                <div class="option">
+                                    <input type="radio" name="s3q3" id="s3q3b" value="b">
+                                    <label for="s3q3b">False</label>
+                                </div>
+                            </div>
+                            <div class="feedback" id="feedback-s3q3"></div>
+                            <div class="explanation" id="explanation-s3q3">
+                                <h4>Explanation:</h4>
+                                <p>This statement is false. According to the law of conservation of energy, the total energy of an isolated system remains constant; it can neither be created nor destroyed, only transformed from one form to another. Work done within an isolated system simply transfers energy from one part of the system to another or converts it between different forms, but it doesn't change the total energy of the system.</p>
+                                <p>In astronomical contexts, this principle is crucial. For example, in a star-planet system, gravitational potential energy can be converted to kinetic energy as a planet falls toward its star, but the total energy (kinetic + potential) remains constant. Similarly, in stellar interiors, nuclear potential energy is converted to thermal and electromagnetic energy, but the total energy is conserved.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="question-section">
+                        <h3>Mathematical Problem-Solving Exercises</h3>
+                        
+                        <div class="question" id="s3q4">
+                            <div class="question-header">
+                                <span>Question 4</span>
+                                <span class="question-type">Energy Calculation</span>
+                            </div>
+                            <p>A comet of mass 5.0 × 10<sup>12</sup> kg is moving at 25 km/s relative to the Sun. Calculate its kinetic energy in joules.</p>
+                            <input type="text" id="s3q4-answer" placeholder="Enter your answer in scientific notation (e.g., 1.23 × 10^20)">
+                            <button class="hint-btn" onclick="toggleHint('hint-s3q4')">Show Hint</button>
+                            <div class="hint" id="hint-s3q4">Use the formula for kinetic energy: KE = (1/2)mv², where m is the mass and v is the velocity. Remember to convert km/s to m/s.</div>
+                            <div class="feedback" id="feedback-s3q4"></div>
+                            <div class="explanation" id="explanation-s3q4">
+                                <h4>Explanation:</h4>
+                                <p><strong>Calculation:</strong></p>
+                                <p>First, convert the velocity from km/s to m/s:</p>
+                                <p>v = 25 km/s = 25,000 m/s</p>
+                                <p>Using the formula for kinetic energy: KE = (1/2)mv²</p>
+                                <p>KE = (1/2) × (5.0 × 10<sup>12</sup> kg) × (25,000 m/s)²</p>
+                                <p>KE = (1/2) × (5.0 × 10<sup>12</sup>) × (6.25 × 10<sup>8</sup>)</p>
+                                <p>KE = 1.56 × 10<sup>21</sup> J</p>
+                                <p>This enormous amount of kinetic energy explains why cometary impacts can be so devastating. For comparison, the Chicxulub impact that likely caused the extinction of non-avian dinosaurs is estimated to have released energy equivalent to about 10<sup>23</sup> J.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="question" id="s3q5">
+                            <div class="question-header">
+                                <span>Question 5</span>
+                                <span class="question-type">Gravitational Potential Energy Problem</span>
+                            </div>
+                            <p>A spacecraft of mass 1,000 kg is in a circular orbit around Earth at an altitude of 400 km. Calculate the change in gravitational potential energy (in joules) if it moves to a higher orbit at 1,000 km altitude. Use G = 6.67 × 10<sup>-11</sup> N·m<sup>2</sup>/kg<sup>2</sup>, Earth's mass = 5.97 × 10<sup>24</sup> kg, and Earth's radius = 6,371 km.</p>
+                            <input type="text" id="s3q5-answer" placeholder="Enter your answer in scientific notation (e.g., 1.23 × 10^9)">
+                            <button class="hint-btn" onclick="toggleHint('hint-s3q5')">Show Hint</button>
+                            <div class="hint" id="hint-s3q5">Use the formula for gravitational potential energy: PE = -GMm/r, where G is the gravitational constant, M is Earth's mass, m is the spacecraft's mass, and r is the distance from Earth's center. Calculate the difference between the potential energy at the two altitudes.</div>
+                            <div class="feedback" id="feedback-s3q5"></div>
+                            <div class="explanation" id="explanation-s3q5">
+                                <h4>Explanation:</h4>
+                                <p><strong>Calculation:</strong></p>
+                                <p>The gravitational potential energy at a distance r from Earth's center is given by: PE = -GMm/r</p>
+                                <p>For the initial orbit at 400 km altitude:</p>
+                                <p>r₁ = Earth's radius + altitude = 6,371 km + 400 km = 6,771 km = 6.771 × 10<sup>6</sup> m</p>
+                                <p>PE₁ = -(6.67 × 10<sup>-11</sup>) × (5.97 × 10<sup>24</sup>) × (1,000) / (6.771 × 10<sup>6</sup>)</p>
+                                <p>PE₁ = -5.88 × 10<sup>10</sup> J</p>
+                                <p>For the final orbit at 1,000 km altitude:</p>
+                                <p>r₂ = Earth's radius + altitude = 6,371 km + 1,000 km = 7,371 km = 7.371 × 10<sup>6</sup> m</p>
+                                <p>PE₂ = -(6.67 × 10<sup>-11</sup>) × (5.97 × 10<sup>24</sup>) × (1,000) / (7.371 × 10<sup>6</sup>)</p>
+                                <p>PE₂ = -5.40 × 10<sup>10</sup> J</p>
+                                <p>The change in potential energy is:</p>
+                                <p>ΔPE = PE₂ - PE₁ = -5.40 × 10<sup>10</sup> - (-5.88 × 10<sup>10</sup>) = 4.8 × 10<sup>9</sup> J</p>
+                                <p>The positive value indicates that energy must be added to the spacecraft to move it to a higher orbit, which makes physical sense. This energy could be provided by rocket engines or other propulsion systems.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="question-section">
+                        <h3>Applied Astronomy Scenarios</h3>
+                        
+                        <div class="question" id="s3q6">
+                            <div class="question-header">
+                                <span>Question 6</span>
+                                <span class="question-type">Scenario Analysis</span>
+                            </div>
+                            <div class="scenario">
+                                <p>A main sequence star with 1.5 times the mass of our Sun has been observed for several decades. Spectroscopic analysis shows that hydrogen fusion is occurring in its core, converting hydrogen into helium and releasing energy.</p>
+                            </div>
+                            <p>A) Explain the primary source of the star's energy in terms of mass-energy equivalence.</p>
+                            <textarea id="s3q6a-answer" rows="3" placeholder="Enter your answer" style="width: 100%; padding: 8px;"></textarea>
+                            <p>B) If the star converts 4.3 × 10<sup>9</sup> kg of mass into energy each second, calculate its power output in watts. Use E = mc², where c = 3.0 × 10<sup>8</sup> m/s.</p>
+                            <textarea id="s3q6b-answer" rows="3" placeholder="Enter your answer" style="width: 100%; padding: 8px;"></textarea>
+                            <p>C) How does this energy production mechanism relate to the star's lifetime compared to lower-mass stars?</p>
+                            <textarea id="s3q6c-answer" rows="3" placeholder="Enter your answer" style="width: 100%; padding: 8px;"></textarea>
+                            <div class="feedback" id="feedback-s3q6"></div>
+                            <div class="explanation" id="explanation-s3q6">
+                                <h4>Explanation:</h4>
+                                <p><strong>A) Source of the star's energy in terms of mass-energy equivalence:</strong></p>
+                                <p>The star's energy comes from nuclear fusion in its core, where hydrogen nuclei combine to form helium. During this process, some of the mass of the original hydrogen nuclei is converted into energy according to Einstein's mass-energy equivalence equation, E = mc². The mass of a helium nucleus is slightly less than the mass of the four hydrogen nuclei that formed it. This mass difference (called the mass defect) is converted directly into energy. This process is the primary power source for main sequence stars.</p>
+                                
+                                <p><strong>B) Power output calculation:</strong></p>
+                                <p>Using E = mc²:</p>
+                                <p>Power = Energy/time = mc²/time</p>
+                                <p>Power = (4.3 × 10<sup>9</sup> kg) × (3.0 × 10<sup>8</sup> m/s)²</p>
+                                <p>Power = (4.3 × 10<sup>9</sup>) × (9.0 × 10<sup>16</sup>)</p>
+                                <p>Power = 3.87 × 10<sup>26</sup> watts</p>
+                                <p>This is approximately 10 times the luminosity of our Sun, which is about 3.8 × 10<sup>26</sup> watts.</p>
+                                
+                                <p><strong>C) Relationship to star's lifetime:</strong></p>
+                                <p>Higher-mass stars have shorter lifetimes than lower-mass stars, despite having more hydrogen fuel. This is because higher-mass stars have much higher core temperatures and pressures, which dramatically accelerate the rate of fusion reactions. The fusion rate increases approximately with the cube of the star's mass. So while a 1.5 solar mass star has 50% more fuel than our Sun, it burns that fuel at a much faster rate, resulting in a shorter overall lifetime. This star would have a main sequence lifetime of roughly 2-3 billion years, compared to our Sun's expected 10 billion year lifetime.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="submit-section">
+                        <button id="submit-btn-section3" onclick="checkAnswersSection3()">Submit Answers</button>
+                    </div>
+                    
+                    <div class="results" id="results-section3">
+                        <h2>Your Results</h2>
+                        <p>You scored <span id="score-section3">0</span> out of 6 questions correctly.</p>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="progress-bar-section3"></div>
+                        </div>
+                        <p id="performance-message-section3"></p>
+                        <p>Review your answers above to see explanations for each question.</p>
+                        <div class="navigation-buttons">
+                            <button class="btn" onclick="showSection('section2')">Previous Section: Classical Mechanics</button>
+                            <button class="btn" onclick="showSection('section4')">Next Section: Rotational Dynamics</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section 4: Rotational Dynamics -->
+            <div id="section4" class="section-content">
+                <!-- Section 4 content would be here -->
+            </div>
+            
+            <!-- Additional sections would be here -->
+            
+            <!-- Review Quizzes -->
+            <div id="review-quizzes" class="section-content">
+                <!-- Review quizzes content would be here -->
+            </div>
+            
+            <!-- Challenge Problems -->
+            <div id="challenge-problems" class="section-content">
+                <!-- Challenge problems content would be here -->
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>AstroCourse Physics Module Assessment Platform | &copy; 2025</p>
+    </footer>
+    
+    <script>
+        // JavaScript for the assessment platform
+        
+        // Function to toggle hints
+        function toggleHint(hintId) {
+            const hint = document.getElementById(hintId);
+            if (hint.style.display === "block") {
+                hint.style.display = "none";
+            } else {
+                hint.style.display = "block";
+            }
+        }
+        
+        // Function to check answers for Section 3
+        function checkAnswersSection3() {
+            let score = 0;
+            let feedback = "";
+            
+            // Question 1
+            const q1Answer = document.querySelector('input[name="s3q1"]:checked');
+            if (q1Answer) {
+                if (q1Answer.value === "c") {
+                    score++;
+                    document.getElementById("feedback-s3q1").innerHTML = "<span class='correct'>Correct!</span>";
+                } else {
+                    document.getElementById("feedback-s3q1").innerHTML = "<span class='incorrect'>Incorrect</span>";
+                }
+                document.getElementById("explanation-s3q1").style.display = "block";
+            } else {
+                document.getElementById("feedback-s3q1").innerHTML = "<span class='unanswered'>Not answered</span>";
+            }
+            
+            // Question 2 (multiple select)
+            const q2Answers = document.querySelectorAll('input[name="s3q2"]:checked');
+            const q2CorrectAnswers = ["a", "b", "c", "d", "e"]; // All options are correct
+            
+            if (q2Answers.length > 0) {
+                if (q2Answers.length === q2CorrectAnswers.length && Array.from(q2Answers).every(input => q2CorrectAnswers.includes(input.value))) {
+                    score++;
+                    document.getElementById("feedback-s3q2").innerHTML = "<span class='correct'>Correct!</span>";
+                } else {
+                    document.getElementById("feedback-s3q2").innerHTML = "<span class='incorrect'>Incorrect</span>";
+                }
+                document.getElementById("explanation-s3q2").style.display = "block";
+            } else {
+                document.getElementById("feedback-s3q2").innerHTML = "<span class='unanswered'>Not answered</span>";
+            }
+            
+            // Question 3
+            const q3Answer = document.querySelector('input[name="s3q3"]:checked');
+            if (q3Answer) {
+                if (q3Answer.value === "b") {
+                    score++;
+                    document.getElementById("feedback-s3q3").innerHTML = "<span class='correct'>Correct!</span>";
+                } else {
+                    document.getElementById("feedback-s3q3").innerHTML = "<span class='incorrect'>Incorrect</span>";
+                }
+                document.getElementById("explanation-s3q3").style.display = "block";
+            } else {
+                document.getElementById("feedback-s3q3").innerHTML = "<span class='unanswered'>Not answered</span>";
+            }
+            
+            // Question 4
+            const q4Answer = document.getElementById("s3q4-answer").value.trim().toLowerCase();
+            if (q4Answer) {
+                // Accept various formats of the correct answer
+                if (q4Answer.includes("1.56") && q4Answer.includes("10") && q4Answer.includes("21") || 
+                    q4Answer.includes("1.6") && q4Answer.includes("10") && q4Answer.includes("21")) {
+                    score++;
+                    document.getElementById("feedback-s3q4").innerHTML = "<span class='correct'>Correct!</span>";
+                } else {
+                    document.getElementById("feedback-s3q4").innerHTML = "<span class='incorrect'>Incorrect</span>";
+                }
+                document.getElementById("explanation-s3q4").style.display = "block";
+            } else {
+                document.getElementById("feedback-s3q4").innerHTML = "<span class='unanswered'>Not answered</span>";
+            }
+            
+            // Question 5
+            const q5Answer = document.getElementById("s3q5-answer").value.trim().toLowerCase();
+            if (q5Answer) {
+                // Accept various formats of the correct answer
+                if (q5Answer.includes("4.8") && q5Answer.includes("10") && q5Answer.includes("9") || 
+                    q5Answer.includes("4.7") && q5Answer.includes("10") && q5Answer.includes("9") ||
+                    q5Answer.includes("5") && q5Answer.includes("10") && q5Answer.includes("9")) {
+                    score++;
+                    document.getElementById("feedback-s3q5").innerHTML = "<span class='correct'>Correct!</span>";
+                } else {
+                    document.getElementById("feedback-s3q5").innerHTML = "<span class='incorrect'>Incorrect</span>";
+                }
+                document.getElementById("explanation-s3q5").style.display = "block";
+            } else {
+                document.getElementById("feedback-s3q5").innerHTML = "<span class='unanswered'>Not answered</span>";
+            }
+            
+            // Question 6 (scenario analysis)
+            const q6aAnswer = document.getElementById("s3q6a-answer").value.trim();
+            const q6bAnswer = document.getElementById("s3q6b-answer").value.trim();
+            const q6cAnswer = document.getElementById("s3q6c-answer").value.trim();
+            
+            if (q6aAnswer && q6bAnswer && q6cAnswer) {
+                // Check if answers contain key concepts
+                const q6aKeywords = ["mass-energy", "e=mc2", "einstein", "fusion", "mass defect"];
+                const q6bKeywords = ["3.87", "10^26", "watts", "joules per second"];
+                const q6cKeywords = ["shorter", "lifetime", "faster", "rate", "temperature", "pressure"];
+                
+                let q6aCorrect = q6aKeywords.some(keyword => q6aAnswer.toLowerCase().includes(keyword));
+                let q6bCorrect = q6bKeywords.some(keyword => q6bAnswer.toLowerCase().includes(keyword));
+                let q6cCorrect = q6cKeywords.some(keyword => q6cAnswer.toLowerCase().includes(keyword));
+                
+                if (q6aCorrect && q6bCorrect && q6cCorrect) {
+                    score++;
+                    document.getElementById("feedback-s3q6").innerHTML = "<span class='correct'>Correct!</span>";
+                } else {
+                    document.getElementById("feedback-s3q6").innerHTML = "<span class='incorrect'>Partially correct or incorrect</span>";
+                }
+                document.getElementById("explanation-s3q6").style.display = "block";
+            } else {
+                document.getElementById("feedback-s3q6").innerHTML = "<span class='unanswered'>Not all parts answered</span>";
+            }
+            
+            // Display results
+            document.getElementById("score-section3").textContent = score;
+            document.getElementById("progress-bar-section3").style.width = `${(score/6)*100}%`;
+            
+            // Performance message
+            let performanceMessage = "";
+            if (score === 6) {
+                performanceMessage = "Excellent! You have a strong understanding of work, energy, and power concepts in astronomy.";
+            } else if (score >= 4) {
+                performanceMessage = "Good job! You understand most of the key concepts, but there's still room for improvement.";
+            } else if (score >= 2) {
+                performanceMessage = "You're making progress, but should review the material to strengthen your understanding.";
+            } else {
+                performanceMessage = "You should review the material thoroughly to improve your understanding of these concepts.";
+            }
+            document.getElementById("performance-message-section3").textContent = performanceMessage;
+            
+            // Show results section
+            document.getElementById("results-section3").style.display = "block";
+            
+            // Update progress tracking
+            if (score >= 4) {
+                sectionProgress.section3 = "completed";
+            } else if (score > 0) {
+                sectionProgress.section3 = "in-progress";
+            }
+            saveProgress();
+            updateProgressDisplay();
+            
+            // Scroll to results
+            document.getElementById("results-section3").scrollIntoView({ behavior: "smooth" });
+        }
+        
+        // Initialize progress tracking
+        let sectionProgress = {
+            'section1': 'not-started',
+            'section2': 'not-started',
+            'section3': 'not-started',
+            'section4': 'not-started',
+            'section5': 'not-started',
+            'section6': 'not-started',
+            'section7': 'not-started',
+            'section8': 'not-started',
+            'section9': 'not-started',
+            'section10': 'not-started',
+            'review-quizzes': 'not-started',
+            'challenge-problems': 'not-started'
+        };
+        
+        // Load progress from localStorage if available
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('astrocourse-physics-progress');
+            if (savedProgress) {
+                sectionProgress = JSON.parse(savedProgress);
+                updateProgressDisplay();
+            }
+        }
+        
+        // Save progress to localStorage
+        function saveProgress() {
+            localStorage.setItem('astrocourse-physics-progress', JSON.stringify(sectionProgress));
+        }
+        
+        // Update progress indicators and status text
+        function updateProgressDisplay() {
+            let completedCount = 0;
+            
+            for (const section in sectionProgress) {
+                const status = sectionProgress[section];
+                const indicator = document.getElementById(`${section}-indicator`);
+                const statusText = document.getElementById(`${section}-status`);
+                
+                if (indicator) {
+                    indicator.className = `progress-indicator ${status}`;
+                }
+                
+                if (statusText) {
+                    statusText.className = `section-status status-${status}`;
+                    
+                    if (status === 'not-started') {
+                        statusText.textContent = 'Not Started';
+                    } else if (status === 'in-progress') {
+                        statusText.textContent = 'In Progress';
+                    } else if (status === 'completed') {
+                        statusText.textContent = 'Completed';
+                        completedCount++;
+                    }
+                }
+            }
+            
+            // Update overall progress
+            document.getElementById('completed-sections').textContent = completedCount;
+            const totalSections = Object.keys(sectionProgress).length;
+            const progressPercentage = (completedCount / totalSections) * 100;
+            document.getElementById('overall-progress-bar').style.width = `${progressPercentage}%`;
+        }
+        
+        // Show a specific section and hide others
+        function showSection(sectionId) {
+            // Hide all sections
+            const sections = document.getElementsByClassName('section-content');
+            for (let i = 0; i < sections.length; i++) {
+                sections[i].classList.remove('active');
+            }
+            
+            // Show the selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Update section status if not already started
+            if (sectionProgress[sectionId] === 'not-started') {
+                sectionProgress[sectionId] = 'in-progress';
+                saveProgress();
+                updateProgressDisplay();
+            }
+        }
+        
+        // Show dashboard
+        function showDashboard() {
+            // Hide all sections
+            const sections = document.getElementsByClassName('section-content');
+            for (let i = 0; i < sections.length; i++) {
+                sections[i].classList.remove('active');
+            }
+            
+            // Show dashboard
+            document.getElementById('dashboard').classList.add('active');
+            
+            // Update dashboard progress indicators
+            updateProgressDisplay();
+            
+            // Update dashboard progress bar
+            const completedCount = Object.values(sectionProgress).filter(status => status === 'completed').length;
+            const totalSections = Object.keys(sectionProgress).length;
+            const progressPercentage = (completedCount / totalSections) * 100;
+            document.getElementById('dashboard-progress-bar').style.width = `${progressPercentage}%`;
+            document.getElementById('dashboard-completed-sections').textContent = completedCount;
+        }
+        
+        // Reset progress
+        function resetProgress() {
+            if (confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+                for (const section in sectionProgress) {
+                    sectionProgress[section] = 'not-started';
+                }
+                saveProgress();
+                updateProgressDisplay();
+                alert('Progress has been reset.');
+            }
+        }
+        
+        // Load progress on page load
+        window.onload = function() {
+            loadProgress();
+            
+            // Hide all explanation sections initially
+            const explanations = document.getElementsByClassName('explanation');
+            for (let i = 0; i < explanations.length; i++) {
+                explanations[i].style.display = 'none';
+            }
+            
+            // Hide all hint sections initially
+            const hints = document.getElementsByClassName('hint');
+            for (let i = 0; i < hints.length; i++) {
+                hints[i].style.display = 'none';
+            }
+            
+            // Hide all results sections initially
+            const results = document.getElementsByClassName('results');
+            for (let i = 0; i < results.length; i++) {
+                results[i].style.display = 'none';
+            }
+        };
+    </script>
+</body>
+</html>
