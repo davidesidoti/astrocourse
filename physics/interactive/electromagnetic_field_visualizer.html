@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electromagnetic Field Visualizer - AstroCourse Physics</title>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --electric-color: #e74c3c;
+            --magnetic-color: #3498db;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background-color: var(--light-color);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .description {
+            font-style: italic;
+            margin-bottom: 0;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .visualization-container {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .visualization {
+            flex: 1;
+            min-width: 300px;
+            height: 400px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .controls-container {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .controls-section {
+            margin-bottom: 20px;
+        }
+
+        .controls-section h3 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .control-group input[type="range"],
+        .control-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .control-group input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button.primary {
+            background-color: var(--primary-color);
+        }
+
+        button.primary:hover {
+            background-color: #1a252f;
+        }
+
+        button.accent {
+            background-color: var(--accent-color);
+        }
+
+        button.accent:hover {
+            background-color: #c0392b;
+        }
+
+        .tabs {
+            display: flex;
+            background-color: #f1f1f1;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab-button {
+            background-color: inherit;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 16px;
+            color: var(--dark-color);
+        }
+
+        .tab-button:hover {
+            background-color: #ddd;
+        }
+
+        .tab-button.active {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border-top: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .info-panel {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .info-panel h3 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .info-panel p {
+            margin-bottom: 15px;
+        }
+
+        .info-panel ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .info-panel code {
+            background-color: #f1f1f1;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+            gap: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+        }
+
+        .electric-field {
+            background-color: var(--electric-color);
+        }
+
+        .magnetic-field {
+            background-color: var(--magnetic-color);
+        }
+
+        .data-display {
+            background-color: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-top: 15px;
+        }
+
+        .data-display h4 {
+            margin-bottom: 5px;
+            color: var(--primary-color);
+        }
+
+        .data-display p {
+            margin: 5px 0;
+            font-family: monospace;
+        }
+
+        .preset-scenarios {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .preset-card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .preset-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .preset-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .preset-card p {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .visualization-container {
+                flex-direction: column;
+            }
+            
+            .visualization, .controls-container {
+                width: 100%;
+            }
+            
+            .preset-scenarios {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .preset-scenarios {
+                grid-template-columns: 1fr;
+            }
+            
+            .tab-button {
+                padding: 10px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Electromagnetic Field Visualizer</h1>
+            <p class="description">Explore electric and magnetic fields, electromagnetic waves, and charged particle motion in interactive 3D space</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab(event, 'visualizer')">Visualizer</button>
+            <button class="tab-button" onclick="openTab(event, 'basics')">EM Basics</button>
+            <button class="tab-button" onclick="openTab(event, 'applications')">Astronomy Applications</button>
+            <button class="tab-button" onclick="openTab(event, 'advanced')">Advanced Topics</button>
+        </div>
+
+        <div id="visualizer" class="tab-content active">
+            <div class="visualization-container">
+                <div class="visualization" id="field-visualization"></div>
+                
+                <div class="controls-container">
+                    <div class="controls-section">
+                        <h3>Visualization Mode</h3>
+                        <div class="control-group">
+                            <select id="visualization-mode">
+                                <option value="electric">Electric Field</option>
+                                <option value="magnetic">Magnetic Field</option>
+                                <option value="electromagnetic">Electromagnetic Wave</option>
+                                <option value="particle">Charged Particle Motion</option>
+                                <option value="combined">Combined Fields</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="controls-section">
+                        <h3>Field Configuration</h3>
+                        <div class="control-group">
+                            <label for="field-type">Field Type:</label>
+                            <select id="field-type">
+                                <option value="point-charge">Point Charge</option>
+                                <option value="dipole">Dipole</option>
+                                <option value="current-loop">Current Loop</option>
+                                <option value="solenoid">Solenoid</option>
+                                <option value="plane-wave">Plane Wave</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="field-strength">Field Strength:</label>
+                            <input type="range" id="field-strength" min="0" max="100" value="50">
+                            <span id="field-strength-value">50</span>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="frequency">Frequency (for waves):</label>
+                            <input type="range" id="frequency" min="0" max="100" value="20">
+                            <span id="frequency-value">20 Hz</span>
+                        </div>
+                    </div>
+
+                    <div class="controls-section">
+                        <h3>Particle Properties</h3>
+                        <div class="control-group">
+                            <label for="charge-sign">Charge Sign:</label>
+                            <select id="charge-sign">
+                                <option value="positive">Positive</option>
+                                <option value="negative">Negative</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="charge-magnitude">Charge Magnitude:</label>
+                            <input type="range" id="charge-magnitude" min="0" max="100" value="50">
+                            <span id="charge-magnitude-value">50</span>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="particle-velocity">Initial Velocity:</label>
+                            <input type="range" id="particle-velocity" min="0" max="100" value="30">
+                            <span id="particle-velocity-value">30</span>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="particle-direction">Initial Direction:</label>
+                            <select id="particle-direction">
+                                <option value="x">X-axis</option>
+                                <option value="y">Y-axis</option>
+                                <option value="z">Z-axis</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="controls-section">
+                        <h3>Display Options</h3>
+                        <div class="control-group">
+                            <label>
+                                <input type="checkbox" id="show-vectors" checked>
+                                Show Field Vectors
+                            </label>
+                        </div>
+                        <div class="control-group">
+                            <label>
+                                <input type="checkbox" id="show-field-lines" checked>
+                                Show Field Lines
+                            </label>
+                        </div>
+                        <div class="control-group">
+                            <label>
+                                <input type="checkbox" id="show-equipotential">
+                                Show Equipotential Surfaces
+                            </label>
+                        </div>
+                        <div class="control-group">
+                            <label>
+                                <input type="checkbox" id="show-particle-path" checked>
+                                Show Particle Path
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button id="reset-view" class="primary">Reset View</button>
+                        <button id="start-simulation">Start Simulation</button>
+                        <button id="pause-simulation" disabled>Pause</button>
+                    </div>
+
+                    <div class="data-display">
+                        <h4>Field Data</h4>
+                        <p id="field-strength-display">E: 0.00 N/C, B: 0.00 T</p>
+                        <p id="energy-display">Energy: 0.00 J</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <h3>Preset Astronomical Scenarios</h3>
+                <p>Select from these preset scenarios to explore electromagnetic phenomena in astronomical contexts:</p>
+                
+                <div class="preset-scenarios">
+                    <div class="preset-card" onclick="loadPreset('solar-magnetic')">
+                        <h4>Solar Magnetic Field</h4>
+                        <p>Explore the complex magnetic field structure of the Sun</p>
+                    </div>
+                    <div class="preset-card" onclick="loadPreset('pulsar-magnetosphere')">
+                        <h4>Pulsar Magnetosphere</h4>
+                        <p>Visualize the intense magnetic fields around a neutron star</p>
+                    </div>
+                    <div class="preset-card" onclick="loadPreset('earth-magnetosphere')">
+                        <h4>Earth's Magnetosphere</h4>
+                        <p>See how Earth's magnetic field interacts with the solar wind</p>
+                    </div>
+                    <div class="preset-card" onclick="loadPreset('cosmic-ray')">
+                        <h4>Cosmic Ray Propagation</h4>
+                        <p>Track charged particles through galactic magnetic fields</p>
+                    </div>
+                    <div class="preset-card" onclick="loadPreset('radio-jet')">
+                        <h4>Radio Galaxy Jet</h4>
+                        <p>Examine electromagnetic fields in relativistic jets</p>
+                    </div>
+                    <div class="preset-card" onclick="loadPreset('magnetic-reconnection')">
+                        <h4>Magnetic Reconnection</h4>
+                        <p>Visualize the process of magnetic field line reconnection</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color electric-field"></div>
+                    <span>Electric Field</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color magnetic-field"></div>
+                    <span>Magnetic Field</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="basics" class="tab-content">
+            <div class="info-panel">
+                <h3>Electromagnetic Field Basics</h3>
+                
+                <h4>Electric Fields</h4>
+                <p>An electric field is a vector field that surrounds electric charges and exerts force on other charges. The electric field at a point is defined as the force that would be exerted on a positive test charge placed at that point, divided by the magnitude of the test charge:</p>
+                <p><code>E = F/q</code></p>
+                <p>Key properties of electric fields:</p>
+                <ul>
+                    <li>Electric field lines point away from positive charges and toward negative charges</li>
+                    <li>The strength of an electric field decreases with the square of the distance from a point charge (inverse-square law)</li>
+                    <li>The electric field due to a point charge q at a distance r is: <code>E = kq/r²</code></li>
+                    <li>Electric fields can do work on charged particles, accelerating them</li>
+                </ul>
+
+                <h4>Magnetic Fields</h4>
+                <p>A magnetic field is a vector field that exerts forces on moving charges and magnetic materials. Unlike electric fields, magnetic fields form closed loops with no beginning or end.</p>
+                <p>Key properties of magnetic fields:</p>
+                <ul>
+                    <li>Magnetic fields are produced by moving electric charges (currents) and by magnetic materials</li>
+                    <li>Magnetic field lines form closed loops</li>
+                    <li>The force on a charged particle moving in a magnetic field is perpendicular to both the velocity and the magnetic field: <code>F = qv × B</code></li>
+                    <li>Charged particles follow helical paths around magnetic field lines</li>
+                </ul>
+
+                <h4>Electromagnetic Waves</h4>
+                <p>Electromagnetic waves consist of oscillating electric and magnetic fields that propagate through space at the speed of light. These waves are described by Maxwell's equations.</p>
+                <p>Key properties of electromagnetic waves:</p>
+                <ul>
+                    <li>Electric and magnetic fields oscillate perpendicular to each other and to the direction of propagation</li>
+                    <li>All electromagnetic waves travel at the speed of light in vacuum (c ≈ 3 × 10⁸ m/s)</li>
+                    <li>The wavelength (λ) and frequency (f) are related by: <code>c = λf</code></li>
+                    <li>The electromagnetic spectrum includes radio waves, microwaves, infrared, visible light, ultraviolet, X-rays, and gamma rays</li>
+                </ul>
+
+                <h4>Maxwell's Equations</h4>
+                <p>Maxwell's equations are the fundamental equations of electromagnetism:</p>
+                <ul>
+                    <li>Gauss's Law for Electricity: <code>∇·E = ρ/ε₀</code></li>
+                    <li>Gauss's Law for Magnetism: <code>∇·B = 0</code></li>
+                    <li>Faraday's Law: <code>∇×E = -∂B/∂t</code></li>
+                    <li>Ampère's Law with Maxwell's Addition: <code>∇×B = μ₀J + μ₀ε₀∂E/∂t</code></li>
+                </ul>
+                <p>These equations unify electricity and magnetism into a single theory of electromagnetism.</p>
+            </div>
+        </div>
+
+        <div id="applications" class="tab-content">
+            <div class="info-panel">
+                <h3>Electromagnetic Fields in Astronomy</h3>
+                
+                <h4>Solar Magnetic Fields</h4>
+                <p>The Sun has a complex magnetic field generated by a dynamo process in its interior. This magnetic field is responsible for many solar phenomena:</p>
+                <ul>
+                    <li>Sunspots: Regions of intense magnetic field that inhibit convection</li>
+                    <li>Solar flares: Explosive releases of energy when magnetic field lines reconnect</li>
+                    <li>Coronal mass ejections: Large eruptions of plasma and magnetic field</li>
+                    <li>Solar wind: Stream of charged particles flowing outward from the Sun</li>
+                </ul>
+                <p>The solar magnetic field undergoes an approximately 11-year cycle of activity, with the polarity reversing every cycle.</p>
+
+                <h4>Planetary Magnetospheres</h4>
+                <p>Many planets, including Earth, have magnetic fields that create magnetospheres—regions where the planetary magnetic field dominates over the solar wind:</p>
+                <ul>
+                    <li>Earth's magnetosphere protects us from solar radiation</li>
+                    <li>Jupiter has the strongest planetary magnetic field in our solar system</li>
+                    <li>Magnetospheres trap charged particles, creating radiation belts</li>
+                    <li>Interaction with the solar wind creates auroras near the magnetic poles</li>
+                </ul>
+
+                <h4>Stellar Magnetic Activity</h4>
+                <p>Stars exhibit various forms of magnetic activity:</p>
+                <ul>
+                    <li>Stellar flares and coronal mass ejections</li>
+                    <li>Starspots analogous to sunspots</li>
+                    <li>X-ray emission from magnetically heated coronae</li>
+                    <li>Stellar winds shaped by magnetic fields</li>
+                </ul>
+                <p>Magnetic activity is particularly strong in young, rapidly rotating stars and close binary systems.</p>
+
+                <h4>Cosmic Magnetic Fields</h4>
+                <p>Magnetic fields exist throughout the universe at various scales:</p>
+                <ul>
+                    <li>Galactic magnetic fields (typical strength: ~5-10 microgauss)</li>
+                    <li>Magnetic fields in galaxy clusters</li>
+                    <li>Intergalactic magnetic fields</li>
+                    <li>Primordial magnetic fields from the early universe</li>
+                </ul>
+                <p>These fields influence cosmic ray propagation, star formation, and galaxy evolution.</p>
+
+                <h4>Compact Objects</h4>
+                <p>Some of the strongest magnetic fields in the universe are associated with compact objects:</p>
+                <ul>
+                    <li>Neutron stars (pulsars) have magnetic fields of ~10¹²-10¹³ gauss</li>
+                    <li>Magnetars have extreme fields up to ~10¹⁵ gauss</li>
+                    <li>Black holes can have magnetized accretion disks and jets</li>
+                </ul>
+                <p>These intense fields power phenomena like pulsars, magnetar flares, and relativistic jets.</p>
+
+                <h4>Electromagnetic Radiation in Astronomy</h4>
+                <p>Electromagnetic radiation is our primary source of information about the universe:</p>
+                <ul>
+                    <li>Thermal radiation from hot objects (stars, dust)</li>
+                    <li>Synchrotron radiation from relativistic electrons in magnetic fields</li>
+                    <li>Spectral lines from atoms and molecules</li>
+                    <li>Cosmic microwave background radiation</li>
+                </ul>
+                <p>Different parts of the electromagnetic spectrum reveal different aspects of astronomical objects and processes.</p>
+            </div>
+        </div>
+
+        <div id="advanced" class="tab-content">
+            <div class="info-panel">
+                <h3>Advanced Topics in Electromagnetic Fields</h3>
+                
+                <h4>Magnetohydrodynamics (MHD)</h4>
+                <p>Magnetohydrodynamics studies the behavior of electrically conducting fluids (like plasma) in magnetic fields. MHD is crucial for understanding:</p>
+                <ul>
+                    <li>Stellar interiors and atmospheres</li>
+                    <li>Accretion disks around compact objects</li>
+                    <li>Astrophysical jets</li>
+                    <li>The interstellar and intergalactic medium</li>
+                </ul>
+                <p>MHD combines fluid dynamics with Maxwell's equations, treating plasma as a conducting fluid.</p>
+
+                <h4>Magnetic Reconnection</h4>
+                <p>Magnetic reconnection is a process where magnetic field lines break and reconnect in a different configuration, releasing magnetic energy as kinetic energy and heat. This process is important in:</p>
+                <ul>
+                    <li>Solar flares and coronal mass ejections</li>
+                    <li>Magnetospheric substorms</li>
+                    <li>Astrophysical jets</li>
+                    <li>Laboratory plasma experiments</li>
+                </ul>
+                <p>Reconnection allows for rapid conversion of magnetic energy and changes in magnetic topology.</p>
+
+                <h4>Relativistic Electrodynamics</h4>
+                <p>When dealing with high velocities or strong gravitational fields, relativistic effects become important:</p>
+                <ul>
+                    <li>Special relativity: Electric and magnetic fields transform into each other in different reference frames</li>
+                    <li>General relativity: Electromagnetic fields in curved spacetime</li>
+                    <li>Relativistic jets from active galactic nuclei and microquasars</li>
+                    <li>Electromagnetic fields near black holes</li>
+                </ul>
+
+                <h4>Quantum Electrodynamics (QED)</h4>
+                <p>QED is the quantum theory of the electromagnetic interaction. In extreme conditions found in some astrophysical environments, QED effects become significant:</p>
+                <ul>
+                    <li>Vacuum polarization in strong magnetic fields</li>
+                    <li>Pair production in intense electromagnetic fields</li>
+                    <li>Quantum effects in magnetar magnetospheres</li>
+                    <li>Hawking radiation from black holes</li>
+                </ul>
+
+                <h4>Plasma Instabilities</h4>
+                <p>Plasmas can develop various instabilities that are important in astrophysical contexts:</p>
+                <ul>
+                    <li>Kink instability in magnetic flux tubes</li>
+                    <li>Kelvin-Helmholtz instability at velocity shear boundaries</li>
+                    <li>Rayleigh-Taylor instability in stratified plasmas</li>
+                    <li>Tearing mode instability leading to magnetic reconnection</li>
+                </ul>
+                <p>These instabilities can trigger dynamic events like solar flares and affect the evolution of astrophysical systems.</p>
+
+                <h4>Numerical Simulations</h4>
+                <p>Modern research in astrophysical electromagnetics relies heavily on numerical simulations:</p>
+                <ul>
+                    <li>Magnetohydrodynamic (MHD) simulations</li>
+                    <li>Particle-in-cell (PIC) simulations</li>
+                    <li>General relativistic magnetohydrodynamics (GRMHD)</li>
+                    <li>Multi-scale and multi-physics approaches</li>
+                </ul>
+                <p>These simulations help us understand complex phenomena that cannot be solved analytically or observed directly.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let scene, camera, renderer, controls;
+        let fieldVectors = [];
+        let fieldLines = [];
+        let particles = [];
+        let particlePaths = [];
+        let equipotentialSurfaces = [];
+        let animationId = null;
+        let isSimulationRunning = false;
+        let clock = new THREE.Clock();
+        let currentPreset = null;
+
+        // Initialize the visualization
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf8f9fa);
+
+            // Create camera
+            camera = new THREE.PerspectiveCamera(60, document.getElementById('field-visualization').clientWidth / document.getElementById('field-visualization').clientHeight, 0.1, 1000);
+            camera.position.set(5, 5, 5);
+
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(document.getElementById('field-visualization').clientWidth, document.getElementById('field-visualization').clientHeight);
+            document.getElementById('field-visualization').appendChild(renderer.domElement);
+
+            // Add orbit controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.25;
+
+            // Add coordinate axes
+            const axesHelper = new THREE.AxesHelper(3);
+            scene.add(axesHelper);
+
+            // Add ambient light
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            // Add directional light
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 7);
+            scene.add(directionalLight);
+
+            // Create initial field visualization
+            createFieldVisualization();
+
+            // Start animation loop
+            animate();
+
+            // Add event listeners
+            window.addEventListener('resize', onWindowResize);
+            document.getElementById('visualization-mode').addEventListener('change', updateVisualization);
+            document.getElementById('field-type').addEventListener('change', updateVisualization);
+            document.getElementById('field-strength').addEventListener('input', updateFieldStrength);
+            document.getElementById('frequency').addEventListener('input', updateFrequency);
+            document.getElementById('charge-sign').addEventListener('change', updateVisualization);
+            document.getElementById('charge-magnitude').addEventListener('input', updateChargeMagnitude);
+            document.getElementById('particle-velocity').addEventListener('input', updateParticleVelocity);
+            document.getElementById('particle-direction').addEventListener('change', updateVisualization);
+            document.getElementById('show-vectors').addEventListener('change', updateDisplayOptions);
+            document.getElementById('show-field-lines').addEventListener('change', updateDisplayOptions);
+            document.getElementById('show-equipotential').addEventListener('change', updateDisplayOptions);
+            document.getElementById('show-particle-path').addEventListener('change', updateDisplayOptions);
+            document.getElementById('reset-view').addEventListener('click', resetView);
+            document.getElementById('start-simulation').addEventListener('click', startSimulation);
+            document.getElementById('pause-simulation').addEventListener('click', pauseSimulation);
+        }
+
+        // Create field visualization based on current settings
+        function createFieldVisualization() {
+            clearVisualization();
+
+            const visualizationMode = document.getElementById('visualization-mode').value;
+            const fieldType = document.getElementById('field-type').value;
+            
+            switch (visualizationMode) {
+                case 'electric':
+                    createElectricFieldVisualization(fieldType);
+                    break;
+                case 'magnetic':
+                    createMagneticFieldVisualization(fieldType);
+                    break;
+                case 'electromagnetic':
+                    createElectromagneticWaveVisualization();
+                    break;
+                case 'particle':
+                    createParticleMotionVisualization();
+                    break;
+                case 'combined':
+                    createCombinedFieldsVisualization(fieldType);
+                    break;
+            }
+
+            updateDisplayOptions();
+        }
+
+        // Create electric field visualization
+        function createElectricFieldVisualization(fieldType) {
+            const fieldStrength = document.getElementById('field-strength').value / 50;
+            
+            // Create a grid of field vectors
+            const gridSize = 5;
+            const spacing = 1;
+            
+            for (let x = -gridSize; x <= gridSize; x += spacing) {
+                for (let y = -gridSize; y <= gridSize; y += spacing) {
+                    for (let z = -gridSize; z <= gridSize; z += spacing) {
+                        if (x === 0 && y === 0 && z === 0) continue; // Skip origin for point charge
+                        
+                        const position = new THREE.Vector3(x, y, z);
+                        let fieldVector;
+                        
+                        switch (fieldType) {
+                            case 'point-charge':
+                                fieldVector = calculatePointChargeField(position, fieldStrength);
+                                break;
+                            case 'dipole':
+                                fieldVector = calculateDipoleField(position, fieldStrength);
+                                break;
+                            case 'custom':
+                                fieldVector = calculateCustomElectricField(position, fieldStrength);
+                                break;
+                            default:
+                                fieldVector = calculatePointChargeField(position, fieldStrength);
+                        }
+                        
+                        // Scale vector for visualization
+                        const vectorLength = fieldVector.length();
+                        const scaledVector = fieldVector.clone().normalize().multiplyScalar(
+                            Math.min(0.8 * spacing, 0.2 + 0.6 * Math.log(1 + vectorLength) / Math.log(10))
+                        );
+                        
+                        // Create arrow helper
+                        const arrowHelper = new THREE.ArrowHelper(
+                            scaledVector.clone().normalize(),
+                            position,
+                            scaledVector.length(),
+                            0xe74c3c, // Red color for electric field
+                            0.2,
+                            0.1
+                        );
+                        
+                        scene.add(arrowHelper);
+                        fieldVectors.push(arrowHelper);
+                    }
+                }
+            }
+            
+            // Create field lines
+            createElectricFieldLines(fieldType, fieldStrength);
+        }
+
+        // Create magnetic field visualization
+        function createMagneticFieldVisualization(fieldType) {
+            const fieldStrength = document.getElementById('field-strength').value / 50;
+            
+            // Create a grid of field vectors
+            const gridSize = 5;
+            const spacing = 1;
+            
+            for (let x = -gridSize; x <= gridSize; x += spacing) {
+                for (let y = -gridSize; y <= gridSize; y += spacing) {
+                    for (let z = -gridSize; z <= gridSize; z += spacing) {
+                        // Skip points on the axis for certain field types
+                        if (fieldType === 'current-loop' && x === 0 && z === 0) continue;
+                        if (fieldType === 'solenoid' && x === 0 && z === 0) continue;
+                        
+                        const position = new THREE.Vector3(x, y, z);
+                        let fieldVector;
+                        
+                        switch (fieldType) {
+                            case 'current-loop':
+                                fieldVector = calculateCurrentLoopField(position, fieldStrength);
+                                break;
+                            case 'solenoid':
+                                fieldVector = calculateSolenoidField(position, fieldStrength);
+                                break;
+                            case 'custom':
+                                fieldVector = calculateCustomMagneticField(position, fieldStrength);
+                                break;
+                            default:
+                                fieldVector = calculateCurrentLoopField(position, fieldStrength);
+                        }
+                        
+                        // Scale vector for visualization
+                        const vectorLength = fieldVector.length();
+                        const scaledVector = fieldVector.clone().normalize().multiplyScalar(
+                            Math.min(0.8 * spacing, 0.2 + 0.6 * Math.log(1 + vectorLength) / Math.log(10))
+                        );
+                        
+                        // Create arrow helper
+                        const arrowHelper = new THREE.ArrowHelper(
+                            scaledVector.clone().normalize(),
+                            position,
+                            scaledVector.length(),
+                            0x3498db, // Blue color for magnetic field
+                            0.2,
+                            0.1
+                        );
+                        
+                        scene.add(arrowHelper);
+                        fieldVectors.push(arrowHelper);
+                    }
+                }
+            }
+            
+            // Create field lines
+            createMagneticFieldLines(fieldType, fieldStrength);
+        }
+
+        // Create electromagnetic wave visualization
+        function createElectromagneticWaveVisualization() {
+            const fieldStrength = document.getElementById('field-strength').value / 50;
+            const frequency = document.getElementById('frequency').value / 10; // Hz
+            
+            // Create wave propagation axis
+            const axisGeometry = new THREE.CylinderGeometry(0.03, 0.03, 10, 8);
+            const axisMaterial = new THREE.MeshBasicMaterial({ color: 0x888888 });
+            const axis = new THREE.Mesh(axisGeometry, axisMaterial);
+            axis.rotation.x = Math.PI / 2;
+            scene.add(axis);
+            fieldVectors.push(axis);
+            
+            // Create wave vectors
+            const wavePoints = 20;
+            const waveLength = 10;
+            const spacing = waveLength / wavePoints;
+            
+            for (let i = 0; i < wavePoints; i++) {
+                const z = -waveLength / 2 + i * spacing;
+                const position = new THREE.Vector3(0, 0, z);
+                
+                // Electric field vector (vertical)
+                const eArrowHelper = new THREE.ArrowHelper(
+                    new THREE.Vector3(0, 1, 0),
+                    position,
+                    fieldStrength,
+                    0xe74c3c, // Red color for electric field
+                    0.2,
+                    0.1
+                );
+                scene.add(eArrowHelper);
+                fieldVectors.push(eArrowHelper);
+                
+                // Magnetic field vector (horizontal)
+                const bArrowHelper = new THREE.ArrowHelper(
+                    new THREE.Vector3(1, 0, 0),
+                    position,
+                    fieldStrength,
+                    0x3498db, // Blue color for magnetic field
+                    0.2,
+                    0.1
+                );
+                scene.add(bArrowHelper);
+                fieldVectors.push(bArrowHelper);
+            }
+            
+            // Create wave curves
+            createElectromagneticWaveCurves(fieldStrength, frequency);
+        }
+
+        // Create particle motion visualization
+        function createParticleMotionVisualization() {
+            const fieldType = document.getElementById('field-type').value;
+            const fieldStrength = document.getElementById('field-strength').value / 50;
+            const chargeSign = document.getElementById('charge-sign').value === 'positive' ? 1 : -1;
+            const chargeMagnitude = document.getElementById('charge-magnitude').value / 50;
+            const velocity = document.getElementById('particle-velocity').value / 10;
+            const direction = document.getElementById('particle-direction').value;
+            
+            // Create a uniform magnetic field in the z-direction for simplicity
+            const gridSize = 5;
+            const spacing = 1;
+            
+            for (let x = -gridSize; x <= gridSize; x += spacing) {
+                for (let y = -gridSize; y <= gridSize; y += spacing) {
+                    for (let z = -gridSize; z <= gridSize; z += spacing) {
+                        const position = new THREE.Vector3(x, y, z);
+                        let fieldVector;
+                        
+                        switch (fieldType) {
+                            case 'current-loop':
+                                fieldVector = calculateCurrentLoopField(position, fieldStrength);
+                                break;
+                            case 'solenoid':
+                                fieldVector = calculateSolenoidField(position, fieldStrength);
+                                break;
+                            default:
+                                // Default uniform field in z-direction
+                                fieldVector = new THREE.Vector3(0, 0, fieldStrength);
+                        }
+                        
+                        // Scale vector for visualization
+                        const scaledVector = fieldVector.clone().normalize().multiplyScalar(0.5);
+                        
+                        // Create arrow helper
+                        const arrowHelper = new THREE.ArrowHelper(
+                            scaledVector.clone().normalize(),
+                            position,
+                            scaledVector.length(),
+                            0x3498db, // Blue color for magnetic field
+                            0.1,
+                            0.05
+                        );
+                        
+                        scene.add(arrowHelper);
+                        fieldVectors.push(arrowHelper);
+                    }
+                }
+            }
+            
+            // Create particle
+            const particleGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+            const particleMaterial = new THREE.MeshBasicMaterial({ 
+                color: chargeSign > 0 ? 0xe74c3c : 0x3498db 
+            });
+            const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+            
+            // Set initial position
+            particle.position.set(-3, 0, 0);
+            
+            // Set initial velocity
+            let initialVelocity;
+            switch (direction) {
+                case 'x':
+                    initialVelocity = new THREE.Vector3(velocity, 0, 0);
+                    break;
+                case 'y':
+                    initialVelocity = new THREE.Vector3(0, velocity, 0);
+                    break;
+                case 'z':
+                    initialVelocity = new THREE.Vector3(0, 0, velocity);
+                    break;
+                case 'custom':
+                    initialVelocity = new THREE.Vector3(velocity * 0.707, velocity * 0.707, 0);
+                    break;
+            }
+            
+            particle.userData = {
+                velocity: initialVelocity,
+                charge: chargeSign * chargeMagnitude,
+                mass: 1,
+                path: []
+            };
+            
+            scene.add(particle);
+            particles.push(particle);
+            
+            // Create path line
+            const pathMaterial = new THREE.LineBasicMaterial({ 
+                color: chargeSign > 0 ? 0xe74c3c : 0x3498db,
+                linewidth: 2
+            });
+            const pathGeometry = new THREE.BufferGeometry();
+            const pathLine = new THREE.Line(pathGeometry, pathMaterial);
+            scene.add(pathLine);
+            particlePaths.push(pathLine);
+        }
+
+        // Create combined fields visualization
+        function createCombinedFieldsVisualization(fieldType) {
+            const fieldStrength = document.getElementById('field-strength').value / 50;
+            
+            // Create a grid of field vectors
+            const gridSize = 5;
+            const spacing = 1;
+            
+            for (let x = -gridSize; x <= gridSize; x += spacing) {
+                for (let y = -gridSize; y <= gridSize; y += spacing) {
+                    for (let z = -gridSize; z <= gridSize; z += spacing) {
+                        if (x === 0 && y === 0 && z === 0 && fieldType === 'point-charge') continue;
+                        
+                        const position = new THREE.Vector3(x, y, z);
+                        
+                        // Calculate electric field
+                        let eField;
+                        switch (fieldType) {
+                            case 'point-charge':
+                                eField = calculatePointChargeField(position, fieldStrength);
+                                break;
+                            case 'dipole':
+                                eField = calculateDipoleField(position, fieldStrength);
+                                break;
+                            default:
+                                eField = calculatePointChargeField(position, fieldStrength);
+                        }
+                        
+                        // Calculate magnetic field
+                        let bField;
+                        switch (fieldType) {
+                            case 'current-loop':
+                                bField = calculateCurrentLoopField(position, fieldStrength);
+                                break;
+                            case 'solenoid':
+                                bField = calculateSolenoidField(position, fieldStrength);
+                                break;
+                            default:
+                                bField = calculateCurrentLoopField(position, fieldStrength);
+                        }
+                        
+                        // Scale vectors for visualization
+                        const eScaledVector = eField.clone().normalize().multiplyScalar(
+                            Math.min(0.4 * spacing, 0.1 + 0.3 * Math.log(1 + eField.length()) / Math.log(10))
+                        );
+                        
+                        const bScaledVector = bField.clone().normalize().multiplyScalar(
+                            Math.min(0.4 * spacing, 0.1 + 0.3 * Math.log(1 + bField.length()) / Math.log(10))
+                        );
+                        
+                        // Create arrow helpers
+                        const eArrowHelper = new THREE.ArrowHelper(
+                            eScaledVector.clone().normalize(),
+                            position,
+                            eScaledVector.length(),
+                            0xe74c3c, // Red color for electric field
+                            0.15,
+                            0.08
+                        );
+                        
+                        const bArrowHelper = new THREE.ArrowHelper(
+                            bScaledVector.clone().normalize(),
+                            position,
+                            bScaledVector.length(),
+                            0x3498db, // Blue color for magnetic field
+                            0.15,
+                            0.08
+                        );
+                        
+                        scene.add(eArrowHelper);
+                        scene.add(bArrowHelper);
+                        fieldVectors.push(eArrowHelper);
+                        fieldVectors.push(bArrowHelper);
+                    }
+                }
+            }
+        }
+
+        // Create electric field lines
+        function createElectricFieldLines(fieldType, fieldStrength) {
+            const numLines = 16;
+            const pointsPerLine = 100;
+            const stepSize = 0.2;
+            
+            // Starting points for field lines
+            const startPoints = [];
+            
+            switch (fieldType) {
+                case 'point-charge':
+                    // Distribute starting points on a sphere around the charge
+                    for (let i = 0; i < numLines; i++) {
+                        const phi = Math.acos(1 - 2 * i / numLines);
+                        const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+                        
+                        const x = 0.5 * Math.sin(phi) * Math.cos(theta);
+                        const y = 0.5 * Math.sin(phi) * Math.sin(theta);
+                        const z = 0.5 * Math.cos(phi);
+                        
+                        startPoints.push(new THREE.Vector3(x, y, z));
+                    }
+                    break;
+                    
+                case 'dipole':
+                    // Distribute starting points on a sphere around the positive charge
+                    for (let i = 0; i < numLines; i++) {
+                        const phi = Math.acos(1 - 2 * i / numLines);
+                        const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+                        
+                        const x = 1 + 0.3 * Math.sin(phi) * Math.cos(theta);
+                        const y = 0.3 * Math.sin(phi) * Math.sin(theta);
+                        const z = 0.3 * Math.cos(phi);
+                        
+                        startPoints.push(new THREE.Vector3(x, y, z));
+                    }
+                    break;
+                    
+                default:
+                    // Default to point charge
+                    for (let i = 0; i < numLines; i++) {
+                        const phi = Math.acos(1 - 2 * i / numLines);
+                        const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+                        
+                        const x = 0.5 * Math.sin(phi) * Math.cos(theta);
+                        const y = 0.5 * Math.sin(phi) * Math.sin(theta);
+                        const z = 0.5 * Math.cos(phi);
+                        
+                        startPoints.push(new THREE.Vector3(x, y, z));
+                    }
+            }
+            
+            // Create field lines
+            for (const startPoint of startPoints) {
+                const linePoints = [startPoint.clone()];
+                let currentPoint = startPoint.clone();
+                
+                // Trace the field line
+                for (let i = 0; i < pointsPerLine; i++) {
+                    let fieldVector;
+                    
+                    switch (fieldType) {
+                        case 'point-charge':
+                            fieldVector = calculatePointChargeField(currentPoint, fieldStrength);
+                            break;
+                        case 'dipole':
+                            fieldVector = calculateDipoleField(currentPoint, fieldStrength);
+                            break;
+                        case 'custom':
+                            fieldVector = calculateCustomElectricField(currentPoint, fieldStrength);
+                            break;
+                        default:
+                            fieldVector = calculatePointChargeField(currentPoint, fieldStrength);
+                    }
+                    
+                    // Normalize and scale for step size
+                    fieldVector.normalize().multiplyScalar(stepSize);
+                    
+                    // Update current point
+                    currentPoint.add(fieldVector);
+                    
+                    // Add to line points
+                    linePoints.push(currentPoint.clone());
+                    
+                    // Check if we're too far from origin
+                    if (currentPoint.length() > 10) break;
+                }
+                
+                // Create line geometry
+                const geometry = new THREE.BufferGeometry().setFromPoints(linePoints);
+                const material = new THREE.LineBasicMaterial({ color: 0xe74c3c, linewidth: 2 });
+                const line = new THREE.Line(geometry, material);
+                
+                scene.add(line);
+                fieldLines.push(line);
+            }
+        }
+
+        // Create magnetic field lines
+        function createMagneticFieldLines(fieldType, fieldStrength) {
+            const numLines = 16;
+            const pointsPerLine = 200;
+            const stepSize = 0.1;
+            
+            // Starting points for field lines
+            const startPoints = [];
+            
+            switch (fieldType) {
+                case 'current-loop':
+                    // Distribute starting points in a circle above the loop
+                    for (let i = 0; i < numLines; i++) {
+                        const angle = (i / numLines) * Math.PI * 2;
+                        const radius = 1.5;
+                        
+                        const x = radius * Math.cos(angle);
+                        const z = radius * Math.sin(angle);
+                        const y = 0.5;
+                        
+                        startPoints.push(new THREE.Vector3(x, y, z));
+                    }
+                    break;
+                    
+                case 'solenoid':
+                    // Distribute starting points in a circle at one end of the solenoid
+                    for (let i = 0; i < numLines; i++) {
+                        const angle = (i / numLines) * Math.PI * 2;
+                        const radius = 1.0;
+                        
+                        const x = radius * Math.cos(angle);
+                        const z = radius * Math.sin(angle);
+                        const y = 3.0;
+                        
+                        startPoints.push(new THREE.Vector3(x, y, z));
+                    }
+                    break;
+                    
+                default:
+                    // Default to current loop
+                    for (let i = 0; i < numLines; i++) {
+                        const angle = (i / numLines) * Math.PI * 2;
+                        const radius = 1.5;
+                        
+                        const x = radius * Math.cos(angle);
+                        const z = radius * Math.sin(angle);
+                        const y = 0.5;
+                        
+                        startPoints.push(new THREE.Vector3(x, y, z));
+                    }
+            }
+            
+            // Create field lines
+            for (const startPoint of startPoints) {
+                const linePoints = [startPoint.clone()];
+                let currentPoint = startPoint.clone();
+                
+                // Trace the field line
+                for (let i = 0; i < pointsPerLine; i++) {
+                    let fieldVector;
+                    
+                    switch (fieldType) {
+                        case 'current-loop':
+                            fieldVector = calculateCurrentLoopField(currentPoint, fieldStrength);
+                            break;
+                        case 'solenoid':
+                            fieldVector = calculateSolenoidField(currentPoint, fieldStrength);
+                            break;
+                        case 'custom':
+                            fieldVector = calculateCustomMagneticField(currentPoint, fieldStrength);
+                            break;
+                        default:
+                            fieldVector = calculateCurrentLoopField(currentPoint, fieldStrength);
+                    }
+                    
+                    // Normalize and scale for step size
+                    fieldVector.normalize().multiplyScalar(stepSize);
+                    
+                    // Update current point
+                    currentPoint.add(fieldVector);
+                    
+                    // Add to line points
+                    linePoints.push(currentPoint.clone());
+                    
+                    // Check if we're too far from origin
+                    if (currentPoint.length() > 10) break;
+                    
+                    // Check if we've returned close to the starting point (for closed loops)
+                    if (i > 10 && currentPoint.distanceTo(startPoint) < stepSize) break;
+                }
+                
+                // Create line geometry
+                const geometry = new THREE.BufferGeometry().setFromPoints(linePoints);
+                const material = new THREE.LineBasicMaterial({ color: 0x3498db, linewidth: 2 });
+                const line = new THREE.Line(geometry, material);
+                
+                scene.add(line);
+                fieldLines.push(line);
+            }
+        }
+
+        // Create electromagnetic wave curves
+        function createElectromagneticWaveCurves(amplitude, frequency) {
+            const waveLength = 10;
+            const numPoints = 100;
+            
+            // Create electric field wave (vertical)
+            const eWavePoints = [];
+            for (let i = 0; i < numPoints; i++) {
+                const z = -waveLength / 2 + (i / (numPoints - 1)) * waveLength;
+                const y = amplitude * Math.sin(2 * Math.PI * z / waveLength);
+                eWavePoints.push(new THREE.Vector3(0, y, z));
+            }
+            
+            const eWaveGeometry = new THREE.BufferGeometry().setFromPoints(eWavePoints);
+            const eWaveMaterial = new THREE.LineBasicMaterial({ color: 0xe74c3c, linewidth: 3 });
+            const eWaveLine = new THREE.Line(eWaveGeometry, eWaveMaterial);
+            
+            scene.add(eWaveLine);
+            fieldLines.push(eWaveLine);
+            
+            // Create magnetic field wave (horizontal)
+            const bWavePoints = [];
+            for (let i = 0; i < numPoints; i++) {
+                const z = -waveLength / 2 + (i / (numPoints - 1)) * waveLength;
+                const x = amplitude * Math.sin(2 * Math.PI * z / waveLength + Math.PI / 2); // 90 degrees out of phase
+                bWavePoints.push(new THREE.Vector3(x, 0, z));
+            }
+            
+            const bWaveGeometry = new THREE.BufferGeometry().setFromPoints(bWavePoints);
+            const bWaveMaterial = new THREE.LineBasicMaterial({ color: 0x3498db, linewidth: 3 });
+            const bWaveLine = new THREE.Line(bWaveGeometry, bWaveMaterial);
+            
+            scene.add(bWaveLine);
+            fieldLines.push(bWaveLine);
+            
+            // Create wave direction indicator
+            const arrowGeometry = new THREE.ConeGeometry(0.2, 0.5, 8);
+            const arrowMaterial = new THREE.MeshBasicMaterial({ color: 0x888888 });
+            const arrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
+            arrow.position.set(0, 0, waveLength / 2 + 0.5);
+            arrow.rotation.x = -Math.PI / 2;
+            
+            scene.add(arrow);
+            fieldVectors.push(arrow);
+        }
+
+        // Calculate electric field for a point charge
+        function calculatePointChargeField(position, strength) {
+            const origin = new THREE.Vector3(0, 0, 0);
+            const r = position.clone().sub(origin);
+            const distance = r.length();
+            
+            if (distance < 0.1) return new THREE.Vector3(0, 0, 0);
+            
+            return r.normalize().multiplyScalar(strength / (distance * distance));
+        }
+
+        // Calculate electric field for a dipole
+        function calculateDipoleField(position, strength) {
+            const positiveCharge = new THREE.Vector3(1, 0, 0);
+            const negativeCharge = new THREE.Vector3(-1, 0, 0);
+            
+            const rPositive = position.clone().sub(positiveCharge);
+            const rNegative = position.clone().sub(negativeCharge);
+            
+            const distancePositive = rPositive.length();
+            const distanceNegative = rNegative.length();
+            
+            if (distancePositive < 0.1 || distanceNegative < 0.1) return new THREE.Vector3(0, 0, 0);
+            
+            const fieldPositive = rPositive.normalize().multiplyScalar(strength / (distancePositive * distancePositive));
+            const fieldNegative = rNegative.normalize().multiplyScalar(-strength / (distanceNegative * distanceNegative));
+            
+            return fieldPositive.add(fieldNegative);
+        }
+
+        // Calculate magnetic field for a current loop
+        function calculateCurrentLoopField(position, strength) {
+            const center = new THREE.Vector3(0, 0, 0);
+            const normal = new THREE.Vector3(0, 1, 0);
+            const radius = 1.0;
+            
+            const r = position.clone().sub(center);
+            const distance = r.length();
+            
+            if (distance < 0.1) return new THREE.Vector3(0, 0, 0);
+            
+            const rho = Math.sqrt(r.x * r.x + r.z * r.z);
+            const y = r.y;
+            
+            // On-axis field formula (approximation)
+            if (rho < 0.1) {
+                const field = normal.clone().multiplyScalar(
+                    strength * radius * radius / (2 * Math.pow(radius * radius + y * y, 1.5))
+                );
+                return field;
+            }
+            
+            // Off-axis field (simplified approximation)
+            const cosTheta = y / distance;
+            const field = new THREE.Vector3();
+            
+            // Radial component
+            const radialDir = new THREE.Vector3(r.x, 0, r.z).normalize();
+            const radialComponent = 3 * cosTheta * r.dot(normal) / (distance * distance * distance);
+            field.add(radialDir.multiplyScalar(radialComponent));
+            
+            // Theta component
+            const thetaDir = normal.clone().sub(radialDir.clone().multiplyScalar(cosTheta)).normalize();
+            const thetaComponent = (3 * r.dot(normal) * cosTheta - normal.dot(r)) / (distance * distance * distance);
+            field.add(thetaDir.multiplyScalar(thetaComponent));
+            
+            return field.multiplyScalar(strength);
+        }
+
+        // Calculate magnetic field for a solenoid
+        function calculateSolenoidField(position, strength) {
+            const center = new THREE.Vector3(0, 0, 0);
+            const axis = new THREE.Vector3(0, 1, 0);
+            const length = 6.0;
+            const radius = 1.0;
+            
+            const r = position.clone().sub(center);
+            
+            // Distance from axis
+            const axisPoint = center.clone().add(axis.clone().multiplyScalar(r.dot(axis)));
+            const rho = r.clone().sub(axisPoint).length();
+            
+            // Position along axis
+            const y = r.dot(axis);
+            
+            // Inside the solenoid
+            if (rho < radius && Math.abs(y) < length / 2) {
+                return axis.clone().multiplyScalar(strength);
+            }
+            
+            // Outside the solenoid (simplified approximation)
+            const distanceToEnd1 = Math.sqrt(rho * rho + Math.pow(y - length / 2, 2));
+            const distanceToEnd2 = Math.sqrt(rho * rho + Math.pow(y + length / 2, 2));
+            
+            const cosTheta1 = (y - length / 2) / distanceToEnd1;
+            const cosTheta2 = (y + length / 2) / distanceToEnd2;
+            
+            const fieldStrength = strength * radius * radius / 2 * (cosTheta1 - cosTheta2) / rho;
+            
+            // Field direction is azimuthal
+            const azimuthalDir = new THREE.Vector3(-r.z, 0, r.x).normalize();
+            
+            return azimuthalDir.multiplyScalar(fieldStrength);
+        }
+
+        // Calculate custom electric field
+        function calculateCustomElectricField(position, strength) {
+            // Example: Electric field with a more complex pattern
+            const x = position.x;
+            const y = position.y;
+            const z = position.z;
+            
+            const fieldX = strength * (x * x - y * y) / Math.pow(x * x + y * y + z * z + 0.1, 2);
+            const fieldY = strength * (2 * x * y) / Math.pow(x * x + y * y + z * z + 0.1, 2);
+            const fieldZ = strength * (2 * x * z) / Math.pow(x * x + y * y + z * z + 0.1, 2);
+            
+            return new THREE.Vector3(fieldX, fieldY, fieldZ);
+        }
+
+        // Calculate custom magnetic field
+        function calculateCustomMagneticField(position, strength) {
+            // Example: Magnetic field with a more complex pattern
+            const x = position.x;
+            const y = position.y;
+            const z = position.z;
+            
+            const fieldX = strength * (-z) / Math.pow(x * x + y * y + z * z + 0.1, 1.5);
+            const fieldY = strength * (0) / Math.pow(x * x + y * y + z * z + 0.1, 1.5);
+            const fieldZ = strength * (x) / Math.pow(x * x + y * y + z * z + 0.1, 1.5);
+            
+            return new THREE.Vector3(fieldX, fieldY, fieldZ);
+        }
+
+        // Update visualization when settings change
+        function updateVisualization() {
+            createFieldVisualization();
+        }
+
+        // Update field strength display
+        function updateFieldStrength() {
+            const value = document.getElementById('field-strength').value;
+            document.getElementById('field-strength-value').textContent = value;
+            updateVisualization();
+        }
+
+        // Update frequency display
+        function updateFrequency() {
+            const value = document.getElementById('frequency').value;
+            document.getElementById('frequency-value').textContent = value + ' Hz';
+            updateVisualization();
+        }
+
+        // Update charge magnitude display
+        function updateChargeMagnitude() {
+            const value = document.getElementById('charge-magnitude').value;
+            document.getElementById('charge-magnitude-value').textContent = value;
+            updateVisualization();
+        }
+
+        // Update particle velocity display
+        function updateParticleVelocity() {
+            const value = document.getElementById('particle-velocity').value;
+            document.getElementById('particle-velocity-value').textContent = value;
+            updateVisualization();
+        }
+
+        // Update display options
+        function updateDisplayOptions() {
+            const showVectors = document.getElementById('show-vectors').checked;
+            const showFieldLines = document.getElementById('show-field-lines').checked;
+            const showEquipotential = document.getElementById('show-equipotential').checked;
+            const showParticlePath = document.getElementById('show-particle-path').checked;
+            
+            // Update visibility of field vectors
+            fieldVectors.forEach(vector => {
+                vector.visible = showVectors;
+            });
+            
+            // Update visibility of field lines
+            fieldLines.forEach(line => {
+                line.visible = showFieldLines;
+            });
+            
+            // Update visibility of equipotential surfaces
+            equipotentialSurfaces.forEach(surface => {
+                surface.visible = showEquipotential;
+            });
+            
+            // Update visibility of particle paths
+            particlePaths.forEach(path => {
+                path.visible = showParticlePath;
+            });
+        }
+
+        // Reset view
+        function resetView() {
+            camera.position.set(5, 5, 5);
+            camera.lookAt(0, 0, 0);
+            controls.reset();
+        }
+
+        // Start simulation
+        function startSimulation() {
+            if (!isSimulationRunning) {
+                isSimulationRunning = true;
+                document.getElementById('start-simulation').disabled = true;
+                document.getElementById('pause-simulation').disabled = false;
+                clock.start();
+            }
+        }
+
+        // Pause simulation
+        function pauseSimulation() {
+            if (isSimulationRunning) {
+                isSimulationRunning = false;
+                document.getElementById('start-simulation').disabled = false;
+                document.getElementById('pause-simulation').disabled = true;
+                clock.stop();
+            }
+        }
+
+        // Load preset scenario
+        function loadPreset(presetName) {
+            currentPreset = presetName;
+            
+            switch (presetName) {
+                case 'solar-magnetic':
+                    document.getElementById('visualization-mode').value = 'magnetic';
+                    document.getElementById('field-type').value = 'custom';
+                    document.getElementById('field-strength').value = 70;
+                    updateFieldStrength();
+                    break;
+                    
+                case 'pulsar-magnetosphere':
+                    document.getElementById('visualization-mode').value = 'magnetic';
+                    document.getElementById('field-type').value = 'dipole';
+                    document.getElementById('field-strength').value = 90;
+                    updateFieldStrength();
+                    break;
+                    
+                case 'earth-magnetosphere':
+                    document.getElementById('visualization-mode').value = 'combined';
+                    document.getElementById('field-type').value = 'dipole';
+                    document.getElementById('field-strength').value = 60;
+                    updateFieldStrength();
+                    break;
+                    
+                case 'cosmic-ray':
+                    document.getElementById('visualization-mode').value = 'particle';
+                    document.getElementById('field-type').value = 'custom';
+                    document.getElementById('field-strength').value = 40;
+                    document.getElementById('charge-sign').value = 'positive';
+                    document.getElementById('particle-velocity').value = 80;
+                    updateFieldStrength();
+                    updateParticleVelocity();
+                    break;
+                    
+                case 'radio-jet':
+                    document.getElementById('visualization-mode').value = 'electromagnetic';
+                    document.getElementById('field-strength').value = 65;
+                    document.getElementById('frequency').value = 30;
+                    updateFieldStrength();
+                    updateFrequency();
+                    break;
+                    
+                case 'magnetic-reconnection':
+                    document.getElementById('visualization-mode').value = 'magnetic';
+                    document.getElementById('field-type').value = 'custom';
+                    document.getElementById('field-strength').value = 75;
+                    updateFieldStrength();
+                    break;
+            }
+            
+            updateVisualization();
+        }
+
+        // Update simulation
+        function updateSimulation(deltaTime) {
+            if (!isSimulationRunning) return;
+            
+            const visualizationMode = document.getElementById('visualization-mode').value;
+            
+            if (visualizationMode === 'electromagnetic') {
+                updateElectromagneticWave(deltaTime);
+            } else if (visualizationMode === 'particle') {
+                updateParticleMotion(deltaTime);
+            }
+            
+            // Update field data display
+            updateFieldDataDisplay();
+        }
+
+        // Update electromagnetic wave
+        function updateElectromagneticWave(deltaTime) {
+            const frequency = document.getElementById('frequency').value / 10; // Hz
+            const phase = (clock.getElapsedTime() * frequency) % (2 * Math.PI);
+            
+            // Update wave vectors
+            fieldVectors.forEach((vector, index) => {
+                if (index < 2) return; // Skip axis and arrow
+                
+                const isElectric = index % 2 === 0;
+                const position = vector.position;
+                const z = position.z;
+                
+                if (isElectric) {
+                    // Update electric field vector
+                    const amplitude = Math.sin(2 * Math.PI * z / 10 + phase);
+                    vector.setDirection(new THREE.Vector3(0, 1, 0));
+                    vector.setLength(Math.abs(amplitude));
+                } else {
+                    // Update magnetic field vector
+                    const amplitude = Math.sin(2 * Math.PI * z / 10 + phase + Math.PI / 2);
+                    vector.setDirection(new THREE.Vector3(1, 0, 0));
+                    vector.setLength(Math.abs(amplitude));
+                }
+            });
+            
+            // Update wave curves
+            if (fieldLines.length >= 2) {
+                const eWaveLine = fieldLines[0];
+                const bWaveLine = fieldLines[1];
+                
+                const eWavePoints = [];
+                const bWavePoints = [];
+                
+                const numPoints = 100;
+                const waveLength = 10;
+                const amplitude = document.getElementById('field-strength').value / 50;
+                
+                for (let i = 0; i < numPoints; i++) {
+                    const z = -waveLength / 2 + (i / (numPoints - 1)) * waveLength;
+                    const eY = amplitude * Math.sin(2 * Math.PI * z / waveLength + phase);
+                    const bX = amplitude * Math.sin(2 * Math.PI * z / waveLength + phase + Math.PI / 2);
+                    
+                    eWavePoints.push(new THREE.Vector3(0, eY, z));
+                    bWavePoints.push(new THREE.Vector3(bX, 0, z));
+                }
+                
+                eWaveLine.geometry.setFromPoints(eWavePoints);
+                bWaveLine.geometry.setFromPoints(bWavePoints);
+            }
+        }
+
+        // Update particle motion
+        function updateParticleMotion(deltaTime) {
+            if (particles.length === 0) return;
+            
+            const particle = particles[0];
+            const fieldType = document.getElementById('field-type').value;
+            const fieldStrength = document.getElementById('field-strength').value / 50;
+            
+            // Calculate magnetic field at particle position
+            let bField;
+            switch (fieldType) {
+                case 'current-loop':
+                    bField = calculateCurrentLoopField(particle.position, fieldStrength);
+                    break;
+                case 'solenoid':
+                    bField = calculateSolenoidField(particle.position, fieldStrength);
+                    break;
+                default:
+                    // Default uniform field in z-direction
+                    bField = new THREE.Vector3(0, 0, fieldStrength);
+            }
+            
+            // Calculate Lorentz force
+            const velocity = particle.userData.velocity;
+            const charge = particle.userData.charge;
+            const mass = particle.userData.mass;
+            
+            // F = q(v × B)
+            const force = new THREE.Vector3();
+            force.crossVectors(velocity, bField);
+            force.multiplyScalar(charge);
+            
+            // a = F/m
+            const acceleration = force.clone().divideScalar(mass);
+            
+            // Update velocity (v = v₀ + at)
+            velocity.add(acceleration.clone().multiplyScalar(deltaTime));
+            
+            // Update position (x = x₀ + vt)
+            particle.position.add(velocity.clone().multiplyScalar(deltaTime));
+            
+            // Update particle path
+            particle.userData.path.push(particle.position.clone());
+            
+            // Limit path length
+            if (particle.userData.path.length > 1000) {
+                particle.userData.path.shift();
+            }
+            
+            // Update path line
+            if (particlePaths.length > 0) {
+                const pathLine = particlePaths[0];
+                pathLine.geometry.setFromPoints(particle.userData.path);
+            }
+            
+            // Check if particle is out of bounds
+            if (particle.position.length() > 10) {
+                // Reset particle position
+                particle.position.set(-3, 0, 0);
+                particle.userData.path = [particle.position.clone()];
+            }
+        }
+
+        // Update field data display
+        function updateFieldDataDisplay() {
+            const visualizationMode = document.getElementById('visualization-mode').value;
+            const fieldStrength = document.getElementById('field-strength').value / 50;
+            
+            let eFieldStr = '0.00';
+            let bFieldStr = '0.00';
+            let energyStr = '0.00';
+            
+            switch (visualizationMode) {
+                case 'electric':
+                    eFieldStr = fieldStrength.toFixed(2);
+                    energyStr = (0.5 * fieldStrength * fieldStrength).toFixed(2);
+                    break;
+                case 'magnetic':
+                    bFieldStr = fieldStrength.toFixed(2);
+                    energyStr = (0.5 * fieldStrength * fieldStrength).toFixed(2);
+                    break;
+                case 'electromagnetic':
+                    eFieldStr = fieldStrength.toFixed(2);
+                    bFieldStr = fieldStrength.toFixed(2);
+                    energyStr = (fieldStrength * fieldStrength).toFixed(2);
+                    break;
+                case 'particle':
+                    bFieldStr = fieldStrength.toFixed(2);
+                    if (particles.length > 0) {
+                        const particle = particles[0];
+                        const velocity = particle.userData.velocity;
+                        const kineticEnergy = 0.5 * particle.userData.mass * velocity.lengthSq();
+                        energyStr = kineticEnergy.toFixed(2);
+                    }
+                    break;
+                case 'combined':
+                    eFieldStr = fieldStrength.toFixed(2);
+                    bFieldStr = fieldStrength.toFixed(2);
+                    energyStr = (fieldStrength * fieldStrength).toFixed(2);
+                    break;
+            }
+            
+            document.getElementById('field-strength-display').textContent = `E: ${eFieldStr} N/C, B: ${bFieldStr} T`;
+            document.getElementById('energy-display').textContent = `Energy: ${energyStr} J`;
+        }
+
+        // Clear visualization
+        function clearVisualization() {
+            // Remove field vectors
+            for (const vector of fieldVectors) {
+                scene.remove(vector);
+            }
+            fieldVectors = [];
+            
+            // Remove field lines
+            for (const line of fieldLines) {
+                scene.remove(line);
+            }
+            fieldLines = [];
+            
+            // Remove particles
+            for (const particle of particles) {
+                scene.remove(particle);
+            }
+            particles = [];
+            
+            // Remove particle paths
+            for (const path of particlePaths) {
+                scene.remove(path);
+            }
+            particlePaths = [];
+            
+            // Remove equipotential surfaces
+            for (const surface of equipotentialSurfaces) {
+                scene.remove(surface);
+            }
+            equipotentialSurfaces = [];
+        }
+
+        // Handle window resize
+        function onWindowResize() {
+            camera.aspect = document.getElementById('field-visualization').clientWidth / document.getElementById('field-visualization').clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(document.getElementById('field-visualization').clientWidth, document.getElementById('field-visualization').clientHeight);
+        }
+
+        // Animation loop
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+            
+            const deltaTime = Math.min(clock.getDelta(), 0.1); // Limit delta time to avoid large jumps
+            
+            updateSimulation(deltaTime);
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Tab functionality
+        function openTab(evt, tabName) {
+            // Hide all tab content
+            const tabContent = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContent.length; i++) {
+                tabContent[i].classList.remove('active');
+            }
+            
+            // Remove active class from all tab buttons
+            const tabButtons = document.getElementsByClassName('tab-button');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
+            }
+            
+            // Show the selected tab and add active class to the button
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+
+        // Initialize when the page loads
+        window.onload = init;
+    </script>
+</body>
+</html>

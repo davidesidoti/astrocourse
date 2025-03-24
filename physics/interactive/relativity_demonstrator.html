@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relativity Demonstrator - AstroCourse Physics</title>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --special-color: #9b59b6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background-color: var(--light-color);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .description {
+            font-style: italic;
+            margin-bottom: 0;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .visualization-container {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .visualization {
+            flex: 1;
+            min-width: 300px;
+            height: 400px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .controls-container {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .controls-section {
+            margin-bottom: 20px;
+        }
+
+        .controls-section h3 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .control-group input[type="range"],
+        .control-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .control-group input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button.primary {
+            background-color: var(--primary-color);
+        }
+
+        button.primary:hover {
+            background-color: #1a252f;
+        }
+
+        button.accent {
+            background-color: var(--accent-color);
+        }
+
+        button.accent:hover {
+            background-color: #c0392b;
+        }
+
+        .tabs {
+            display: flex;
+            background-color: #f1f1f1;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab-button {
+            background-color: inherit;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 16px;
+            color: var(--dark-color);
+        }
+
+        .tab-button:hover {
+            background-color: #ddd;
+        }
+
+        .tab-button.active {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border-top: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .info-panel {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .info-panel h3 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .info-panel p {
+            margin-bottom: 15px;
+        }
+
+        .info-panel ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .info-panel code {
+            background-color: #f1f1f1;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        .data-display {
+            background-color: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-top: 15px;
+        }
+
+        .data-display h4 {
+            margin-bottom: 5px;
+            color: var(--primary-color);
+        }
+
+        .data-display p {
+            margin: 5px 0;
+            font-family: monospace;
+        }
+
+        .preset-scenarios {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .preset-card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .preset-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .preset-card h4 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .preset-card p {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .formula {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: 'Times New Roman', Times, serif;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .split-view {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .split-view > div {
+            flex: 1;
+            padding: 10px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .split-view h4 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .comparison-table th, .comparison-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .comparison-table th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .highlight {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .spacetime-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 2px;
+            margin: 15px 0;
+        }
+
+        .spacetime-grid-cell {
+            background-color: #f1f1f1;
+            aspect-ratio: 1;
+            border-radius: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .visualization-container {
+                flex-direction: column;
+            }
+            
+            .visualization, .controls-container {
+                width: 100%;
+            }
+            
+            .preset-scenarios {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .split-view {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .preset-scenarios {
+                grid-template-columns: 1fr;
+            }
+            
+            .tab-button {
+                padding: 10px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Relativity Demonstrator</h1>
+            <p class="description">Explore relativistic effects, spacetime curvature, and reference frame transformations</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab(event, 'visualizer')">Visualizer</button>
+            <button class="tab-button" onclick="openTab(event, 'special-relativity')">Special Relativity</button>
+            <button class="tab-button" onclick="openTab(event, 'general-relativity')">General Relativity</button>
+            <button class="tab-button" onclick="openTab(event, 'astronomy-applications')">Astronomy Applications</button>
+        </div>
+
+        <div id="visualizer" class="tab-content active">
+            <div class="visualization-container">
+                <div class="visualization" id="relativity-visualization"></div>
+                
+                <div class="controls-container">
+                    <div class="controls-section">
+                        <h3>Visualization Mode</h3>
+                        <div class="control-group">
+                            <select id="visualization-mode">
+                                <option value="time-dilation">Time Dilation</option>
+                                <option value="length-contraction">Length Contraction</option>
+                                <option value="spacetime-curvature">Spacetime Curvature</option>
+                                <option value="gravitational-lensing">Gravitational Lensing</option>
+                                <option value="reference-frames">Reference Frame Transformation</option>
+                                <option value="light-cone">Light Cone</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="controls-section">
+                        <h3>Parameters</h3>
+                        <div class="control-group">
+                            <label for="velocity-fraction">Velocity (fraction of c):</label>
+                            <input type="range" id="velocity-fraction" min="0" max="99" value="80">
+                            <span id="velocity-fraction-value">0.80c</span>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="mass">Mass (solar masses):</label>
+                            <input type="range" id="mass" min="0" max="100" value="10">
+                            <span id="mass-value">10 M☉</span>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="distance">Distance (Schwarzschild radii):</label>
+                            <input type="range" id="distance" min="1" max="50" value="10">
+                            <span id="distance-value">10 Rs</span>
+                        </div>
+
+                        <div class="control-group">
+                            <label for="observer-position">Observer Position:</label>
+                            <select id="observer-position">
+                                <option value="stationary">Stationary Observer</option>
+                                <option value="moving">Moving Observer</option>
+                                <option value="both">Both Observers</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="controls-section">
+                        <h3>Display Options</h3>
+                        <div class="control-group">
+                            <label>
+                                <input type="checkbox" id="show-grid" checked>
+                                Show Coordinate Grid
+                            </label>
+                        </div>
+                        <div class="control-group">
+                            <label>
+                                <input type="checkbox" id="show-labels" checked>
+                                Show Labels
+                            </label>
+                        </div>
+                        <div class="control-group">
+                            <label>
+                                <input type="checkbox" id="show-effects" checked>
+                                Show Relativistic Effects
+                            </label>
+                        </div>
+                        <div class="control-group">
+                            <label>
+                                <input type="checkbox" id="show-comparison">
+                                Show Newtonian Comparison
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button id="reset-view" class="primary">Reset View</button>
+                        <button id="start-animation">Start Animation</button>
+                        <button id="pause-animation" disabled>Pause</button>
+                    </div>
+
+                    <div class="data-display">
+                        <h4>Relativistic Data</h4>
+                        <p id="time-dilation-display">Time Dilation Factor: 1.00</p>
+                        <p id="length-contraction-display">Length Contraction Factor: 1.00</p>
+                        <p id="relativistic-mass-display">Relativistic Mass Factor: 1.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <h3>Preset Astronomical Scenarios</h3>
+                <p>Select from these preset scenarios to explore relativistic effects in astronomical contexts:</p>
+                
+                <div class="preset-scenarios">
+                    <div class="preset-card" onclick="loadPreset('black-hole')">
+                        <h4>Black Hole</h4>
+                        <p>Explore spacetime curvature and gravitational lensing near a black hole</p>
+                    </div>
+                    <div class="preset-card" onclick="loadPreset('neutron-star')">
+                        <h4>Neutron Star</h4>
+                        <p>Examine time dilation and gravitational effects near a neutron star</p>
+                    </div>
+                    <div class="preset-card" onclick="loadPreset('binary-pulsar')">
+                        <h4>Binary Pulsar</h4>
+                        <p>Observe relativistic orbital effects in a binary pulsar system</p>
+                    </div>
+                    <div class="preset-card" onclick="loadPreset('relativistic-jet')">
+                        <h4>Relativistic Jet</h4>
+                        <p>Visualize length contraction and time dilation in a relativistic jet</p>
+                    </div>
+                    <div class="preset-card" onclick="loadPreset('galaxy-cluster')">
+                        <h4>Galaxy Cluster</h4>
+                        <p>See gravitational lensing effects from a massive galaxy cluster</p>
+                    </div>
+                    <div class="preset-card" onclick="loadPreset('expanding-universe')">
+                        <h4>Expanding Universe</h4>
+                        <p>Explore cosmological reference frames and redshift</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="special-relativity" class="tab-content">
+            <div class="info-panel">
+                <h3>Special Relativity Fundamentals</h3>
+                
+                <h4>Einstein's Postulates</h4>
+                <p>Special relativity is based on two fundamental postulates:</p>
+                <ol>
+                    <li><strong>The Principle of Relativity:</strong> The laws of physics are the same in all inertial reference frames.</li>
+                    <li><strong>The Invariance of the Speed of Light:</strong> The speed of light in vacuum is the same for all observers, regardless of their relative motion or the motion of the light source.</li>
+                </ol>
+                <p>These seemingly simple postulates lead to profound consequences for our understanding of space and time.</p>
+
+                <h4>Time Dilation</h4>
+                <p>Time passes more slowly for moving objects as observed from a stationary reference frame. The time dilation factor is given by:</p>
+                <div class="formula">
+                    Δt' = γ Δt = Δt / √(1 - v²/c²)
+                </div>
+                <p>Where:</p>
+                <ul>
+                    <li>Δt is the time interval in the rest frame</li>
+                    <li>Δt' is the dilated time interval as observed from another frame</li>
+                    <li>v is the relative velocity between the frames</li>
+                    <li>c is the speed of light</li>
+                    <li>γ (gamma) is the Lorentz factor</li>
+                </ul>
+                <p>This effect becomes significant as velocities approach the speed of light. For example, at 0.9c, time runs about 2.3 times slower.</p>
+
+                <h4>Length Contraction</h4>
+                <p>Objects appear shorter in the direction of motion when observed from a stationary reference frame. The length contraction factor is given by:</p>
+                <div class="formula">
+                    L' = L / γ = L × √(1 - v²/c²)
+                </div>
+                <p>Where:</p>
+                <ul>
+                    <li>L is the proper length (in the object's rest frame)</li>
+                    <li>L' is the contracted length as observed from another frame</li>
+                </ul>
+                <p>This contraction only occurs along the direction of motion. Dimensions perpendicular to the motion are unaffected.</p>
+
+                <h4>Relativistic Mass and Energy</h4>
+                <p>The mass of an object appears to increase with velocity according to:</p>
+                <div class="formula">
+                    m = γm₀ = m₀ / √(1 - v²/c²)
+                </div>
+                <p>Where m₀ is the rest mass of the object.</p>
+                <p>Einstein's famous equation relates mass and energy:</p>
+                <div class="formula">
+                    E = mc² = γm₀c²
+                </div>
+                <p>For a particle at rest, this simplifies to E₀ = m₀c², the rest energy.</p>
+
+                <h4>Lorentz Transformations</h4>
+                <p>The Lorentz transformations describe how coordinates transform between inertial reference frames:</p>
+                <div class="formula">
+                    t' = γ(t - vx/c²)<br>
+                    x' = γ(x - vt)<br>
+                    y' = y<br>
+                    z' = z
+                </div>
+                <p>These transformations replace the Galilean transformations of classical mechanics and correctly account for the invariance of the speed of light.</p>
+
+                <h4>Relativistic Velocity Addition</h4>
+                <p>Velocities don't add linearly in special relativity. If an object moves at velocity u in one reference frame, and that frame moves at velocity v relative to another frame, the object's velocity w in the second frame is:</p>
+                <div class="formula">
+                    w = (u + v) / (1 + uv/c²)
+                </div>
+                <p>This ensures that no object can exceed the speed of light by adding velocities.</p>
+            </div>
+        </div>
+
+        <div id="general-relativity" class="tab-content">
+            <div class="info-panel">
+                <h3>General Relativity Fundamentals</h3>
+                
+                <h4>Einstein's Principle of Equivalence</h4>
+                <p>General relativity extends special relativity to include gravity. It is based on the equivalence principle:</p>
+                <p><em>The effects of gravity and acceleration are indistinguishable.</em></p>
+                <p>This means that an observer in a closed elevator cannot determine whether they are accelerating in space or stationary in a gravitational field.</p>
+
+                <h4>Spacetime Curvature</h4>
+                <p>The central concept of general relativity is that mass and energy curve spacetime, and this curvature determines how objects move:</p>
+                <ul>
+                    <li>Mass and energy tell spacetime how to curve</li>
+                    <li>Curved spacetime tells matter how to move</li>
+                </ul>
+                <p>This is mathematically expressed by Einstein's field equations:</p>
+                <div class="formula">
+                    G<sub>μν</sub> = 8πG/c⁴ T<sub>μν</sub>
+                </div>
+                <p>Where G<sub>μν</sub> is the Einstein tensor describing spacetime curvature, and T<sub>μν</sub> is the stress-energy tensor describing the distribution of matter and energy.</p>
+
+                <h4>Gravitational Time Dilation</h4>
+                <p>Time passes more slowly in stronger gravitational fields. The time dilation factor due to gravity is:</p>
+                <div class="formula">
+                    Δt' = Δt / √(1 - 2GM/rc²)
+                </div>
+                <p>Where:</p>
+                <ul>
+                    <li>Δt is the time interval far from any gravitational mass</li>
+                    <li>Δt' is the dilated time interval at distance r from mass M</li>
+                    <li>G is the gravitational constant</li>
+                </ul>
+                <p>This effect has been confirmed by precise atomic clocks at different altitudes on Earth.</p>
+
+                <h4>Gravitational Lensing</h4>
+                <p>Light follows curved paths in curved spacetime, causing massive objects to act as gravitational lenses. The deflection angle for light passing a mass M at distance r is approximately:</p>
+                <div class="formula">
+                    θ = 4GM/rc²
+                </div>
+                <p>This effect was first confirmed during a solar eclipse in 1919, providing crucial early evidence for general relativity.</p>
+
+                <h4>Black Holes</h4>
+                <p>Black holes are regions where spacetime is so curved that nothing, not even light, can escape. Key features include:</p>
+                <ul>
+                    <li><strong>Event Horizon:</strong> The boundary beyond which escape is impossible</li>
+                    <li><strong>Schwarzschild Radius:</strong> R<sub>s</sub> = 2GM/c², the radius of the event horizon for a non-rotating black hole</li>
+                    <li><strong>Singularity:</strong> The central point of infinite density (according to classical general relativity)</li>
+                </ul>
+                <p>Near a black hole, relativistic effects become extreme, with time dilation approaching infinity at the event horizon.</p>
+
+                <h4>Gravitational Waves</h4>
+                <p>General relativity predicts that accelerating masses produce ripples in spacetime called gravitational waves. These waves:</p>
+                <ul>
+                    <li>Travel at the speed of light</li>
+                    <li>Carry energy and momentum</li>
+                    <li>Cause tiny oscillations in the proper distance between objects</li>
+                </ul>
+                <p>Gravitational waves were directly detected for the first time in 2015 by LIGO, from the merger of two black holes.</p>
+
+                <h4>Cosmological Implications</h4>
+                <p>General relativity provides the framework for modern cosmology:</p>
+                <ul>
+                    <li>The expansion of the universe is described as the expansion of spacetime itself</li>
+                    <li>The Friedmann equations, derived from general relativity, describe the evolution of the universe</li>
+                    <li>Cosmic microwave background radiation and the abundance of light elements provide evidence for the Big Bang model</li>
+                </ul>
+                <p>General relativity also predicts the existence of dark energy, which drives the accelerating expansion of the universe.</p>
+            </div>
+        </div>
+
+        <div id="astronomy-applications" class="tab-content">
+            <div class="info-panel">
+                <h3>Relativity in Astronomy</h3>
+                
+                <h4>Black Holes</h4>
+                <p>Black holes are perhaps the most dramatic prediction of general relativity. Astronomical observations have confirmed their existence through multiple methods:</p>
+                <ul>
+                    <li><strong>X-ray binaries:</strong> Matter from a companion star falling into a stellar-mass black hole emits X-rays</li>
+                    <li><strong>Stellar orbits:</strong> Stars orbiting Sagittarius A* at the center of our galaxy reveal a supermassive black hole of about 4 million solar masses</li>
+                    <li><strong>Event Horizon Telescope:</strong> Direct imaging of the shadow of the supermassive black hole in M87</li>
+                    <li><strong>Gravitational waves:</strong> Detection of merging black hole binaries by LIGO and Virgo</li>
+                </ul>
+                <p>Black holes come in several mass ranges:</p>
+                <ul>
+                    <li><strong>Stellar-mass black holes:</strong> ~5-100 solar masses, formed from collapsed massive stars</li>
+                    <li><strong>Intermediate-mass black holes:</strong> ~100-100,000 solar masses</li>
+                    <li><strong>Supermassive black holes:</strong> ~10⁶-10¹⁰ solar masses, found at the centers of most galaxies</li>
+                </ul>
+
+                <h4>Neutron Stars and Pulsars</h4>
+                <p>Neutron stars are extremely dense objects where relativistic effects are significant:</p>
+                <ul>
+                    <li>Strong gravitational fields cause significant time dilation</li>
+                    <li>Rapidly rotating neutron stars (pulsars) serve as precise cosmic clocks</li>
+                    <li>The binary pulsar PSR B1913+16 provided the first indirect evidence for gravitational waves through orbital decay</li>
+                </ul>
+
+                <h4>Gravitational Lensing</h4>
+                <p>Gravitational lensing occurs when light from a distant source is bent by a massive object between the source and observer:</p>
+                <ul>
+                    <li><strong>Strong lensing:</strong> Creates multiple images, arcs, or Einstein rings</li>
+                    <li><strong>Weak lensing:</strong> Causes subtle distortions in the shapes of background galaxies</li>
+                    <li><strong>Microlensing:</strong> Temporary brightening of a background star due to a passing foreground object</li>
+                </ul>
+                <p>Gravitational lensing is used to:</p>
+                <ul>
+                    <li>Map dark matter distribution in galaxy clusters</li>
+                    <li>Magnify distant galaxies that would otherwise be too faint to observe</li>
+                    <li>Detect exoplanets through microlensing events</li>
+                    <li>Measure the Hubble constant through time delays in lensed quasars</li>
+                </ul>
+
+                <h4>Relativistic Jets</h4>
+                <p>Many active galactic nuclei and some X-ray binaries produce highly collimated jets of material moving at relativistic speeds:</p>
+                <ul>
+                    <li><strong>Apparent superluminal motion:</strong> Jets can appear to move faster than light due to relativistic effects</li>
+                    <li><strong>Relativistic beaming:</strong> Radiation is concentrated in the direction of motion, making approaching jets appear much brighter than receding jets</li>
+                    <li><strong>Time dilation:</strong> Processes in the jet appear slowed down in the observer's frame</li>
+                </ul>
+
+                <h4>Cosmology</h4>
+                <p>General relativity forms the foundation of modern cosmology:</p>
+                <ul>
+                    <li>The expansion of the universe is described by the Friedmann-Lemaître-Robertson-Walker metric</li>
+                    <li>Cosmic microwave background radiation shows tiny temperature fluctuations that grew into the large-scale structure we see today</li>
+                    <li>Gravitational redshift contributes to the cosmological redshift of distant galaxies</li>
+                    <li>Dark energy, which accelerates the expansion of the universe, may be explained as a cosmological constant in Einstein's field equations</li>
+                </ul>
+
+                <h4>Tests of General Relativity</h4>
+                <p>Astronomy provides several ways to test general relativity:</p>
+                <ul>
+                    <li><strong>Perihelion precession of Mercury:</strong> The anomalous precession is explained by general relativity</li>
+                    <li><strong>Gravitational redshift:</strong> Light climbing out of a gravitational well loses energy and is redshifted</li>
+                    <li><strong>Light deflection:</strong> Starlight is bent when passing near the Sun</li>
+                    <li><strong>Shapiro time delay:</strong> Signals take longer to travel through curved spacetime near massive objects</li>
+                    <li><strong>Frame-dragging:</strong> Rotating masses drag spacetime around with them</li>
+                    <li><strong>Gravitational waves:</strong> Direct detection confirms a key prediction of general relativity</li>
+                </ul>
+                <p>So far, general relativity has passed all observational tests, though tensions with quantum mechanics remain at extremely small scales.</p>
+
+                <h4>Future Prospects</h4>
+                <p>Upcoming astronomical observations will continue to test and refine our understanding of relativity:</p>
+                <ul>
+                    <li>More sensitive gravitational wave detectors will observe a wider range of sources</li>
+                    <li>The Event Horizon Telescope will produce more detailed images of black hole shadows</li>
+                    <li>Pulsar timing arrays may detect low-frequency gravitational waves from supermassive black hole binaries</li>
+                    <li>Space-based tests will probe the equivalence principle with unprecedented precision</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let scene, camera, renderer, controls;
+        let animationId = null;
+        let isAnimationRunning = false;
+        let clock = new THREE.Clock();
+        let currentPreset = null;
+        let objects = [];
+        let gridLines = [];
+        let labels = [];
+        let effectObjects = [];
+        let comparisonObjects = [];
+
+        // Initialize the visualization
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf8f9fa);
+
+            // Create camera
+            camera = new THREE.PerspectiveCamera(60, document.getElementById('relativity-visualization').clientWidth / document.getElementById('relativity-visualization').clientHeight, 0.1, 1000);
+            camera.position.set(5, 5, 5);
+
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(document.getElementById('relativity-visualization').clientWidth, document.getElementById('relativity-visualization').clientHeight);
+            document.getElementById('relativity-visualization').appendChild(renderer.domElement);
+
+            // Add orbit controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.25;
+
+            // Add ambient light
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            // Add directional light
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 7);
+            scene.add(directionalLight);
+
+            // Create initial visualization
+            createVisualization();
+
+            // Start animation loop
+            animate();
+
+            // Add event listeners
+            window.addEventListener('resize', onWindowResize);
+            document.getElementById('visualization-mode').addEventListener('change', updateVisualization);
+            document.getElementById('velocity-fraction').addEventListener('input', updateVelocity);
+            document.getElementById('mass').addEventListener('input', updateMass);
+            document.getElementById('distance').addEventListener('input', updateDistance);
+            document.getElementById('observer-position').addEventListener('change', updateVisualization);
+            document.getElementById('show-grid').addEventListener('change', updateDisplayOptions);
+            document.getElementById('show-labels').addEventListener('change', updateDisplayOptions);
+            document.getElementById('show-effects').addEventListener('change', updateDisplayOptions);
+            document.getElementById('show-comparison').addEventListener('change', updateDisplayOptions);
+            document.getElementById('reset-view').addEventListener('click', resetView);
+            document.getElementById('start-animation').addEventListener('click', startAnimation);
+            document.getElementById('pause-animation').addEventListener('click', pauseAnimation);
+        }
+
+        // Create visualization based on current settings
+        function createVisualization() {
+            clearVisualization();
+
+            const visualizationMode = document.getElementById('visualization-mode').value;
+            
+            switch (visualizationMode) {
+                case 'time-dilation':
+                    createTimeDilationVisualization();
+                    break;
+                case 'length-contraction':
+                    createLengthContractionVisualization();
+                    break;
+                case 'spacetime-curvature':
+                    createSpacetimeCurvatureVisualization();
+                    break;
+                case 'gravitational-lensing':
+                    createGravitationalLensingVisualization();
+                    break;
+                case 'reference-frames':
+                    createReferenceFrameVisualization();
+                    break;
+                case 'light-cone':
+                    createLightConeVisualization();
+                    break;
+            }
+
+            updateDisplayOptions();
+            updateRelativisticData();
+        }
+
+        // Create time dilation visualization
+        function createTimeDilationVisualization() {
+            // Create coordinate system
+            createCoordinateSystem();
+            
+            // Get parameters
+            const velocityFraction = document.getElementById('velocity-fraction').value / 100;
+            const observerPosition = document.getElementById('observer-position').value;
+            
+            // Calculate Lorentz factor
+            const gamma = 1 / Math.sqrt(1 - velocityFraction * velocityFraction);
+            
+            // Create stationary clock
+            const stationaryClock = createClock(new THREE.Vector3(-2, 0, 0), 0x3498db);
+            objects.push(stationaryClock);
+            
+            // Create moving clock
+            const movingClock = createClock(new THREE.Vector3(2, 0, 0), 0xe74c3c);
+            objects.push(movingClock);
+            
+            // Add labels
+            const stationaryLabel = createTextSprite("Stationary Clock", new THREE.Vector3(-2, 1.5, 0), 0x3498db);
+            const movingLabel = createTextSprite("Moving Clock", new THREE.Vector3(2, 1.5, 0), 0xe74c3c);
+            labels.push(stationaryLabel, movingLabel);
+            scene.add(stationaryLabel, movingLabel);
+            
+            // Add time dilation effect visualization
+            const stationaryTicks = createClockTicks(new THREE.Vector3(-2, 0, 0), 1, 0x3498db);
+            const movingTicks = createClockTicks(new THREE.Vector3(2, 0, 0), 1/gamma, 0xe74c3c);
+            
+            effectObjects.push(stationaryTicks, movingTicks);
+            scene.add(stationaryTicks, movingTicks);
+            
+            // Add comparison (Newtonian) visualization
+            const comparisonTicks = createClockTicks(new THREE.Vector3(2, 0, 0), 1, 0x2ecc71);
+            comparisonObjects.push(comparisonTicks);
+            scene.add(comparisonTicks);
+            
+            // Store animation data
+            stationaryTicks.userData = { rotationSpeed: 1 };
+            movingTicks.userData = { rotationSpeed: 1/gamma };
+            comparisonTicks.userData = { rotationSpeed: 1 };
+        }
+
+        // Create length contraction visualization
+        function createLengthContractionVisualization() {
+            // Create coordinate system
+            createCoordinateSystem();
+            
+            // Get parameters
+            const velocityFraction = document.getElementById('velocity-fraction').value / 100;
+            const observerPosition = document.getElementById('observer-position').value;
+            
+            // Calculate Lorentz factor
+            const gamma = 1 / Math.sqrt(1 - velocityFraction * velocityFraction);
+            
+            // Create stationary object
+            const stationaryObject = createRod(new THREE.Vector3(-2, 0, 0), 2, 0x3498db);
+            objects.push(stationaryObject);
+            
+            // Create moving object (contracted)
+            const movingObject = createRod(new THREE.Vector3(2, 0, 0), 2/gamma, 0xe74c3c);
+            objects.push(movingObject);
+            
+            // Add labels
+            const stationaryLabel = createTextSprite("Stationary Object", new THREE.Vector3(-2, 1, 0), 0x3498db);
+            const movingLabel = createTextSprite("Moving Object", new THREE.Vector3(2, 1, 0), 0xe74c3c);
+            labels.push(stationaryLabel, movingLabel);
+            scene.add(stationaryLabel, movingLabel);
+            
+            // Add length markers
+            const stationaryMarkers = createLengthMarkers(new THREE.Vector3(-3, -0.5, 0), 2, 0x3498db);
+            const movingMarkers = createLengthMarkers(new THREE.Vector3(1, -0.5, 0), 2/gamma, 0xe74c3c);
+            
+            effectObjects.push(stationaryMarkers, movingMarkers);
+            scene.add(stationaryMarkers, movingMarkers);
+            
+            // Add comparison (Newtonian) visualization
+            const comparisonObject = createRod(new THREE.Vector3(2, 0.5, 0), 2, 0x2ecc71);
+            const comparisonMarkers = createLengthMarkers(new THREE.Vector3(1, 1, 0), 2, 0x2ecc71);
+            
+            comparisonObjects.push(comparisonObject, comparisonMarkers);
+            scene.add(comparisonObject, comparisonMarkers);
+        }
+
+        // Create spacetime curvature visualization
+        function createSpacetimeCurvatureVisualization() {
+            // Create coordinate system
+            createCoordinateSystem(5);
+            
+            // Get parameters
+            const mass = document.getElementById('mass').value;
+            const scaledMass = mass / 10; // Scale for visualization
+            
+            // Create central mass
+            const centralMass = createSphere(new THREE.Vector3(0, 0, 0), 0.5 * Math.pow(scaledMass, 1/3), 0x3498db);
+            objects.push(centralMass);
+            
+            // Create spacetime grid
+            const grid = createSpacetimeGrid(scaledMass);
+            effectObjects.push(grid);
+            scene.add(grid);
+            
+            // Add label
+            const massLabel = createTextSprite(`${mass} Solar Masses`, new THREE.Vector3(0, 1.5, 0), 0x3498db);
+            labels.push(massLabel);
+            scene.add(massLabel);
+            
+            // Add test particles
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const radius = 3;
+                const position = new THREE.Vector3(
+                    radius * Math.cos(angle),
+                    0,
+                    radius * Math.sin(angle)
+                );
+                
+                const particle = createSphere(position, 0.1, 0xe74c3c);
+                effectObjects.push(particle);
+                scene.add(particle);
+                
+                // Store orbit data
+                particle.userData = {
+                    orbitRadius: radius,
+                    orbitSpeed: 0.5 / Math.pow(radius, 1.5), // Kepler's third law
+                    orbitAngle: angle,
+                    precessionRate: 0.05 * scaledMass / (radius * radius) // Simplified precession
+                };
+            }
+            
+            // Add comparison (Newtonian) visualization
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const radius = 3;
+                const position = new THREE.Vector3(
+                    radius * Math.cos(angle),
+                    0.5,
+                    radius * Math.sin(angle)
+                );
+                
+                const particle = createSphere(position, 0.1, 0x2ecc71);
+                comparisonObjects.push(particle);
+                scene.add(particle);
+                
+                // Store orbit data (no precession)
+                particle.userData = {
+                    orbitRadius: radius,
+                    orbitSpeed: 0.5 / Math.pow(radius, 1.5), // Kepler's third law
+                    orbitAngle: angle,
+                    precessionRate: 0 // No precession in Newtonian physics
+                };
+            }
+        }
+
+        // Create gravitational lensing visualization
+        function createGravitationalLensingVisualization() {
+            // Create coordinate system
+            createCoordinateSystem(5);
+            
+            // Get parameters
+            const mass = document.getElementById('mass').value;
+            const scaledMass = mass / 10; // Scale for visualization
+            
+            // Create central mass
+            const centralMass = createSphere(new THREE.Vector3(0, 0, 0), 0.5 * Math.pow(scaledMass, 1/3), 0x3498db);
+            objects.push(centralMass);
+            
+            // Add label
+            const massLabel = createTextSprite(`${mass} Solar Masses`, new THREE.Vector3(0, 1.5, 0), 0x3498db);
+            labels.push(massLabel);
+            scene.add(massLabel);
+            
+            // Create background light sources
+            const sourceGroup = new THREE.Group();
+            for (let i = 0; i < 50; i++) {
+                const x = (Math.random() - 0.5) * 10;
+                const y = (Math.random() - 0.5) * 10;
+                const z = -10;
+                
+                const source = createSphere(new THREE.Vector3(x, y, z), 0.1, 0xffffff);
+                sourceGroup.add(source);
+            }
+            objects.push(sourceGroup);
+            scene.add(sourceGroup);
+            
+            // Create lensed images
+            const lensedGroup = new THREE.Group();
+            for (let i = 0; i < 50; i++) {
+                const source = sourceGroup.children[i];
+                const sourcePos = source.position;
+                
+                // Calculate lensing effect (simplified)
+                const r = Math.sqrt(sourcePos.x * sourcePos.x + sourcePos.y * sourcePos.y);
+                if (r < 0.1) continue; // Skip sources directly behind the lens
+                
+                const deflectionAngle = 4 * scaledMass / r; // Simplified deflection angle
+                const deflectionFactor = deflectionAngle / (Math.PI / 2); // Normalize
+                
+                // Create lensed images
+                const direction = new THREE.Vector3(sourcePos.x, sourcePos.y, 0).normalize();
+                
+                // Primary image (same side, magnified)
+                const primaryOffset = direction.clone().multiplyScalar(deflectionFactor * 0.5);
+                const primaryPos = new THREE.Vector3(
+                    sourcePos.x + primaryOffset.x,
+                    sourcePos.y + primaryOffset.y,
+                    5
+                );
+                const primaryImage = createSphere(primaryPos, 0.15, 0xe74c3c);
+                lensedGroup.add(primaryImage);
+                
+                // Secondary image (opposite side, demagnified)
+                if (r < 3 * scaledMass) { // Only create secondary images for sources close enough to the lens
+                    const secondaryOffset = direction.clone().multiplyScalar(-deflectionFactor * 1.5);
+                    const secondaryPos = new THREE.Vector3(
+                        -sourcePos.x + secondaryOffset.x,
+                        -sourcePos.y + secondaryOffset.y,
+                        5
+                    );
+                    const secondaryImage = createSphere(secondaryPos, 0.08, 0xe74c3c);
+                    lensedGroup.add(secondaryImage);
+                }
+            }
+            effectObjects.push(lensedGroup);
+            scene.add(lensedGroup);
+            
+            // Create light paths
+            const pathsGroup = new THREE.Group();
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const radius = 2;
+                
+                const sourcePos = new THREE.Vector3(
+                    radius * Math.cos(angle),
+                    radius * Math.sin(angle),
+                    -10
+                );
+                
+                // Calculate deflection
+                const deflectionAngle = 4 * scaledMass / radius; // Simplified
+                
+                // Create curved path
+                const curve = new THREE.QuadraticBezierCurve3(
+                    sourcePos,
+                    new THREE.Vector3(0, 0, 0),
+                    new THREE.Vector3(
+                        radius * Math.cos(angle + deflectionAngle),
+                        radius * Math.sin(angle + deflectionAngle),
+                        10
+                    )
+                );
+                
+                const points = curve.getPoints(50);
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const material = new THREE.LineBasicMaterial({ color: 0xe74c3c });
+                const path = new THREE.Line(geometry, material);
+                
+                pathsGroup.add(path);
+            }
+            effectObjects.push(pathsGroup);
+            scene.add(pathsGroup);
+            
+            // Add comparison (Newtonian) visualization - straight light paths
+            const straightPathsGroup = new THREE.Group();
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2;
+                const radius = 2;
+                
+                const sourcePos = new THREE.Vector3(
+                    radius * Math.cos(angle),
+                    radius * Math.sin(angle),
+                    -10
+                );
+                
+                const targetPos = new THREE.Vector3(
+                    radius * Math.cos(angle),
+                    radius * Math.sin(angle),
+                    10
+                );
+                
+                const points = [sourcePos, targetPos];
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const material = new THREE.LineBasicMaterial({ color: 0x2ecc71 });
+                const path = new THREE.Line(geometry, material);
+                
+                straightPathsGroup.add(path);
+            }
+            comparisonObjects.push(straightPathsGroup);
+            scene.add(straightPathsGroup);
+        }
+
+        // Create reference frame visualization
+        function createReferenceFrameVisualization() {
+            // Create coordinate system
+            createCoordinateSystem();
+            
+            // Get parameters
+            const velocityFraction = document.getElementById('velocity-fraction').value / 100;
+            const observerPosition = document.getElementById('observer-position').value;
+            
+            // Calculate Lorentz factor
+            const gamma = 1 / Math.sqrt(1 - velocityFraction * velocityFraction);
+            
+            // Create stationary frame
+            const stationaryFrame = createReferenceFrame(new THREE.Vector3(-3, 0, 0), 1, 0x3498db);
+            objects.push(stationaryFrame);
+            
+            // Create moving frame (with Lorentz transformation)
+            const movingFrame = createReferenceFrame(new THREE.Vector3(3, 0, 0), 1, 0xe74c3c);
+            objects.push(movingFrame);
+            
+            // Add labels
+            const stationaryLabel = createTextSprite("Stationary Frame", new THREE.Vector3(-3, 2, 0), 0x3498db);
+            const movingLabel = createTextSprite("Moving Frame", new THREE.Vector3(3, 2, 0), 0xe74c3c);
+            labels.push(stationaryLabel, movingLabel);
+            scene.add(stationaryLabel, movingLabel);
+            
+            // Create events in spacetime
+            const eventsGroup = new THREE.Group();
+            
+            // Event 1: Origin
+            const event1 = createSphere(new THREE.Vector3(-3, 0, 0), 0.15, 0xffffff);
+            const event1Moving = createSphere(new THREE.Vector3(3, 0, 0), 0.15, 0xffffff);
+            eventsGroup.add(event1, event1Moving);
+            
+            // Event 2: Simultaneous in stationary frame
+            const event2 = createSphere(new THREE.Vector3(-3, 1, 0), 0.15, 0xffffff);
+            // Transform to moving frame: t' = γ(t - vx/c²), x' = γ(x - vt)
+            const event2Moving = createSphere(
+                new THREE.Vector3(
+                    3 + gamma * (0 - velocityFraction * 1),
+                    gamma * (1 - velocityFraction * 0),
+                    0
+                ),
+                0.15, 0xffffff
+            );
+            eventsGroup.add(event2, event2Moving);
+            
+            // Event 3: Simultaneous in stationary frame
+            const event3 = createSphere(new THREE.Vector3(-2, 1, 0), 0.15, 0xffffff);
+            // Transform to moving frame
+            const event3Moving = createSphere(
+                new THREE.Vector3(
+                    3 + gamma * (1 - velocityFraction * 1),
+                    gamma * (1 - velocityFraction * 1),
+                    0
+                ),
+                0.15, 0xffffff
+            );
+            eventsGroup.add(event3, event3Moving);
+            
+            // Connect simultaneous events in each frame
+            const stationarySimultaneous = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([event2.position, event3.position]),
+                new THREE.LineBasicMaterial({ color: 0x3498db, linewidth: 2 })
+            );
+            const movingSimultaneous = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(3 - 1, 0, 0),
+                    new THREE.Vector3(3 + 1, 0, 0)
+                ]),
+                new THREE.LineBasicMaterial({ color: 0xe74c3c, linewidth: 2 })
+            );
+            eventsGroup.add(stationarySimultaneous, movingSimultaneous);
+            
+            effectObjects.push(eventsGroup);
+            scene.add(eventsGroup);
+            
+            // Add comparison (Newtonian) visualization
+            const newtonianGroup = new THREE.Group();
+            
+            // In Newtonian physics, simultaneity is absolute
+            const newtonianEvent2 = createSphere(new THREE.Vector3(3, 1, 0), 0.15, 0x2ecc71);
+            const newtonianEvent3 = createSphere(new THREE.Vector3(4, 1, 0), 0.15, 0x2ecc71);
+            
+            const newtonianSimultaneous = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([newtonianEvent2.position, newtonianEvent3.position]),
+                new THREE.LineBasicMaterial({ color: 0x2ecc71, linewidth: 2 })
+            );
+            
+            newtonianGroup.add(newtonianEvent2, newtonianEvent3, newtonianSimultaneous);
+            comparisonObjects.push(newtonianGroup);
+            scene.add(newtonianGroup);
+        }
+
+        // Create light cone visualization
+        function createLightConeVisualization() {
+            // Create coordinate system
+            createCoordinateSystem(5);
+            
+            // Create origin event
+            const originEvent = createSphere(new THREE.Vector3(0, 0, 0), 0.2, 0xffffff);
+            objects.push(originEvent);
+            
+            // Add label
+            const originLabel = createTextSprite("Event", new THREE.Vector3(0, 0.5, 0), 0xffffff);
+            labels.push(originLabel);
+            scene.add(originLabel);
+            
+            // Create light cone
+            const futureCone = createLightCone(0.5, 2, 0xe74c3c);
+            const pastCone = createLightCone(-0.5, -2, 0x3498db);
+            
+            effectObjects.push(futureCone, pastCone);
+            scene.add(futureCone, pastCone);
+            
+            // Add labels for cones
+            const futureLabel = createTextSprite("Future Light Cone", new THREE.Vector3(0, 2.5, 0), 0xe74c3c);
+            const pastLabel = createTextSprite("Past Light Cone", new THREE.Vector3(0, -2.5, 0), 0x3498db);
+            labels.push(futureLabel, pastLabel);
+            scene.add(futureLabel, pastLabel);
+            
+            // Create spacelike, timelike, and lightlike intervals
+            const intervalsGroup = new THREE.Group();
+            
+            // Timelike interval (inside cone)
+            const timelikeEnd = new THREE.Vector3(0.5, 1.5, 0);
+            const timelikeEvent = createSphere(timelikeEnd, 0.15, 0x2ecc71);
+            const timelikeLine = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), timelikeEnd]),
+                new THREE.LineBasicMaterial({ color: 0x2ecc71, linewidth: 2 })
+            );
+            const timelikeLabel = createTextSprite("Timelike", new THREE.Vector3(0.5, 1.8, 0), 0x2ecc71);
+            
+            // Spacelike interval (outside cone)
+            const spacelikeEnd = new THREE.Vector3(2, 0.5, 0);
+            const spacelikeEvent = createSphere(spacelikeEnd, 0.15, 0xf39c12);
+            const spacelikeLine = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), spacelikeEnd]),
+                new THREE.LineBasicMaterial({ color: 0xf39c12, linewidth: 2 })
+            );
+            const spacelikeLabel = createTextSprite("Spacelike", new THREE.Vector3(2.3, 0.5, 0), 0xf39c12);
+            
+            // Lightlike interval (on cone)
+            const lightlikeEnd = new THREE.Vector3(1.5, 1.5, 0);
+            const lightlikeEvent = createSphere(lightlikeEnd, 0.15, 0x9b59b6);
+            const lightlikeLine = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), lightlikeEnd]),
+                new THREE.LineBasicMaterial({ color: 0x9b59b6, linewidth: 2 })
+            );
+            const lightlikeLabel = createTextSprite("Lightlike", new THREE.Vector3(1.8, 1.8, 0), 0x9b59b6);
+            
+            intervalsGroup.add(
+                timelikeEvent, timelikeLine, timelikeLabel,
+                spacelikeEvent, spacelikeLine, spacelikeLabel,
+                lightlikeEvent, lightlikeLine, lightlikeLabel
+            );
+            
+            effectObjects.push(intervalsGroup);
+            scene.add(intervalsGroup);
+        }
+
+        // Helper function to create a coordinate system
+        function createCoordinateSystem(size = 3) {
+            // Create axes
+            const axesHelper = new THREE.AxesHelper(size);
+            scene.add(axesHelper);
+            gridLines.push(axesHelper);
+            
+            // Create grid
+            const gridHelper = new THREE.GridHelper(size * 2, size * 2);
+            gridHelper.rotation.x = Math.PI / 2;
+            scene.add(gridHelper);
+            gridLines.push(gridHelper);
+            
+            // Add axis labels
+            const xLabel = createTextSprite("x", new THREE.Vector3(size + 0.5, 0, 0), 0xff0000);
+            const yLabel = createTextSprite("y", new THREE.Vector3(0, size + 0.5, 0), 0x00ff00);
+            const zLabel = createTextSprite("z", new THREE.Vector3(0, 0, size + 0.5), 0x0000ff);
+            
+            labels.push(xLabel, yLabel, zLabel);
+            scene.add(xLabel, yLabel, zLabel);
+        }
+
+        // Helper function to create a clock
+        function createClock(position, color) {
+            const group = new THREE.Group();
+            
+            // Clock face
+            const faceGeometry = new THREE.CircleGeometry(1, 32);
+            const faceMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const face = new THREE.Mesh(faceGeometry, faceMaterial);
+            face.position.copy(position);
+            group.add(face);
+            
+            // Clock outline
+            const outlineGeometry = new THREE.RingGeometry(0.95, 1, 32);
+            const outlineMaterial = new THREE.MeshBasicMaterial({ color: color });
+            const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
+            outline.position.copy(position);
+            group.add(outline);
+            
+            // Hour marks
+            for (let i = 0; i < 12; i++) {
+                const angle = (i / 12) * Math.PI * 2;
+                const markGeometry = new THREE.BoxGeometry(0.1, 0.3, 0.01);
+                const markMaterial = new THREE.MeshBasicMaterial({ color: color });
+                const mark = new THREE.Mesh(markGeometry, markMaterial);
+                
+                mark.position.set(
+                    position.x + 0.8 * Math.sin(angle),
+                    position.y + 0.8 * Math.cos(angle),
+                    position.z + 0.01
+                );
+                mark.rotation.z = -angle;
+                
+                group.add(mark);
+            }
+            
+            scene.add(group);
+            return group;
+        }
+
+        // Helper function to create clock ticks
+        function createClockTicks(position, speed, color) {
+            const group = new THREE.Group();
+            group.position.copy(position);
+            
+            // Hour hand
+            const hourGeometry = new THREE.BoxGeometry(0.1, 0.6, 0.01);
+            const hourMaterial = new THREE.MeshBasicMaterial({ color: color });
+            const hourHand = new THREE.Mesh(hourGeometry, hourMaterial);
+            hourHand.position.set(0, 0.3, 0.02);
+            group.add(hourHand);
+            
+            // Minute hand
+            const minuteGeometry = new THREE.BoxGeometry(0.05, 0.8, 0.01);
+            const minuteMaterial = new THREE.MeshBasicMaterial({ color: color });
+            const minuteHand = new THREE.Mesh(minuteGeometry, minuteMaterial);
+            minuteHand.position.set(0, 0.4, 0.03);
+            group.add(minuteHand);
+            
+            return group;
+        }
+
+        // Helper function to create a rod
+        function createRod(position, length, color) {
+            const group = new THREE.Group();
+            
+            const geometry = new THREE.BoxGeometry(length, 0.2, 0.2);
+            const material = new THREE.MeshBasicMaterial({ color: color });
+            const rod = new THREE.Mesh(geometry, material);
+            
+            rod.position.copy(position);
+            group.add(rod);
+            
+            scene.add(group);
+            return group;
+        }
+
+        // Helper function to create length markers
+        function createLengthMarkers(position, length, color) {
+            const group = new THREE.Group();
+            
+            // Create line
+            const points = [
+                new THREE.Vector3(position.x, position.y, position.z),
+                new THREE.Vector3(position.x + length, position.y, position.z)
+            ];
+            
+            const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+            const lineMaterial = new THREE.LineBasicMaterial({ color: color });
+            const line = new THREE.Line(lineGeometry, lineMaterial);
+            group.add(line);
+            
+            // Create end markers
+            const markerGeometry = new THREE.BoxGeometry(0.1, 0.5, 0.1);
+            const markerMaterial = new THREE.MeshBasicMaterial({ color: color });
+            
+            const startMarker = new THREE.Mesh(markerGeometry, markerMaterial);
+            startMarker.position.copy(position);
+            group.add(startMarker);
+            
+            const endMarker = new THREE.Mesh(markerGeometry, markerMaterial);
+            endMarker.position.set(position.x + length, position.y, position.z);
+            group.add(endMarker);
+            
+            // Add length label
+            const lengthLabel = createTextSprite(`L = ${length.toFixed(2)}`, 
+                new THREE.Vector3(position.x + length/2, position.y - 0.3, position.z), 
+                color);
+            group.add(lengthLabel);
+            
+            scene.add(group);
+            return group;
+        }
+
+        // Helper function to create a sphere
+        function createSphere(position, radius, color) {
+            const geometry = new THREE.SphereGeometry(radius, 32, 16);
+            const material = new THREE.MeshPhongMaterial({ color: color });
+            const sphere = new THREE.Mesh(geometry, material);
+            
+            sphere.position.copy(position);
+            scene.add(sphere);
+            
+            return sphere;
+        }
+
+        // Helper function to create a spacetime grid
+        function createSpacetimeGrid(mass) {
+            const group = new THREE.Group();
+            
+            const gridSize = 10;
+            const resolution = 20;
+            const step = gridSize / resolution;
+            
+            // Create grid points
+            for (let i = 0; i <= resolution; i++) {
+                for (let j = 0; j <= resolution; j++) {
+                    const x = -gridSize/2 + i * step;
+                    const z = -gridSize/2 + j * step;
+                    
+                    // Calculate gravitational well depth
+                    const r = Math.sqrt(x*x + z*z);
+                    let y = 0;
+                    
+                    if (r > 0.5) { // Avoid singularity at center
+                        y = -mass / (r * 5); // Simplified gravitational well
+                    }
+                    
+                    const pointGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+                    const pointMaterial = new THREE.MeshBasicMaterial({ color: 0x888888 });
+                    const point = new THREE.Mesh(pointGeometry, pointMaterial);
+                    
+                    point.position.set(x, y, z);
+                    group.add(point);
+                }
+            }
+            
+            // Create grid lines
+            for (let i = 0; i <= resolution; i++) {
+                const points1 = [];
+                const points2 = [];
+                
+                for (let j = 0; j <= resolution; j++) {
+                    const x1 = -gridSize/2 + i * step;
+                    const z1 = -gridSize/2 + j * step;
+                    const r1 = Math.sqrt(x1*x1 + z1*z1);
+                    let y1 = 0;
+                    
+                    if (r1 > 0.5) {
+                        y1 = -mass / (r1 * 5);
+                    }
+                    
+                    points1.push(new THREE.Vector3(x1, y1, z1));
+                    
+                    const x2 = -gridSize/2 + j * step;
+                    const z2 = -gridSize/2 + i * step;
+                    const r2 = Math.sqrt(x2*x2 + z2*z2);
+                    let y2 = 0;
+                    
+                    if (r2 > 0.5) {
+                        y2 = -mass / (r2 * 5);
+                    }
+                    
+                    points2.push(new THREE.Vector3(x2, y2, z2));
+                }
+                
+                const lineGeometry1 = new THREE.BufferGeometry().setFromPoints(points1);
+                const lineMaterial1 = new THREE.LineBasicMaterial({ color: 0x888888 });
+                const line1 = new THREE.Line(lineGeometry1, lineMaterial1);
+                group.add(line1);
+                
+                const lineGeometry2 = new THREE.BufferGeometry().setFromPoints(points2);
+                const lineMaterial2 = new THREE.LineBasicMaterial({ color: 0x888888 });
+                const line2 = new THREE.Line(lineGeometry2, lineMaterial2);
+                group.add(line2);
+            }
+            
+            return group;
+        }
+
+        // Helper function to create a reference frame
+        function createReferenceFrame(position, scale, color) {
+            const group = new THREE.Group();
+            group.position.copy(position);
+            
+            // Create axes
+            const xAxis = new THREE.ArrowHelper(
+                new THREE.Vector3(1, 0, 0),
+                new THREE.Vector3(0, 0, 0),
+                scale,
+                0xff0000,
+                0.2,
+                0.1
+            );
+            
+            const yAxis = new THREE.ArrowHelper(
+                new THREE.Vector3(0, 1, 0),
+                new THREE.Vector3(0, 0, 0),
+                scale,
+                0x00ff00,
+                0.2,
+                0.1
+            );
+            
+            const zAxis = new THREE.ArrowHelper(
+                new THREE.Vector3(0, 0, 1),
+                new THREE.Vector3(0, 0, 0),
+                scale,
+                0x0000ff,
+                0.2,
+                0.1
+            );
+            
+            group.add(xAxis, yAxis, zAxis);
+            
+            // Create frame outline
+            const outlineGeometry = new THREE.BoxGeometry(scale * 2, scale * 2, scale * 2);
+            const edges = new THREE.EdgesGeometry(outlineGeometry);
+            const outlineMaterial = new THREE.LineBasicMaterial({ color: color });
+            const outline = new THREE.LineSegments(edges, outlineMaterial);
+            
+            group.add(outline);
+            
+            scene.add(group);
+            return group;
+        }
+
+        // Helper function to create a light cone
+        function createLightCone(baseY, height, color) {
+            const group = new THREE.Group();
+            
+            // Create cone geometry
+            const coneGeometry = new THREE.ConeGeometry(Math.abs(height), Math.abs(height) * 2, 32, 1, true);
+            const coneMaterial = new THREE.MeshBasicMaterial({ 
+                color: color,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.DoubleSide
+            });
+            
+            const cone = new THREE.Mesh(coneGeometry, coneMaterial);
+            cone.position.set(0, baseY + height/2, 0);
+            
+            if (height < 0) {
+                cone.rotation.x = Math.PI;
+            }
+            
+            group.add(cone);
+            
+            // Create cone edges
+            const edges = new THREE.EdgesGeometry(coneGeometry);
+            const edgeMaterial = new THREE.LineBasicMaterial({ color: color });
+            const wireframe = new THREE.LineSegments(edges, edgeMaterial);
+            wireframe.position.copy(cone.position);
+            wireframe.rotation.copy(cone.rotation);
+            
+            group.add(wireframe);
+            
+            return group;
+        }
+
+        // Helper function to create text sprite
+        function createTextSprite(text, position, color) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 256;
+            canvas.height = 128;
+            
+            context.font = '24px Arial';
+            context.fillStyle = '#ffffff';
+            context.textAlign = 'center';
+            context.fillText(text, 128, 64);
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            
+            const spriteMaterial = new THREE.SpriteMaterial({ 
+                map: texture,
+                color: color
+            });
+            
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.position.copy(position);
+            sprite.scale.set(2, 1, 1);
+            
+            return sprite;
+        }
+
+        // Update visualization when settings change
+        function updateVisualization() {
+            createVisualization();
+        }
+
+        // Update velocity display
+        function updateVelocity() {
+            const value = document.getElementById('velocity-fraction').value / 100;
+            document.getElementById('velocity-fraction-value').textContent = value.toFixed(2) + 'c';
+            updateVisualization();
+        }
+
+        // Update mass display
+        function updateMass() {
+            const value = document.getElementById('mass').value;
+            document.getElementById('mass-value').textContent = value + ' M☉';
+            updateVisualization();
+        }
+
+        // Update distance display
+        function updateDistance() {
+            const value = document.getElementById('distance').value;
+            document.getElementById('distance-value').textContent = value + ' Rs';
+            updateVisualization();
+        }
+
+        // Update display options
+        function updateDisplayOptions() {
+            const showGrid = document.getElementById('show-grid').checked;
+            const showLabels = document.getElementById('show-labels').checked;
+            const showEffects = document.getElementById('show-effects').checked;
+            const showComparison = document.getElementById('show-comparison').checked;
+            
+            // Update visibility of grid
+            gridLines.forEach(line => {
+                line.visible = showGrid;
+            });
+            
+            // Update visibility of labels
+            labels.forEach(label => {
+                label.visible = showLabels;
+            });
+            
+            // Update visibility of relativistic effects
+            effectObjects.forEach(obj => {
+                obj.visible = showEffects;
+            });
+            
+            // Update visibility of Newtonian comparison
+            comparisonObjects.forEach(obj => {
+                obj.visible = showComparison;
+            });
+        }
+
+        // Update relativistic data display
+        function updateRelativisticData() {
+            const velocityFraction = document.getElementById('velocity-fraction').value / 100;
+            const gamma = 1 / Math.sqrt(1 - velocityFraction * velocityFraction);
+            
+            document.getElementById('time-dilation-display').textContent = 
+                `Time Dilation Factor: ${gamma.toFixed(2)}`;
+            
+            document.getElementById('length-contraction-display').textContent = 
+                `Length Contraction Factor: ${(1/gamma).toFixed(2)}`;
+            
+            document.getElementById('relativistic-mass-display').textContent = 
+                `Relativistic Mass Factor: ${gamma.toFixed(2)}`;
+        }
+
+        // Reset view
+        function resetView() {
+            camera.position.set(5, 5, 5);
+            camera.lookAt(0, 0, 0);
+            controls.reset();
+        }
+
+        // Start animation
+        function startAnimation() {
+            if (!isAnimationRunning) {
+                isAnimationRunning = true;
+                document.getElementById('start-animation').disabled = true;
+                document.getElementById('pause-animation').disabled = false;
+                clock.start();
+            }
+        }
+
+        // Pause animation
+        function pauseAnimation() {
+            if (isAnimationRunning) {
+                isAnimationRunning = false;
+                document.getElementById('start-animation').disabled = false;
+                document.getElementById('pause-animation').disabled = true;
+                clock.stop();
+            }
+        }
+
+        // Load preset scenario
+        function loadPreset(presetName) {
+            currentPreset = presetName;
+            
+            switch (presetName) {
+                case 'black-hole':
+                    document.getElementById('visualization-mode').value = 'spacetime-curvature';
+                    document.getElementById('mass').value = 100;
+                    updateMass();
+                    break;
+                    
+                case 'neutron-star':
+                    document.getElementById('visualization-mode').value = 'time-dilation';
+                    document.getElementById('mass').value = 15;
+                    updateMass();
+                    break;
+                    
+                case 'binary-pulsar':
+                    document.getElementById('visualization-mode').value = 'reference-frames';
+                    document.getElementById('velocity-fraction').value = 50;
+                    updateVelocity();
+                    break;
+                    
+                case 'relativistic-jet':
+                    document.getElementById('visualization-mode').value = 'length-contraction';
+                    document.getElementById('velocity-fraction').value = 95;
+                    updateVelocity();
+                    break;
+                    
+                case 'galaxy-cluster':
+                    document.getElementById('visualization-mode').value = 'gravitational-lensing';
+                    document.getElementById('mass').value = 80;
+                    updateMass();
+                    break;
+                    
+                case 'expanding-universe':
+                    document.getElementById('visualization-mode').value = 'light-cone';
+                    break;
+            }
+            
+            updateVisualization();
+        }
+
+        // Update animation
+        function updateAnimation(deltaTime) {
+            if (!isAnimationRunning) return;
+            
+            const visualizationMode = document.getElementById('visualization-mode').value;
+            
+            switch (visualizationMode) {
+                case 'time-dilation':
+                    updateClockAnimation(deltaTime);
+                    break;
+                case 'spacetime-curvature':
+                    updateOrbitalAnimation(deltaTime);
+                    break;
+                case 'gravitational-lensing':
+                    // Static visualization, no animation needed
+                    break;
+                case 'reference-frames':
+                    // Static visualization, no animation needed
+                    break;
+                case 'light-cone':
+                    // Static visualization, no animation needed
+                    break;
+            }
+        }
+
+        // Update clock animation
+        function updateClockAnimation(deltaTime) {
+            effectObjects.forEach(clockTicks => {
+                if (clockTicks.userData && clockTicks.userData.rotationSpeed !== undefined) {
+                    clockTicks.rotation.z -= clockTicks.userData.rotationSpeed * deltaTime;
+                }
+            });
+            
+            comparisonObjects.forEach(clockTicks => {
+                if (clockTicks.userData && clockTicks.userData.rotationSpeed !== undefined) {
+                    clockTicks.rotation.z -= clockTicks.userData.rotationSpeed * deltaTime;
+                }
+            });
+        }
+
+        // Update orbital animation
+        function updateOrbitalAnimation(deltaTime) {
+            // Update relativistic orbits
+            effectObjects.forEach(obj => {
+                if (obj.userData && obj.userData.orbitRadius !== undefined) {
+                    obj.userData.orbitAngle += obj.userData.orbitSpeed * deltaTime;
+                    
+                    // Add precession
+                    const precessionAngle = obj.userData.precessionRate * deltaTime;
+                    
+                    const radius = obj.userData.orbitRadius;
+                    const angle = obj.userData.orbitAngle;
+                    
+                    obj.position.x = radius * Math.cos(angle + precessionAngle);
+                    obj.position.z = radius * Math.sin(angle + precessionAngle);
+                }
+            });
+            
+            // Update Newtonian orbits (no precession)
+            comparisonObjects.forEach(obj => {
+                if (obj.userData && obj.userData.orbitRadius !== undefined) {
+                    obj.userData.orbitAngle += obj.userData.orbitSpeed * deltaTime;
+                    
+                    const radius = obj.userData.orbitRadius;
+                    const angle = obj.userData.orbitAngle;
+                    
+                    obj.position.x = radius * Math.cos(angle);
+                    obj.position.z = radius * Math.sin(angle);
+                }
+            });
+        }
+
+        // Clear visualization
+        function clearVisualization() {
+            // Remove objects
+            for (const obj of objects) {
+                scene.remove(obj);
+            }
+            objects = [];
+            
+            // Remove grid lines
+            for (const line of gridLines) {
+                scene.remove(line);
+            }
+            gridLines = [];
+            
+            // Remove labels
+            for (const label of labels) {
+                scene.remove(label);
+            }
+            labels = [];
+            
+            // Remove effect objects
+            for (const obj of effectObjects) {
+                scene.remove(obj);
+            }
+            effectObjects = [];
+            
+            // Remove comparison objects
+            for (const obj of comparisonObjects) {
+                scene.remove(obj);
+            }
+            comparisonObjects = [];
+        }
+
+        // Handle window resize
+        function onWindowResize() {
+            camera.aspect = document.getElementById('relativity-visualization').clientWidth / document.getElementById('relativity-visualization').clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(document.getElementById('relativity-visualization').clientWidth, document.getElementById('relativity-visualization').clientHeight);
+        }
+
+        // Animation loop
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+            
+            const deltaTime = Math.min(clock.getDelta(), 0.1); // Limit delta time to avoid large jumps
+            
+            updateAnimation(deltaTime);
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Tab functionality
+        function openTab(evt, tabName) {
+            // Hide all tab content
+            const tabContent = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContent.length; i++) {
+                tabContent[i].classList.remove('active');
+            }
+            
+            // Remove active class from all tab buttons
+            const tabButtons = document.getElementsByClassName('tab-button');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
+            }
+            
+            // Show the selected tab and add active class to the button
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+
+        // Initialize when the page loads
+        window.onload = init;
+    </script>
+</body>
+</html>
