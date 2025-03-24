@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotational Dynamics Assessment</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        /* CSS styles would be here */
+    </style>
+</head>
+<body>
+    <div class="assessment-container">
+        <div class="assessment-header">
+            <h2>Rotational Dynamics</h2>
+            <p>Quick Check Assessment</p>
+        </div>
+        
+        <div class="instructions">
+            <h3>Instructions</h3>
+            <p>This quick check exercise covers the content from Section 4: Rotational Dynamics. Answer all questions to test your understanding of rotational motion and its applications in astronomical systems.</p>
+            <p>The assessment includes conceptual questions, mathematical problems, and applied astronomy scenarios. Complete all questions and click "Submit Answers" to see your results.</p>
+        </div>
+        
+        <div class="question-section">
+            <h3>Conceptual Understanding Questions</h3>
+            
+            <div class="question" id="s4q1">
+                <div class="question-header">
+                    <span>Question 1</span>
+                    <span class="question-type">Multiple Choice (Select the best answer)</span>
+                </div>
+                <p>Which of the following is the rotational equivalent of linear momentum?</p>
+                <div class="options">
+                    <div class="option">
+                        <input type="radio" name="s4q1" id="s4q1a" value="a">
+                        <label for="s4q1a">Torque</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="s4q1" id="s4q1b" value="b">
+                        <label for="s4q1b">Angular velocity</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="s4q1" id="s4q1c" value="c">
+                        <label for="s4q1c">Angular acceleration</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="s4q1" id="s4q1d" value="d">
+                        <label for="s4q1d">Angular momentum</label>
+                    </div>
+                </div>
+                <div class="feedback" id="feedback-s4q1"></div>
+                <div class="explanation" id="explanation-s4q1">
+                    <h4>Explanation:</h4>
+                    <p>Angular momentum is the rotational equivalent of linear momentum. Just as linear momentum is defined as p = mv (mass × velocity), angular momentum is defined as L = Iω (moment of inertia × angular velocity). Both quantities are conserved in closed systems.</p>
+                    <p>In astronomical systems, angular momentum conservation is crucial for understanding phenomena like planetary orbits, stellar rotation, accretion disks, and galaxy formation. For example, as a cloud of gas collapses to form a star, conservation of angular momentum causes it to spin faster, similar to how an ice skater spins faster when pulling in their arms.</p>
+                </div>
+            </div>
+            
+            <div class="question" id="s4q2">
+                <div class="question-header">
+                    <span>Question 2</span>
+                    <span class="question-type">Multiple Choice (Select all that apply)</span>
+                </div>
+                <p>Which of the following astronomical phenomena can be explained using conservation of angular momentum? (Check all that apply)</p>
+                <div class="options">
+                    <div class="option">
+                        <input type="checkbox" name="s4q2" id="s4q2a" value="a">
+                        <label for="s4q2a">The formation of accretion disks around black holes</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" name="s4q2" id="s4q2b" value="b">
+                        <label for="s4q2b">The flattened shape of spiral galaxies</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" name="s4q2" id="s4q2c" value="c">
+                        <label for="s4q2c">The increase in rotation rate of a neutron star as it collapses from a larger star</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" name="s4q2" id="s4q2d" value="d">
+                        <label for="s4q2d">The redshift of light from distant galaxies</label>
+                    </div>
+                    <div class="option">
+                        <input type="checkbox" name="s4q2" id="s4q2e" value="e">
+                        <label for="s4q2e">The alignment of planetary orbits in a solar system</label>
+                    </div>
+                </div>
+                <div class="feedback" id="feedback-s4q2"></div>
+                <div class="explanation" id="explanation-s4q2">
+                    <h4>Explanation:</h4>
+                    <p>Conservation of angular momentum explains options A, B, C, and E:</p>
+                    <p>- <strong>Accretion disks around black holes</strong> form because infalling matter with angular momentum cannot move directly toward the black hole. Instead, it forms a rotating disk as angular momentum is conserved.</p>
+                    <p>- <strong>The flattened shape of spiral galaxies</strong> results from the initial angular momentum of the gas cloud from which the galaxy formed. As the cloud collapsed, conservation of angular momentum caused it to flatten into a disk.</p>
+                    <p>- <strong>The increase in rotation rate of neutron stars</strong> (pulsars) occurs because as a massive star collapses, its moment of inertia decreases dramatically. To conserve angular momentum (L = Iω), the angular velocity must increase proportionally.</p>
+                    <p>- <strong>The alignment of planetary orbits</strong> in a solar system is related to the conservation of angular momentum in the protoplanetary disk from which the planets formed.</p>
+                    <p>The redshift of light from distant galaxies (option D) is not explained by conservation of angular momentum. It's primarily due to the expansion of the universe (cosmological redshift) or the Doppler effect from radial motion.</p>
+                </div>
+            </div>
+            
+            <div class="question" id="s4q3">
+                <div class="question-header">
+                    <span>Question 3</span>
+                    <span class="question-type">True/False</span>
+                </div>
+                <p>The moment of inertia of an object depends only on its mass, not on the distribution of that mass relative to the axis of rotation.</p>
+                <div class="options">
+                    <div class="option">
+                        <input type="radio" name="s4q3" id="s4q3a" value="a">
+                        <label for="s4q3a">True</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" name="s4q3" id="s4q3b" value="b">
+                        <label for="s4q3b">False</label>
+                    </div>
+                </div>
+                <div class="feedback" id="feedback-s4q3"></div>
+                <div class="explanation" id="explanation-s4q3">
+                    <h4>Explanation:</h4>
+                    <p>This statement is false. The moment of inertia depends not only on an object's mass but also critically on how that mass is distributed relative to the axis of rotation. Mathematically, the moment of inertia is calculated as I = ∑mr², where m is the mass of each particle and r is its perpendicular distance from the rotation axis.</p>
+                    <p>This is why a hollow sphere has a different moment of inertia than a solid sphere of the same mass, and why extending your arms while spinning causes you to slow down (your moment of inertia increases as mass moves farther from the rotation axis).</p>
+                    <p>In astronomy, this concept is important for understanding the rotation of different celestial bodies. For example, gas giants like Jupiter have most of their mass concentrated toward their centers, giving them different rotational properties than if their mass were uniformly distributed throughout their volume.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="question-section">
+            <h3>Mathematical Problem-Solving Exercises</h3>
+            
+            <div class="question" id="s4q4">
+                <div class="question-header">
+                    <span>Question 4</span>
+                    <span class="question-type">Angular Momentum Calculation</span>
+                </div>
+                <p>A neutron star with a radius of 10 km and mass of 1.4 × 10<sup>30</sup> kg is rotating at 30 revolutions per second. Assuming the neutron star is a uniform sphere, calculate its angular momentum in kg·m²/s.</p>
+                <p>Use the formula for the moment of inertia of a solid sphere: I = (2/5)MR², where M is the mass and R is the radius.</p>
+                <input type="text" id="s4q4-answer" placeholder="Enter your answer in scientific notation (e.g., 1.23 × 10^38)">
+                <button class="hint-btn" onclick="toggleHint('hint-s4q4')">Show Hint</button>
+                <div class="hint" id="hint-s4q4">First calculate the moment of inertia using I = (2/5)MR². Then convert the rotation rate from revolutions per second to radians per second using ω = 2π × (revolutions per second). Finally, calculate the angular momentum using L = Iω.</div>
+                <div class="feedback" id="feedback-s4q4"></div>
+                <div class="explanation" id="explanation-s4q4">
+                    <h4>Explanation:</h4>
+                    <p><strong>Calculation:</strong></p>
+                    <p>Step 1: Calculate the moment of inertia of the neutron star.</p>
+                    <p>I = (2/5)MR²</p>
+                    <p>I = (2/5) × (1.4 × 10<sup>30</sup> kg) × (10,000 m)²</p>
+                    <p>I = (2/5) × (1.4 × 10<sup>30</sup>) × (10<sup>8</sup>)</p>
+                    <p>I = (2/5) × (1.4 × 10<sup>38</sup>)</p>
+                    <p>I = 5.6 × 10<sup>37</sup> kg·m²</p>
+                    
+                    <p>Step 2: Convert the rotation rate to radians per second.</p>
+                    <p>ω = 2π × (revolutions per second)</p>
+                    <p>ω = 2π × 30</p>
+                    <p>ω = 188.5 rad/s</p>
+                    
+                    <p>Step 3: Calculate the angular momentum.</p>
+                    <p>L = Iω</p>
+                    <p>L = (5.6 × 10<sup>37</sup> kg·m²) × (188.5 rad/s)</p>
+                    <p>L = 1.06 × 10<sup>40</sup> kg·m²/s</p>
+                    
+                    <p>This enormous angular momentum is characteristic of neutron stars, which are among the most rapidly rotating objects in the universe. The conservation of angular momentum during the collapse of a much larger star into a neutron star explains these rapid rotation rates.</p>
+                </div>
+            </div>
+            
+            <div class="question" id="s4q5">
+                <div class="question-header">
+                    <span>Question 5</span>
+                    <span class="question-type">Torque Problem</span>
+                </div>
+                <p>A satellite of mass 2,000 kg is in a circular orbit 42,000 km from Earth's center. Earth exerts a gravitational force of 1,100 N on the satellite. Calculate the magnitude of the torque that would be required to move the satellite into an elliptical orbit if a force is applied perpendicular to the orbital radius for 10 seconds.</p>
+                <input type="text" id="s4q5-answer" placeholder="Enter your answer in N·m">
+                <button class="hint-btn" onclick="toggleHint('hint-s4q5')">Show Hint</button>
+                <div class="hint" id="hint-s4q5">Torque is calculated as τ = r × F, where r is the position vector and F is the force vector. For a force perpendicular to the radius, τ = rF. To change the orbit, you need to apply a torque that changes the satellite's angular momentum.</div>
+                <div class="feedback" id="feedback-s4q5"></div>
+                <div class="explanation" id="explanation-s4q5">
+                    <h4>Explanation:</h4>
+                    <p><strong>Calculation:</strong></p>
+                    <p>To change a circular orbit into an elliptical orbit, we need to apply a torque that changes the satellite's angular momentum. The torque is calculated as:</p>
+                    <p>τ = r × F</p>
+                    <p>For a force perpendicular to the radius, the magnitude of the torque is:</p>
+                    <p>τ = rF</p>
+                    <p>where r is the orbital radius and F is the force applied.</p>
+                    
+                    <p>To determine the required force, we need to consider the change in angular momentum needed to create an elliptical orbit. For a circular orbit to become elliptical, the velocity at one point must change.</p>
+                    
+                    <p>The gravitational force of 1,100 N is maintaining the circular orbit. To create an elliptical orbit, we need to apply a force that's a significant fraction of this gravitational force.</p>
+                    
+                    <p>Let's say we need to apply a force of about 500 N perpendicular to the radius:</p>
+                    <p>τ = r × F</p>
+                    <p>τ = (42,000,000 m) × (500 N)</p>
+                    <p>τ = 2.1 × 10<sup>10</sup> N·m</p>
+                    
+                    <p>This torque applied for 10 seconds would change the satellite's angular momentum by:</p>
+                    <p>ΔL = τ × Δt</p>
+                    <p>ΔL = (2.1 × 10<sup>10</sup> N·m) × (10 s)</p>
+                    <p>ΔL = 2.1 × 10<sup>11</sup> kg·m²/s</p>
+                    
+                    <p>This change in angular momentum would be sufficient to convert the circular orbit into an elliptical one. The exact shape of the resulting elliptical orbit would depend on the point in the original orbit where the torque was applied.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="question-section">
+            <h3>Applied Astronomy Scenarios</h3>
+            
+            <div class="question" id="s4q6">
+                <div class="question-header">
+                    <span>Question 6</span>
+                    <span class="question-type">Scenario Analysis</span>
+                </div>
+                <div class="scenario">
+                    <p>Astronomers have discovered a binary star system consisting of two stars of similar mass orbiting their common center of mass. Over time, observations show that the orbital period of the system is gradually decreasing, and the stars are slowly spiraling toward each other.</p>
+                </div>
+                <p>A) Explain what is happening to the angular momentum of this system. If the total angular momentum must be conserved, where is it going?</p>
+                <textarea id="s4q6a-answer" rows="3" placeholder="Enter your answer" style="width: 100%; padding: 8px;"></textarea>
+                <p>B) As the stars get closer together, what happens to their orbital velocity? Explain using principles of rotational dynamics.</p>
+                <textarea id="s4q6b-answer" rows="3" placeholder="Enter your answer" style="width: 100%; padding: 8px;"></textarea>
+                <p>C) What astronomical phenomenon might eventually result from this process, and how does rotational dynamics play a role in the properties of the resulting object?</p>
+                <textarea id="s4q6c-answer" rows="3" placeholder="Enter your answer" style="width: 100%; padding: 8px;"></textarea>
+                <div class="feedback" id="feedback-s4q6"></div>
+                <div class="explanation" id="explanation-s4q6">
+                    <h4>Explanation:</h4>
+                    <p><strong>A) Angular momentum transfer:</strong></p>
+                    <p>The total angular momentum of the system must be conserved, but the orbital angular momentum is decreasing as the stars spiral inward. This angular momentum is being transferred to other forms, primarily through gravitational waves that carry away energy and angular momentum from the system. Additionally, some angular momentum may be transferred to the rotational motion of the individual stars (causing them to spin faster) or to surrounding material if present (like a circumstellar disk). The emission of gravitational waves, predicted by Einstein's theory of general relativity, causes the system to lose energy, resulting in the observed orbital decay.</p>
+                    
+                    <p><strong>B) Orbital velocity changes:</strong></p>
+                    <p>As the stars get closer together, their orbital velocity increases. This follows from Kepler's laws and the principles of angular momentum. For a two-body system, the specific angular momentum is h = r²ω = rv, where r is the orbital radius, ω is the angular velocity, and v is the linear velocity. If r decreases and angular momentum is approximately conserved in the short term (before being radiated away as gravitational waves), then v must increase proportionally to r<sup>-1/2</sup>. This is also consistent with the virial theorem, which states that for a bound gravitational system, the kinetic energy increases as the separation decreases.</p>
+                    
+                    <p><strong>C) Resulting astronomical phenomenon:</strong></p>
+                    <p>This process could eventually result in a merger of the two stars. Depending on the masses involved, this could lead to various outcomes:</p>
+                    <p>1. If the stars are massive enough, the merger could result in a supernova explosion and potentially leave behind a neutron star or black hole.</p>
+                    <p>2. For less massive stars, the merger might form a single, more massive star with rapid rotation due to the conservation of angular momentum.</p>
+                    <p>3. If one or both stars are already compact objects (white dwarfs, neutron stars, or black holes), the merger could produce gravitational waves detectable by instruments like LIGO, similar to the first direct detection of gravitational waves in 2015.</p>
+                    
+                    <p>Rotational dynamics plays a crucial role in the properties of the resulting object, particularly its rotation rate. The merged object will initially rotate very rapidly due to the conservation of angular momentum from the orbital motion. In the case of neutron stars, this rapid rotation is responsible for the pulsar phenomenon, where beams of radiation sweep across our line of sight as the neutron star rotates, creating regular pulses of detectable radiation.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="submit-section">
+            <button id="submit-btn-section4" onclick="checkAnswersSection4()">Submit Answers</button>
+        </div>
+        
+        <div class="results" id="results-section4">
+            <h2>Your Results</h2>
+            <p>You scored <span id="score-section4">0</span> out of 6 questions correctly.</p>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar-section4"></div>
+            </div>
+            <p id="performance-message-section4"></p>
+            <p>Review your answers above to see explanations for each question.</p>
+            <div class="navigation-buttons">
+                <button class="btn" onclick="showSection('section3')">Previous Section: Work, Energy, Power</button>
+                <button class="btn" onclick="showSection('section5')">Next Section: Oscillations and Waves</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // JavaScript for the assessment
+        
+        // Function to toggle hints
+        function toggleHint(hintId) {
+            const hint = document.getElementById(hintId);
+            if (hint.style.display === "block") {
+                hint.style.display = "none";
+            } else {
+                hint.style.display = "block";
+            }
+        }
+        
+        // Function to check answers for Section 4
+        function checkAnswersSection4() {
+            let score = 0;
+            let feedback = "";
+            
+            // Question 1
+            const q1Answer = document.querySelector('input[name="s4q1"]:checked');
+            if (q1Answer) {
+                if (q1Answer.value === "d") {
+                    score++;
+                    document.getElementById("feedback-s4q1").innerHTML = "<span class='correct'>Correct!</span>";
+                } else {
+                    document.getElementById("feedback-s4q1").innerHTML = "<span class='incorrect'>Incorrect</span>";
+                }
+                document.getElementById("explanation-s4q1").style.display = "block";
+            } else {
+                document.getElementById("feedback-s4q1").innerHTML = "<span class='unanswered'>Not answered</span>";
+            }
+            
+            // Question 2 (multiple select)
+            const q2Answers = document.querySelectorAll('input[name="s4q2"]:checked');
+            const q2CorrectAnswers = ["a", "b", "c", "e"]; // All options except D are correct
+            
+            if (q2Answers.length > 0) {
+                let allCorrect = true;
+                let hasIncorrect = false;
+                
+                // Check if all selected answers are correct
+                for (let i = 0; i < q2Answers.length; i++) {
+                    if (!q2CorrectAnswers.includes(q2Answers[i].value)) {
+                        allCorrect = false;
+                        hasIncorrect = true;
+                        break;
+                    }
+                }
+                
+                // Check if all correct answers are selected
+                if (allCorrect && q2Answers.length === q2CorrectAnswers.length) {
+                    score++;
+                    document.getElementById("feedback-s4q2").innerHTML = "<span class='correct'>Correct!</span>";
+                } else {
+                    document.getElementById("feedback-s4q2").innerHTML = "<span class='incorrect'>Incorrect</span>";
+                }
+                document.getElementById("explanation-s4q2").style.display = "block";
+            } else {
+                document.getElementById("feedback-s4q2").innerHTML = "<span class='unanswered'>Not answered</span>";
+            }
+            
+            // Question 3
+            const q3Answer = document.querySelector('input[name="s4q3"]:checked');
+            if (q3Answer) {
+                if (q3Answer.value === "b") {
+                    score++;
+                    document.getElementById("feedback-s4q3").innerHTML = "<span class='correct'>Correct!</span>";
+                } else {
+                    document.getElementById("feedback-s4q3").innerHTML = "<span class='incorrect'>Incorrect</span>";
+                }
+                document.getElementById("explanation-s4q3").style.display = "block";
+            } else {
+                document.getElementById("feedback-s4q3").innerHTML = "<span class='unanswered'>Not answered</span>";
+            }
+            
+            // Question 4
+            const q4Answer = document.getElementById("s4q4-answer").value.trim().toLowerCase();
+            if (q4Answer) {
+                // Accept various formats of the correct answer
+                if (q4Answer.includes("1.06") && q4Answer.includes("10") && q4Answer.includes("40") || 
+                    q4Answer.includes("1.1") && q4Answer.includes("10") && q4Answer.includes("40")) {
+                    score++;
+                    document.getElementById("feedback-s4q4").innerHTML = "<span class='correct'>Correct!</span>";
+                } else {
+                    document.getElementById("feedback-s4q4").innerHTML = "<span class='incorrect'>Incorrect</span>";
+                }
+                document.getElementById("explanation-s4q4").style.display = "block";
+            } else {
+                document.getElementById("feedback-s4q4").innerHTML = "<span class='unanswered'>Not answered</span>";
+            }
+            
+            // Question 5
+            const q5Answer = document.getElementById("s4q5-answer").value.trim().toLowerCase();
+            if (q5Answer) {
+                // Accept various formats of the correct answer
+                if (q5Answer.includes("2.1") && q5Answer.includes("10") && q5Answer.includes("10") || 
+                    q5Answer.includes("21") && q5Answer.includes("10") && q5Answer.includes("9")) {
+                    score++;
+                    document.getElementById("feedback-s4q5").innerHTML = "<span class='correct'>Correct!</span>";
+                } else {
+                    document.getElementById("feedback-s4q5").innerHTML = "<span class='incorrect'>Incorrect</span>";
+                }
+                document.getElementById("explanation-s4q5").style.display = "block";
+            } else {
+                document.getElementById("feedback-s4q5").innerHTML = "<span class='unanswered'>Not answered</span>";
+            }
+            
+            // Question 6 (scenario analysis)
+            const q6aAnswer = document.getElementById("s4q6a-answer").value.trim();
+            const q6bAnswer = document.getElementById("s4q6b-answer").value.trim();
+            const q6cAnswer = document.getElementById("s4q6c-answer").value.trim();
+            
+            if (q6aAnswer && q6bAnswer && q6cAnswer) {
+                // Check if answers contain key concepts
+                const q6aKeywords = ["gravitational waves", "conservation", "transfer", "radiate", "emit"];
+                const q6bKeywords = ["increase", "faster", "kepler", "angular momentum", "conservation"];
+                const q6cKeywords = ["merger", "supernova", "neutron star", "black hole", "pulsar", "rotation"];
+                
+                let q6aCorrect = q6aKeywords.some(keyword => q6aAnswer.toLowerCase().includes(keyword));
+                let q6bCorrect = q6bKeywords.some(keyword => q6bAnswer.toLowerCase().includes(keyword));
+                let q6cCorrect = q6cKeywords.some(keyword => q6cAnswer.toLowerCase().includes(keyword));
+                
+                if (q6aCorrect && q6bCorrect && q6cCorrect) {
+                    score++;
+                    document.getElementById("feedback-s4q6").innerHTML = "<span class='correct'>Correct!</span>";
+                } else {
+                    document.getElementById("feedback-s4q6").innerHTML = "<span class='incorrect'>Partially correct or incorrect</span>";
+                }
+                document.getElementById("explanation-s4q6").style.display = "block";
+            } else {
+                document.getElementById("feedback-s4q6").innerHTML = "<span class='unanswered'>Not all parts answered</span>";
+            }
+            
+            // Display results
+            document.getElementById("score-section4").textContent = score;
+            document.getElementById("progress-bar-section4").style.width = `${(score/6)*100}%`;
+            
+            // Performance message
+            let performanceMessage = "";
+            if (score === 6) {
+                performanceMessage = "Excellent! You have a strong understanding of rotational dynamics concepts in astronomy.";
+            } else if (score >= 4) {
+                performanceMessage = "Good job! You understand most of the key concepts, but there's still room for improvement.";
+            } else if (score >= 2) {
+                performanceMessage = "You're making progress, but should review the material to strengthen your understanding.";
+            } else {
+                performanceMessage = "You should review the material thoroughly to improve your understanding of these concepts.";
+            }
+            document.getElementById("performance-message-section4").textContent = performanceMessage;
+            
+            // Show results section
+            document.getElementById("results-section4").style.display = "block";
+            
+            // Scroll to results
+            document.getElementById("results-section4").scrollIntoView({ behavior: "smooth" });
+        }
+        
+        // Initialize when page loads
+        window.onload = function() {
+            // Hide all explanation sections initially
+            const explanations = document.getElementsByClassName('explanation');
+            for (let i = 0; i < explanations.length; i++) {
+                explanations[i].style.display = 'none';
+            }
+            
+            // Hide all hint sections initially
+            const hints = document.getElementsByClassName('hint');
+            for (let i = 0; i < hints.length; i++) {
+                hints[i].style.display = 'none';
+            }
+            
+            // Hide results section initially
+            document.getElementById('results-section4').style.display = 'none';
+        };
+    </script>
+</body>
+</html>
