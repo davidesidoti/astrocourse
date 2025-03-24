@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Module Assessment Platform</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --correct-color: #2ecc71;
+            --incorrect-color: #e74c3c;
+            --nav-height: 60px;
+            --sidebar-width: 250px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--primary-color);
+            background-color: #f9f9f9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0 20px;
+            height: var(--nav-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .logo {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .nav-links {
+            display: flex;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .main-container {
+            display: flex;
+            margin-top: var(--nav-height);
+            min-height: calc(100vh - var(--nav-height));
+        }
+        
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--light-color);
+            padding: 20px;
+            position: fixed;
+            height: calc(100vh - var(--nav-height));
+            overflow-y: auto;
+        }
+        
+        .sidebar h3 {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .section-list {
+            list-style: none;
+        }
+        
+        .section-item {
+            margin-bottom: 10px;
+        }
+        
+        .section-link {
+            display: block;
+            padding: 10px;
+            border-radius: 4px;
+            text-decoration: none;
+            color: var(--primary-color);
+            transition: background-color 0.3s;
+        }
+        
+        .section-link:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+        
+        .section-link.active {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .progress-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .not-started {
+            background-color: #ddd;
+        }
+        
+        .in-progress {
+            background-color: #f39c12;
+        }
+        
+        .completed {
+            background-color: var(--correct-color);
+        }
+        
+        .content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 30px;
+        }
+        
+        .dashboard-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .welcome-section {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .module-progress {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .progress-bar-container {
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: var(--secondary-color);
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .section-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        
+        .section-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .section-card h3 {
+            margin-bottom: 10px;
+            color: var(--dark-color);
+        }
+        
+        .section-card p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .section-card .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .section-status {
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .status-not-started {
+            color: #777;
+        }
+        
+        .status-in-progress {
+            color: #f39c12;
+        }
+        
+        .status-completed {
+            color: var(--correct-color);
+        }
+        
+        .btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background-color: var(--dark-color);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            color: var(--secondary-color);
+            border: 1px solid var(--secondary-color);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .assessment-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .assessment-header {
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .assessment-header h2 {
+            margin-bottom: 10px;
+        }
+        
+        .instructions {
+            background-color: var(--light-color);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        
+        .question-section {
+            margin-bottom: 40px;
+        }
+        
+        .question {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            border: 1px solid #eee;
+        }
+        
+        .question-header {
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .question-type {
+            color: var(--secondary-color);
+            font-size: 0.9em;
+        }
+        
+        .options {
+            margin-left: 20px;
+        }
+        
+        .option {
+            margin-bottom: 10px;
+        }
+        
+        input[type="radio"], input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        
+        input[type="text"], input[type="number"], textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .submit-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .feedback {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .correct {
+            background-color: rgba(46, 204, 113, 0.2);
+            border-left: 4px solid var(--correct-color);
+        }
+        
+        .incorrect {
+            background-color: rgba(231, 76, 60, 0.2);
+            border-left: 4px solid var(--incorrect-color);
+        }
+        
+        .explanation {
+            display: none;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .results {
+            display: none;
+            background-color: var(--light-color);
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .matching-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .matching-item select {
+            margin-left: 10px;
+            padding: 5px;
+        }
+        
+        .scenario {
+            background-color: #f0f7ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .hint-btn {
+            background-color: transparent;
+            color: var(--secondary-color);
+            border: 1px solid var(--secondary-color);
+            padding: 5px 10px;
+            font-size: 0.8em;
+            margin-top: 10px;
+        }
+        
+        .hint {
+            display: none;
+            font-style: italic;
+            color: #666;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #fffde7;
+            border-left: 2px solid #ffd54f;
+        }
+        
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        
+        footer {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: auto;
+        }
+        
+        /* Hide all sections by default */
+        .section-content {
+            display: none;
+        }
+        
+        /* Show active section */
+        .section-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">AstroCourse</div>
+        <div class="nav-links">
+            <a href="#" onclick="showDashboard()">Dashboard</a>
+            <a href="#" onclick="showSection('review-quizzes')">Review Quizzes</a>
+            <a href="#" onclick="showSection('challenge-problems')">Challenge Problems</a>
+            <a href="#" onclick="resetProgress()">Reset Progress</a>
+        </div>
+    </header>
+    
+    <div class="main-container">
+        <div class="sidebar">
+            <h3>Physics Module</h3>
+            <ul class="section-list">
+                <li class="section-item">
+                    <a href="#" class="section-link" onclick="showSection('dashboard')">
+                        <span class="progress-indicator completed"></span>Dashboard
+                    </a>
+                </li>
+                <li class="section-item">
+                    <a href="#" class="section-link" onclick="showSection('section1')">
+                        <span class="progress-indicator not-started" id="section1-indicator"></span>Introduction to Physics
+                    </a>
+                </li>
+                <li class="section-item">
+                    <a href="#" class="section-link" onclick="showSection('section2')">
+                        <span class="progress-indicator not-started" id="section2-indicator"></span>Classical Mechanics
+                    </a>
+                </li>
+                <li class="section-item">
+                    <a href="#" class="section-link" onclick="showSection('section3')">
+                        <span class="progress-indicator not-started" id="section3-indicator"></span>Work, Energy, Power
+                    </a>
+                </li>
+                <li class="section-item">
+                    <a href="#" class="section-link" onclick="showSection('section4')">
+                        <span class="progress-indicator not-started" id="section4-indicator"></span>Rotational Dynamics
+                    </a>
+                </li>
+                <li class="section-item">
+                    <a href="#" class="section-link" onclick="showSection('section5')">
+                        <span class="progress-indicator not-started" id="section5-indicator"></span>Oscillations and Waves
+                    </a>
+                </li>
+                <li class="section-item">
+                    <a href="#" class="section-link" onclick="showSection('section6')">
+                        <span class="progress-indicator not-started" id="section6-indicator"></span>Fluid Mechanics and Thermodynamics
+                    </a>
+                </li>
+                <li class="section-item">
+                    <a href="#" class="section-link" onclick="showSection('section7')">
+                        <span class="progress-indicator not-started" id="section7-indicator"></span>Electromagnetism
+                    </a>
+                </li>
+                <li class="section-item">
+                    <a href="#" class="section-link" onclick="showSection('section8')">
+                        <span class="progress-indicator not-started" id="section8-indicator"></span>Optics and Light
+                    </a>
+                </li>
+                <li class="section-item">
+                    <a href="#" class="section-link" onclick="showSection('section9')">
+                        <span class="progress-indicator not-started" id="section9-indicator"></span>Modern Physics
+                    </a>
+                </li>
+                <li class="section-item">
+                    <a href="#" class="section-link" onclick="showSection('section10')">
+                        <span class="progress-indicator not-started" id="section10-indicator"></span>Summary and Connections
+                    </a>
+                </li>
+                <li class="section-item">
+                    <a href="#" class="section-link" onclick="showSection('review-quizzes')">
+                        <span class="progress-indicator not-started" id="review-quizzes-indicator"></span>Review Quizzes
+                    </a>
+                </li>
+                <li class="section-item">
+                    <a href="#" class="section-link" onclick="showSection('challenge-problems')">
+                        <span class="progress-indicator not-started" id="challenge-problems-indicator"></span>Challenge Problems
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="content">
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="section-content active">
+                <div class="dashboard-container">
+                    <div class="welcome-section">
+                        <h2>Welcome to the Physics Module Assessment Platform</h2>
+                        <p>This platform contains quick check exercises, review quizzes, and challenge problems to help you test and reinforce your understanding of physics concepts in astronomy.</p>
+                        <p>Select a section from the sidebar to begin an assessment, or use the dashboard below to track your progress.</p>
+                    </div>
+                    
+                    <div class="module-progress">
+                        <h2>Your Progress</h2>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="overall-progress-bar"></div>
+                        </div>
+                        <p><span id="completed-sections">0</span> of <span id="total-sections">12</span> sections completed</p>
+                    </div>
+                    
+                    <h2>Quick Check Assessments</h2>
+                    <p>Test your understanding of each section with these quick assessments.</p>
+                    
+                    <div class="section-grid">
+                        <div class="section-card" onclick="showSection('section1')">
+                            <h3>1. Introduction to Physics</h3>
+                            <p>Fundamental concepts and the relationship between physics and astronomy.</p>
+                            <div class="card-footer">
+                                <span class="section-status status-not-started" id="section1-status">Not Started</span>
+                                <a href="#" class="btn" onclick="showSection('section1'); event.stopPropagation();">Start</a>
+                            </div>
+                        </div>
+                        
+                        <div class="section-card" onclick="showSection('section2')">
+                            <h3>2. Classical Mechanics</h3>
+                            <p>Newton's laws, forces, and motion in astronomical contexts.</p>
+                            <div class="card-footer">
+                                <span class="section-status status-not-started" id="section2-status">Not Started</span>
+                                <a href="#" class="btn" onclick="showSection('section2'); event.stopPropagation();">Start</a>
+                            </div>
+                        </div>
+                        
+                        <div class="section-card" onclick="showSection('section3')">
+                            <h3>3. Work, Energy, Power</h3>
+                            <p>Energy transformations and conservation in astronomical systems.</p>
+                            <div class="card-footer">
+                                <span class="section-status status-not-started" id="section3-status">Not Started</span>
+                                <a href="#" class="btn" onclick="showSection('section3'); event.stopPropagation();">Start</a>
+                            </div>
+                        </div>
+                        
+                        <div class="section-card" onclick="showSection('section4')">
+                            <h3>4. Rotational Dynamics</h3>
+                            <p>Angular momentum, torque, and rotational motion of celestial bodies.</p>
+                            <div class="card-footer">
+                                <span class="section-status status-not-started" id="section4-status">Not Started</span>
+                                <a href="#" class="btn" onclick="showSection('section4'); event.stopPropagation();">Start</a>
+                            </div>
+                        </div>
+                        
+                        <div class="section-card" onclick="showSection('section5')">
+                            <h3>5. Oscillations and Waves</h3>
+                            <p>Wave phenomena and oscillatory motion in space.</p>
+                            <div class="card-footer">
+                                <span class="section-status status-not-started" id="section5-status">Not Started</span>
+                                <a href="#" class="btn" onclick="showSection('section5'); event.stopPropagation();">Start</a>
+                            </div>
+                        </div>
+                        
+                        <div class="section-card" onclick="showSection('section6')">
+                            <h3>6. Fluid Mechanics and Thermodynamics</h3>
+                            <p>Heat, energy, and fluid behavior in astronomical contexts.</p>
+                            <div class="card-footer">
+                                <span class="section-status status-not-started" id="section6-status">Not Started</span>
+                                <a href="#" class="btn" onclick="showSection('section6'); event.stopPropagation();">Start</a>
+                            </div>
+                        </div>
+                        
+                        <div class="section-card" onclick="showSection('section7')">
+                            <h3>7. Electromagnetism</h3>
+                            <p>Electric and magnetic fields and their role in astronomical phenomena.</p>
+                            <div class="card-footer">
+                                <span class="section-status status-not-started" id="section7-status">Not Started</span>
+                                <a href="#" class="btn" onclick="showSection('section7'); event.stopPropagation();">Start</a>
+                            </div>
+                        </div>
+                        
+                        <div class="section-card" onclick="showSection('section8')">
+                            <h3>8. Optics and Light</h3>
+                            <p>Properties of light and optical principles in astronomy.</p>
+                            <div class="card-footer">
+                                <span class="section-status status-not-started" id="section8-status">Not Started</span>
+                                <a href="#" class="btn" onclick="showSection('section8'); event.stopPropagation();">Start</a>
+                            </div>
+                        </div>
+                        
+                        <div class="section-card" onclick="showSection('section9')">
+                            <h3>9. Modern Physics</h3>
+                            <p>Quantum mechanics, relativity, and nuclear physics in astronomy.</p>
+                            <div class="card-footer">
+                                <span class="section-status status-not-started" id="section9-status">Not Started</span>
+                                <a href="#" class="btn" onclick="showSection('section9'); event.stopPropagation();">Start</a>
+                            </div>
+                        </div>
+                        
+                        <div class="section-card" onclick="showSection('section10')">
+                            <h3>10. Summary and Connections</h3>
+                            <p>Synthesis of physics concepts and their applications in astronomy.</p>
+                            <div class="card-footer">
+                                <span class="section-status status-not-started" id="section10-status">Not Started</span>
+                                <a href="#" class="btn" onclick="showSection('section10'); event.stopPropagation();">Start</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h2 style="margin-top: 40px;">Advanced Assessments</h2>
+                    <p>Test your comprehensive understanding with these more challenging assessments.</p>
+                    
+                    <div class="section-grid">
+                        <div class="section-card" onclick="showSection('review-quizzes')">
+                            <h3>Review Quizzes</h3>
+                            <p>Comprehensive quizzes covering multiple sections.</p>
+                            <div class="card-footer">
+                                <span class="section-status status-not-started" id="review-quizzes-status">Not Started</span>
+                                <a href="#" class="btn" onclick="showSection('review-quizzes'); event.stopPropagation();">Start</a>
+                            </div>
+                        </div>
+                        
+                        <div class="section-card" onclick="showSection('challenge-problems')">
+                            <h3>Challenge Problems</h3>
+                            <p>Advanced problems requiring integration of multiple concepts.</p>
+                            <div class="card-footer">
+                                <span class="section-status status-not-started" id="challenge-problems-status">Not Started</span>
+                                <a href="#" class="btn" onclick="showSection('challenge-problems'); event.stopPropagation();">Start</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section 1: Introduction to Physics in Astronomy -->
+            <div id="section1" class="section-content">
+                <div class="assessment-container">
+                    <div class="assessment-header">
+                        <h2>Introduction to Physics in Astronomy</h2>
+                        <p>Quick Check Assessment</p>
+                    </div>
+                    
+                    <div class="instructions">
+                        <h3>Instructions</h3>
+                        <p>This quick check exercise covers the content from Section 1: Introduction to Physics in Astronomy. Answer all questions to test your understanding of the fundamental concepts.</p>
+                        <p>The assessment includes conceptual questions, mathematical problems, and applied astronomy scenarios. Complete all questions and click "Submit Answers" to see your results.</p>
+                    </div>
+                    
+                    <div class="question-section">
+                        <h3>Conceptual Understanding Questions</h3>
+                        
+                        <div class="question" id="q1">
+                            <div class="question-header">
+                                <span>Question 1</span>
+                                <span class="question-type">Multiple Choice (Select the best answer)</span>
+                            </div>
+                            <p>Which of the following best describes the relationship between physics and astronomy?</p>
+                            <div class="options">
+                                <div class="option">
+                                    <input type="radio" name="q1" id="q1a" value="a">
+                                    <label for="q1a">Physics and astronomy are completely separate disciplines with little overlap</label>
+                                </div>
+                                <div class="option">
+                                    <input type="radio" name="q1" id="q1b" value="b">
+                                    <label for="q1b">Physics provides the fundamental laws that explain astronomical observations</label>
+                                </div>
+                                <div class="option">
+                                    <input type="radio" name="q1" id="q1c" value="c">
+                                    <label for="q1c">Astronomy is primarily concerned with cataloging celestial objects, not explaining them</label>
+                                </div>
+                                <div class="option">
+                                    <input type="radio" name="q1" id="q1d" value="d">
+                                    <label for="q1d">Physics is only relevant to Earth-based phenomena, not astronomical ones</label>
+                                </div>
+                            </div>
+                            <div class="feedback" id="feedback-q1"></div>
+                            <div class="explanation" id="explanation-q1">
+                                <h4>Explanation:</h4>
+                                <p>Physics and astronomy are deeply interconnected disciplines. Physics provides the theoretical framework and fundamental laws (such as gravity, electromagnetism, thermodynamics) that allow us to explain and predict astronomical phenomena. Astronomical observations, in turn, have often led to new physical theories or confirmed existing ones.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="question" id="q2">
+                            <div class="question-header">
+                                <span>Question 2</span>
+                                <span class="question-type">True/False</span>
+                            </div>
+                            <p>The scientific method in astronomy often relies more heavily on observation than on controlled experiments compared to other branches of physics.</p>
+                            <div class="options">
+                                <div class="option">
+                                    <input type="radio" name="q2" id="q2a" value="a">
+                                    <label for="q2a">True</label>
+                                </div>
+                                <div class="option">
+                                    <input type="radio" name="q2" id="q2b" value="b">
+                                    <label for="q2b">False</label>
+                                </div>
+                            </div>
+                            <div class="feedback" id="feedback-q2"></div>
+                            <div class="explanation" id="explanation-q2">
+                                <h4>Explanation:</h4>
+                                <p>Unlike many areas of physics where controlled laboratory experiments can be conducted, astronomy primarily relies on observation rather than experimentation. Astronomers cannot manipulate celestial objects or create controlled conditions in space. Instead, they must observe natural phenomena as they occur and develop theories based on these observations. This makes the observational component of the scientific method particularly important in astronomy.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="question" id="q3">
+                            <div class="question-header">
+                                <span>Question 3</span>
+                                <span class="question-type">Multiple Choice (Select all that apply)</span>
+                            </div>
+                            <p>Which of the following are important applications of physics in modern astronomy? (Check all that apply)</p>
+                            <div class="options">
+                                <div class="option">
+                                    <input type="checkbox" name="q3" id="q3a" value="a">
+                                    <label for="q3a">Designing telescopes and detectors to observe distant objects</label>
+                                </div>
+                                <div class="option">
+                                    <input type="checkbox" name="q3" id="q3b" value="b">
+                                    <label for="q3b">Modeling the internal structure and evolution of stars</label>
+                                </div>
+                                <div class="option">
+                                    <input type="checkbox" name="q3" id="q3c" value="c">
+                                    <label for="q3c">Predicting the motion of planets and other celestial bodies</label>
+                                </div>
+                                <div class="option">
+                                    <input type="checkbox" name="q3" id="q3d" value="d">
+                                    <label for="q3d">Creating purely aesthetic star catalogs with no physical interpretation</label>
+                                </div>
+                            </div>
+                            <div class="feedback" id="feedback-q3"></div>
+                            <div class="explanation" id="explanation-q3">
+                                <h4>Explanation:</h4>
+                                <p>Physics is essential to modern astronomy in multiple ways:</p>
+                                <p>- Designing telescopes and detectors requires understanding optics, electronics, and quantum mechanics to create instruments that can detect faint signals from distant objects.</p>
+                                <p>- Modeling stellar structure and evolution requires nuclear physics, thermodynamics, and fluid dynamics to understand how stars generate energy and evolve over time.</p>
+                                <p>- Predicting celestial motion relies on mechanics and gravitation to calculate orbits and trajectories.</p>
+                                <p>The creation of purely aesthetic catalogs without physical interpretation would not be a scientific application of physics in astronomy. Modern astronomical catalogs include physical parameters and are used to understand the physical nature of celestial objects.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="question-section">
+                        <h3>Mathematical Problem-Solving Exercises</h3>
+                        
+                        <div class="question" id="q4">
+                            <div class="question-header">
+                                <span>Question 4</span>
+                                <span class="question-type">Basic Calculation</span>
+                            </div>
+                            <p>The distance to Alpha Centauri is approximately 4.37 light-years. If a light-year is 9.46 × 10<sup>15</sup> meters, calculate the distance to Alpha Centauri in meters. Express your answer in scientific notation.</p>
+                            <input type="text" id="q4-answer" placeholder="Enter your answer (e.g., 1.23 × 10^15)">
+                            <button class="hint-btn" onclick="toggleHint('hint-q4')">Show Hint</button>
+                            <div class="hint" id="hint-q4">Multiply the distance in light-years by the conversion factor. Remember that in scientific notation, you should have one digit before the decimal point.</div>
+                            <div class="feedback" id="feedback-q4"></div>
+                            <div class="explanation" id="explanation-q4">
+                                <h4>Explanation:</h4>
+                                <p><strong>Calculation:</strong> Distance = 4.37 light-years × (9.46 × 10<sup>15</sup> meters/light-year) = 4.13 × 10<sup>16</sup> meters</p>
+                                <p>This calculation converts the distance from light-years to meters by multiplying by the conversion factor. The result illustrates the vast distances in astronomy and why we often use units like light-years rather than standard SI units.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="question" id="q5">
+                            <div class="question-header">
+                                <span>Question 5</span>
+                                <span class="question-type">Dimensional Analysis</span>
+                            </div>
+                            <p>The gravitational force between two objects is given by F = G(m₁m₂)/r². If force is measured in newtons (kg·m/s²), determine the units of the gravitational constant G.</p>
+                            <input type="text" id="q5-answer" placeholder="Enter your answer (e.g., kg·m/s²)">
+                            <button class="hint-btn" onclick="toggleHint('hint-q5')">Show Hint</button>
+                            <div class="hint" id="hint-q5">Rearrange the equation to isolate G, then substitute the units for each quantity.</div>
+                            <div class="feedback" id="feedback-q5"></div>
+                            <div class="explanation" id="explanation-q5">
+                                <h4>Explanation:</h4>
+                                <p><strong>Calculation:</strong></p>
+                                <ul>
+                                    <li>F = G(m₁m₂)/r²</li>
+                                    <li>[F] = [G][m₁][m₂]/[r]²</li>
+                                    <li>kg·m/s² = [G]·kg·kg/m²</li>
+                                    <li>[G] = (kg·m/s²)·m²/(kg·kg) = m³/(kg·s²)</li>
+                                </ul>
+                                <p>Dimensional analysis is a powerful tool in physics for checking equations and understanding the nature of physical constants. The gravitational constant G has units that allow the equation to be dimensionally consistent, with force measured in newtons.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="question-section">
+                        <h3>Applied Astronomy Scenarios</h3>
+                        
+                        <div class="question" id="q6">
+                            <div class="question-header">
+                                <span>Question 6</span>
+                                <span class="question-type">Scenario Analysis</span>
+                            </div>
+                            <div class="scenario">
+                                <p>Astronomers observe a distant galaxy and measure its spectrum. They notice that spectral lines are shifted toward the red end of the spectrum compared to laboratory measurements.</p>
+                            </div>
+                            <p>A) What physical phenomenon explains this observation?</p>
+                            <input type="text" id="q6a-answer" placeholder="Enter your answer">
+                            <p>B) What can astronomers infer about the galaxy's motion relative to Earth?</p>
+                            <input type="text" id="q6b-answer" placeholder="Enter your answer">
+                            <p>C) How might this observation contribute to our understanding of the universe's structure?</p>
+                            <textarea id="q6c-answer" rows="3" placeholder="Enter your answer" style="width: 100%; padding: 8px;"></textarea>
+                            <div class="feedback" id="feedback-q6"></div>
+                            <div class="explanation" id="explanation-q6">
+                                <h4>Explanation:</h4>
+                                <p><strong>A) The redshift phenomenon, which is a consequence of the Doppler effect for light waves</strong></p>
+                                <p><strong>B) The galaxy is moving away from Earth</strong></p>
+                                <p><strong>C) This observation contributes to evidence for the expansion of the universe and supports the Big Bang theory</strong></p>
+                                <p>The redshift of spectral lines is a key observational tool in astronomy. When a light source moves away from an observer, the wavelengths of light appear longer (shifted toward the red end of the spectrum). By measuring redshifts of many galaxies, astronomers discovered that most galaxies are moving away from us, with more distant galaxies receding faster—evidence for an expanding universe. This observation is one of the cornerstones of the Big Bang theory, suggesting that the universe began from a hot, dense state and has been expanding ever since.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="submit-section">
+                        <button id="submit-btn-section1" onclick="checkAnswersSection1()">Submit Answers</button>
+                    </div>
+                    
+                    <div class="results" id="results-section1">
+                        <h2>Your Results</h2>
+                        <p>You scored <span id="score-section1">0</span> out of 6 questions correctly.</p>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="progress-bar-section1"></div>
+                        </div>
+                        <p id="performance-message-section1"></p>
+                        <p>Review your answers above to see explanations for each question.</p>
+                        <div class="navigation-buttons">
+                            <button class="btn" onclick="showDashboard()">Return to Dashboard</button>
+                            <button class="btn" onclick="showSection('section2')">Next Section: Classical Mechanics</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section 2: Classical Mechanics -->
+            <div id="section2" class="section-content">
+                <div class="assessment-container">
+                    <div class="assessment-header">
+                        <h2>Classical Mechanics</h2>
+                        <p>Quick Check Assessment</p>
+                    </div>
+                    
+                    <div class="instructions">
+                        <h3>Instructions</h3>
+                        <p>This quick check exercise covers the content from Section 2: Classical Mechanics. Answer all questions to test your understanding of Newton's laws, forces, and motion in astronomical contexts.</p>
+                        <p>The assessment includes conceptual questions, mathematical problems, and applied astronomy scenarios. Complete all questions and click "Submit Answers" to see your results.</p>
+                    </div>
+                    
+                    <div class="question-section">
+                        <h3>Conceptual Understanding Questions</h3>
+                        
+                        <div class="question" id="s2q1">
+                            <div class="question-header">
+                                <span>Question 1</span>
+                                <span class="question-type">Multiple Choice (Select the best answer)</span>
+                            </div>
+                            <p>Which of Newton's laws explains why a satellite continues to orbit Earth without requiring constant propulsion?</p>
+                            <div class="options">
+                                <div class="option">
+                                    <input type="radio" name="s2q1" id="s2q1a" value="a">
+                                    <label for="s2q1a">Newton's First Law (Law of Inertia)</label>
+                                </div>
+                                <div class="option">
+                                    <input type="radio" name="s2q1" id="s2q1b" value="b">
+                                    <label for="s2q1b">Newton's Second Law (F = ma)</label>
+                                </div>
+                                <div class="option">
+                                    <input type="radio" name="s2q1" id="s2q1c" value="c">
+                                    <label for="s2q1c">Newton's Third Law (Action-Reaction)</label>
+                                </div>
+                                <div class="option">
+                                    <input type="radio" name="s2q1" id="s2q1d" value="d">
+                                    <label for="s2q1d">Newton's Law of Universal Gravitation</label>
+                                </div>
+                            </div>
+                            <div class="feedback" id="feedback-s2q1"></div>
+                            <div class="explanation" id="explanation-s2q1">
+                                <h4>Explanation:</h4>
+                                <p>Newton's First Law states that an object in motion will remain in motion with the same speed and direction unless acted upon by an external force. This explains why a satellite, once in orbit, continues to move without needing constant propulsion. The satellite's inertia keeps it moving forward, while Earth's gravity provides the centripetal force that curves its path into an orbit. Without Earth's gravity, the satellite would move in a straight line (following the First Law). The combination of inertia and gravitational force creates the orbital motion.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="question" id="s2q2">
+                            <div class="question-header">
+                                <span>Question 2</span>
+                                <span class="question-type">Multiple Choice (Select all that apply)</span>
+                            </div>
+                            <p>Which of the following are examples of forces that play significant roles in astronomical phenomena? (Check all that apply)</p>
+                            <div class="options">
+                                <div class="option">
+                                    <input type="checkbox" name="s2q2" id="s2q2a" value="a">
+                                    <label for="s2q2a">Gravitational force</label>
+                                </div>
+                                <div class="option">
+                                    <input type="checkbox" name="s2q2" id="s2q2b" value="b">
+                                    <label for="s2q2b">Electromagnetic force</label>
+                                </div>
+                                <div class="option">
+                                    <input type="checkbox" name="s2q2" id="s2q2c" value="c">
+                                    <label for="s2q2c">Strong nuclear force</label>
+                                </div>
+                                <div class="option">
+                                    <input type="checkbox" name="s2q2" id="s2q2d" value="d">
+                                    <label for="s2q2d">Weak nuclear force</label>
+                                </div>
+                                <div class="option">
+                                    <input type="checkbox" name="s2q2" id="s2q2e" value="e">
+                                    <label for="s2q2e">Friction</label>
+                                </div>
+                            </div>
+                            <div class="feedback" id="feedback-s2q2"></div>
+                            <div class="explanation" id="explanation-s2q2">
+                                <h4>Explanation:</h4>
+                                <p>All four fundamental forces play important roles in astronomical phenomena:</p>
+                                <p>- <strong>Gravitational force</strong> is responsible for the formation of stars, planets, and galaxies, as well as orbital motion and gravitational lensing.</p>
+                                <p>- <strong>Electromagnetic force</strong> governs the behavior of charged particles in space, including solar wind, cosmic rays, and the emission of electromagnetic radiation from stars.</p>
+                                <p>- <strong>Strong nuclear force</strong> is essential for nuclear fusion in stars, which powers stellar evolution and nucleosynthesis.</p>
+                                <p>- <strong>Weak nuclear force</strong> is involved in certain types of radioactive decay and plays a role in stellar nucleosynthesis and supernova explosions.</p>
+                                <p>Friction, while important on Earth, is generally negligible in space due to the vacuum environment. However, it can play a role in certain contexts like accretion disks around black holes or in planetary atmospheres.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="question" id="s2q3">
+                            <div class="question-header">
+                                <span>Question 3</span>
+                                <span class="question-type">True/False</span>
+                            </div>
+                            <p>According to Kepler's laws, a planet moves faster in its orbit when it is closer to the Sun (at perihelion) than when it is farther away (at aphelion).</p>
+                            <div class="options">
+                                <div class="option">
+                                    <input type="radio" name="s2q3" id="s2q3a" value="a">
+                                    <label for="s2q3a">True</label>
+                                </div>
+                                <div class="option">
+                                    <input type="radio" name="s2q3" id="s2q3b" value="b">
+                                    <label for="s2q3b">False</label>
+                                </div>
+                            </div>
+                            <div class="feedback" id="feedback-s2q3"></div>
+                            <div class="explanation" id="explanation-s2q3">
+                                <h4>Explanation:</h4>
+                                <p>This statement is true. According to Kepler's Second Law (Law of Equal Areas), a line connecting a planet to the Sun sweeps out equal areas in equal times. This means that when a planet is closer to the Sun (at perihelion), it must move faster to sweep out the same area in the same time as when it is farther away (at aphelion). This is a consequence of the conservation of angular momentum and is directly related to the inverse square nature of the gravitational force.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="question-section">
+                        <h3>Mathematical Problem-Solving Exercises</h3>
+                        
+                        <div class="question" id="s2q4">
+                            <div class="question-header">
+                                <span>Question 4</span>
+                                <span class="question-type">Orbital Mechanics Calculation</span>
+                            </div>
+                            <p>A satellite orbits Earth at an altitude of 400 km. Given that Earth's radius is 6,371 km and Earth's mass is 5.97 × 10<sup>24</sup> kg, calculate the orbital velocity of the satellite in km/s. Use G = 6.67 × 10<sup>-11</sup> N·m<sup>2</sup>/kg<sup>2</sup>.</p>
+                            <input type="text" id="s2q4-answer" placeholder="Enter your answer in km/s">
+                            <button class="hint-btn" onclick="toggleHint('hint-s2q4')">Show Hint</button>
+                            <div class="hint" id="hint-s2q4">Use the formula v = √(GM/r), where G is the gravitational constant, M is Earth's mass, and r is the orbital radius (Earth's radius + altitude).</div>
+                            <div class="feedback" id="feedback-s2q4"></div>
+                            <div class="explanation" id="explanation-s2q4">
+                                <h4>Explanation:</h4>
+                                <p><strong>Calculation:</strong></p>
+                                <p>The orbital radius r = Earth's radius + altitude = 6,371 km + 400 km = 6,771 km = 6.771 × 10<sup>6</sup> m</p>
+                                <p>Using the formula for orbital velocity: v = √(GM/r)</p>
+                                <p>v = √[(6.67 × 10<sup>-11</sup> N·m<sup>2</sup>/kg<sup>2</sup>) × (5.97 × 10<sup>24</sup> kg) / (6.771 × 10<sup>6</sup> m)]</p>
+                                <p>v = √[(3.98 × 10<sup>14</sup>) / (6.771 × 10<sup>6</sup>)]</p>
+                                <p>v = √(5.88 × 10<sup>7</sup>)</p>
+                                <p>v = 7,668 m/s = 7.67 km/s</p>
+                                <p>This calculation demonstrates how orbital velocity depends on the distance from Earth's center. Satellites in lower orbits move faster than those in higher orbits, which is a direct consequence of Kepler's laws and Newton's law of universal gravitation.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="question" id="s2q5">
+                            <div class="question-header">
+                                <span>Question 5</span>
+                                <span class="question-type">Gravitational Force Problem</span>
+                            </div>
+                            <p>The Moon has a mass of 7.35 × 10<sup>22</sup> kg and is approximately 3.84 × 10<sup>8</sup> m from Earth. Calculate the gravitational force between Earth and the Moon in newtons. Use G = 6.67 × 10<sup>-11</sup> N·m<sup>2</sup>/kg<sup>2</sup> and Earth's mass = 5.97 × 10<sup>24</sup> kg.</p>
+                            <input type="text" id="s2q5-answer" placeholder="Enter your answer in scientific notation (e.g., 1.23 × 10^20)">
+                            <button class="hint-btn" onclick="toggleHint('hint-s2q5')">Show Hint</button>
+                            <div class="hint" id="hint-s2q5">Use Newton's Law of Universal Gravitation: F = G(m₁m₂)/r², where G is the gravitational constant, m₁ and m₂ are the masses, and r is the distance between the centers of mass.</div>
+                            <div class="feedback" id="feedback-s2q5"></div>
+                            <div class="explanation" id="explanation-s2q5">
+                                <h4>Explanation:</h4>
+                                <p><strong>Calculation:</strong></p>
+                                <p>Using Newton's Law of Universal Gravitation: F = G(m₁m₂)/r²</p>
+                                <p>F = (6.67 × 10<sup>-11</sup> N·m<sup>2</sup>/kg<sup>2</sup>) × (5.97 × 10<sup>24</sup> kg) × (7.35 × 10<sup>22</sup> kg) / (3.84 × 10<sup>8</sup> m)²</p>
+                                <p>F = (6.67 × 10<sup>-11</sup>) × (5.97 × 10<sup>24</sup>) × (7.35 × 10<sup>22</sup>) / (1.47 × 10<sup>17</sup>)</p>
+                                <p>F = 2.0 × 10<sup>20</sup> N</p>
+                                <p>This enormous force is what keeps the Moon in orbit around Earth. It's balanced by the Moon's inertia, which would otherwise cause it to move in a straight line. The balance between gravitational attraction and inertial motion creates the stable orbit we observe.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="question-section">
+                        <h3>Applied Astronomy Scenarios</h3>
+                        
+                        <div class="question" id="s2q6">
+                            <div class="question-header">
+                                <span>Question 6</span>
+                                <span class="question-type">Scenario Analysis</span>
+                            </div>
+                            <div class="scenario">
+                                <p>Astronomers have discovered an exoplanet orbiting a star with twice the mass of our Sun. The planet's orbital period is 248 Earth days, and it orbits at a distance of 1.2 astronomical units (AU) from its star.</p>
+                            </div>
+                            <p>A) Using Kepler's Third Law, would you expect a planet orbiting at 2.4 AU from this star to have a longer or shorter orbital period than 248 days? Explain your reasoning.</p>
+                            <textarea id="s2q6a-answer" rows="3" placeholder="Enter your answer" style="width: 100%; padding: 8px;"></textarea>
+                            <p>B) How would the gravitational force on this exoplanet compare to the gravitational force on Earth from the Sun? (Assume the exoplanet has the same mass as Earth.)</p>
+                            <textarea id="s2q6b-answer" rows="3" placeholder="Enter your answer" style="width: 100%; padding: 8px;"></textarea>
+                            <div class="feedback" id="feedback-s2q6"></div>
+                            <div class="explanation" id="explanation-s2q6">
+                                <h4>Explanation:</h4>
+                                <p><strong>A) A planet orbiting at 2.4 AU would have a longer orbital period.</strong></p>
+                                <p>According to Kepler's Third Law, the square of the orbital period is proportional to the cube of the semi-major axis (P² ∝ a³). If the distance increases from 1.2 AU to 2.4 AU (a factor of 2), then the period will increase by a factor of 2^(3/2) = 2.83. So the new period would be approximately 248 days × 2.83 = 702 days.</p>
+                                <p><strong>B) The gravitational force would be greater than that experienced by Earth.</strong></p>
+                                <p>The gravitational force is given by F = G(m₁m₂)/r². Compared to the Earth-Sun system:</p>
+                                <p>- The star has twice the mass of our Sun (m₁ is 2 times larger)</p>
+                                <p>- The distance is 1.2 AU (r is 1.2 times larger)</p>
+                                <p>- The planet's mass is the same as Earth's (m₂ is the same)</p>
+                                <p>Therefore, the force ratio is: F_exoplanet/F_Earth = (2 × 1) / (1.2)² = 2 / 1.44 = 1.39</p>
+                                <p>The gravitational force on the exoplanet would be about 1.39 times stronger than the gravitational force on Earth from the Sun.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="submit-section">
+                        <button id="submit-btn-section2" onclick="checkAnswersSection2()">Submit Answers</button>
+                    </div>
+                    
+                    <div class="results" id="results-section2">
+                        <h2>Your Results</h2>
+                        <p>You scored <span id="score-section2">0</span> out of 6 questions correctly.</p>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="progress-bar-section2"></div>
+                        </div>
+                        <p id="performance-message-section2"></p>
+                        <p>Review your answers above to see explanations for each question.</p>
+                        <div class="navigation-buttons">
+                            <button class="btn" onclick="showSection('section1')">Previous Section: Introduction to Physics</button>
+                            <button class="btn" onclick="showSection('section3')">Next Section: Work, Energy, Power</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Other sections will be implemented similarly -->
+            
+            <!-- Review Quizzes Section -->
+            <div id="review-quizzes" class="section-content">
+                <div class="assessment-container">
+                    <div class="assessment-header">
+                        <h2>Review Quizzes</h2>
+                        <p>Comprehensive assessments covering multiple sections</p>
+                    </div>
+                    
+                    <div class="instructions">
+                        <h3>Instructions</h3>
+                        <p>These review quizzes cover multiple sections of the Physics module. They are designed to test your comprehensive understanding of physics concepts and their applications in astronomy.</p>
+                        <p>Select a quiz below to begin.</p>
+                    </div>
+                    
+                    <p>Review quizzes will be implemented soon.</p>
+                    
+                    <div class="navigation-buttons">
+                        <button class="btn" onclick="showDashboard()">Return to Dashboard</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Challenge Problems Section -->
+            <div id="challenge-problems" class="section-content">
+                <div class="assessment-container">
+                    <div class="assessment-header">
+                        <h2>Challenge Problems</h2>
+                        <p>Advanced problems requiring integration of multiple concepts</p>
+                    </div>
+                    
+                    <div class="instructions">
+                        <h3>Instructions</h3>
+                        <p>These challenge problems are designed to test your ability to integrate multiple physics concepts and apply them to complex astronomical scenarios.</p>
+                        <p>Select a problem set below to begin.</p>
+                    </div>
+                    
+                    <p>Challenge problems will be implemented soon.</p>
+                    
+                    <div class="navigation-buttons">
+                        <button class="btn" onclick="showDashboard()">Return to Dashboard</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>AstroCourse Physics Module Assessment Platform | &copy; 2025</p>
+    </footer>
+    
+    <script>
+        // Initialize progress tracking
+        let sectionProgress = {
+            'section1': 'not-started',
+            'section2': 'not-started',
+            'section3': 'not-started',
+            'section4': 'not-started',
+            'section5': 'not-started',
+            'section6': 'not-started',
+            'section7': 'not-started',
+            'section8': 'not-started',
+            'section9': 'not-started',
+            'section10': 'not-started',
+            'review-quizzes': 'not-started',
+            'challenge-problems': 'not-started'
+        };
+        
+        // Load progress from localStorage if available
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('astrocourse-physics-progress');
+            if (savedProgress) {
+                sectionProgress = JSON.parse(savedProgress);
+                updateProgressDisplay();
+            }
+        }
+        
+        // Save progress to localStorage
+        function saveProgress() {
+            localStorage.setItem('astrocourse-physics-progress', JSON.stringify(sectionProgress));
+        }
+        
+        // Update progress indicators and status text
+        function updateProgressDisplay() {
+            let completedCount = 0;
+            
+            for (const section in sectionProgress) {
+                const status = sectionProgress[section];
+                const indicator = document.getElementById(`${section}-indicator`);
+                const statusText = document.getElementById(`${section}-status`);
+                
+                if (indicator) {
+                    indicator.className = `progress-indicator ${status}`;
+                }
+                
+                if (statusText) {
+                    statusText.className = `section-status status-${status}`;
+                    
+                    if (status === 'not-started') {
+                        statusText.textContent = 'Not Started';
+                    } else if (status === 'in-progress') {
+                        statusText.textContent = 'In Progress';
+                    } else if (status === 'completed') {
+                        statusText.textContent = 'Completed';
+                        completedCount++;
+                    }
+                }
+            }
+            
+            // Update overall progress
+            document.getElementById('completed-sections').textContent = completedCount;
+            const totalSections = Object.keys(sectionProgress).length;
+            const progressPercentage = (completedCount / totalSections) * 100;
+            document.getElementById('overall-progress-bar').style.width = `${progressPercentage}%`;
+        }
+        
+        // Show a specific section and hide others
+        function showSection(sectionId) {
+            // Hide all sections
+            const sections = document.getElementsByClassName('section-content');
+            for (let i = 0; i < sections.length; i++) {
+                sections[i].classList.remove('active');
+            }
+            
+            // Show the selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Update sidebar active link
+            const links = document.getElementsByClassName('section-link');
+            for (let i = 0; i < links.length; i++) {
+                links[i].classList.remove('active');
+            }
+            
+            // Find and activate the correct link
+            const activeLinks = document.querySelectorAll(`.section-link[onclick="showSection('${sectionId}')"]`);
+            if (activeLinks.length > 0) {
+                activeLinks[0].classList.add('active');
+            }
+            
+            // Update section progress if not already started
+            if (sectionId !== 'dashboard' && sectionProgress[sectionId] === 'not-started') {
+                sectionProgress[sectionId] = 'in-progress';
+                saveProgress();
+                updateProgressDisplay();
+            }
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+        
+        // Show dashboard
+        function showDashboard() {
+            showSection('dashboard');
+        }
+        
+        // Reset progress
+        function resetProgress() {
+            if (confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+                for (const section in sectionProgress) {
+                    sectionProgress[section] = 'not-started';
+                }
+                saveProgress();
+                updateProgressDisplay();
+                alert('Progress has been reset.');
+            }
+        }
+        
+        // Toggle hint visibility
+        function toggleHint(hintId) {
+            const hint = document.getElementById(hintId);
+            if (hint.style.display === "block") {
+                hint.style.display = "none";
+            } else {
+                hint.style.display = "block";
+            }
+        }
+        
+        // Check answers for Section 1
+        function checkAnswersSection1() {
+            let score = 0;
+            
+            // Question 1 (Single-select multiple choice)
+            const q1Answer = document.querySelector('input[name="q1"]:checked');
+            if (q1Answer) {
+                const feedbackElement = document.getElementById('feedback-q1');
+                if (q1Answer.value === 'b') {
+                    feedbackElement.textContent = "Correct!";
+                    feedbackElement.className = "feedback correct";
+                    score++;
+                } else {
+                    feedbackElement.textContent = "Incorrect. The correct answer is: Physics provides the fundamental laws that explain astronomical observations.";
+                    feedbackElement.className = "feedback incorrect";
+                }
+                feedbackElement.style.display = "block";
+                document.getElementById('explanation-q1').style.display = "block";
+            }
+            
+            // Question 2 (True/False)
+            const q2Answer = document.querySelector('input[name="q2"]:checked');
+            if (q2Answer) {
+                const feedbackElement = document.getElementById('feedback-q2');
+                if (q2Answer.value === 'a') {
+                    feedbackElement.textContent = "Correct!";
+                    feedbackElement.className = "feedback correct";
+                    score++;
+                } else {
+                    feedbackElement.textContent = "Incorrect. The correct answer is: True.";
+                    feedbackElement.className = "feedback incorrect";
+                }
+                feedbackElement.style.display = "block";
+                document.getElementById('explanation-q2').style.display = "block";
+            }
+            
+            // Question 3 (Multiple-select multiple choice)
+            const q3Answers = document.querySelectorAll('input[name="q3"]:checked');
+            const feedbackElement3 = document.getElementById('feedback-q3');
+            
+            if (q3Answers.length > 0) {
+                let q3Correct = true;
+                let selectedValues = Array.from(q3Answers).map(input => input.value);
+                
+                // Check if all correct options are selected (a, b, c) and no incorrect options (d)
+                if (!selectedValues.includes('a') || !selectedValues.includes('b') || 
+                    !selectedValues.includes('c') || selectedValues.includes('d')) {
+                    q3Correct = false;
+                }
+                
+                if (q3Correct) {
+                    feedbackElement3.textContent = "Correct! You identified all the applications of physics in astronomy.";
+                    feedbackElement3.className = "feedback correct";
+                    score++;
+                } else {
+                    feedbackElement3.textContent = "Incorrect. The correct answers are: Designing telescopes and detectors, Modeling stellar structure, and Predicting celestial motion.";
+                    feedbackElement3.className = "feedback incorrect";
+                }
+                feedbackElement3.style.display = "block";
+                document.getElementById('explanation-q3').style.display = "block";
+            }
+            
+            // Question 4 (Basic Calculation)
+            const q4Answer = document.getElementById('q4-answer').value.toLowerCase().replace(/\s+/g, '');
+            const feedbackElement4 = document.getElementById('feedback-q4');
+            
+            // Accept various formats of scientific notation
+            if (q4Answer) {
+                const normalizedAnswer = q4Answer.replace(/×/g, 'x').replace(/\^/g, '');
+                if (normalizedAnswer.includes('4.13x10^16') || 
+                    normalizedAnswer.includes('4.13x1016') || 
+                    normalizedAnswer.includes('4.13e16') ||
+                    normalizedAnswer.includes('4.13e+16')) {
+                    feedbackElement4.textContent = "Correct!";
+                    feedbackElement4.className = "feedback correct";
+                    score++;
+                } else {
+                    feedbackElement4.textContent = "Incorrect. The correct answer is: 4.13 × 10^16 meters.";
+                    feedbackElement4.className = "feedback incorrect";
+                }
+                feedbackElement4.style.display = "block";
+                document.getElementById('explanation-q4').style.display = "block";
+            }
+            
+            // Question 5 (Dimensional Analysis)
+            const q5Answer = document.getElementById('q5-answer').value.toLowerCase().replace(/\s+/g, '');
+            const feedbackElement5 = document.getElementById('feedback-q5');
+            
+            if (q5Answer) {
+                // Accept various formats
+                if (q5Answer.includes('m³/kg·s²') || 
+                    q5Answer.includes('m^3/kg·s^2') || 
+                    q5Answer.includes('m3/kgs2') ||
+                    q5Answer.includes('m³/(kg·s²)') ||
+                    q5Answer.includes('m^3/(kg·s^2)')) {
+                    feedbackElement5.textContent = "Correct!";
+                    feedbackElement5.className = "feedback correct";
+                    score++;
+                } else {
+                    feedbackElement5.textContent = "Incorrect. The correct answer is: m³/(kg·s²).";
+                    feedbackElement5.className = "feedback incorrect";
+                }
+                feedbackElement5.style.display = "block";
+                document.getElementById('explanation-q5').style.display = "block";
+            }
+            
+            // Question 6 (Scenario Analysis)
+            const q6aAnswer = document.getElementById('q6a-answer').value.toLowerCase();
+            const q6bAnswer = document.getElementById('q6b-answer').value.toLowerCase();
+            const q6cAnswer = document.getElementById('q6c-answer').value.toLowerCase();
+            
+            const feedbackElement6 = document.getElementById('feedback-q6');
+            if (q6aAnswer && q6bAnswer && q6cAnswer) {
+                const q6aCorrect = q6aAnswer.includes('redshift') || 
+                                  q6aAnswer.includes('doppler') || 
+                                  q6aAnswer.includes('red shift');
+                                  
+                const q6bCorrect = q6bAnswer.includes('away') || 
+                                  q6bAnswer.includes('receding') ||
+                                  q6bAnswer.includes('moving away');
+                                  
+                const q6cCorrect = q6cAnswer.includes('expansion') || 
+                                  q6cAnswer.includes('big bang');
+                
+                if (q6aCorrect && q6bCorrect && q6cCorrect) {
+                    feedbackElement6.textContent = "Correct!";
+                    feedbackElement6.className = "feedback correct";
+                    score++;
+                } else {
+                    feedbackElement6.textContent = "Partially correct or incorrect. The key points are: A) The redshift phenomenon (Doppler effect), B) The galaxy is moving away from Earth, C) This supports the expansion of the universe and the Big Bang theory.";
+                    feedbackElement6.className = "feedback incorrect";
+                }
+                feedbackElement6.style.display = "block";
+                document.getElementById('explanation-q6').style.display = "block";
+            }
+            
+            // Display results
+            document.getElementById('score-section1').textContent = score;
+            const percentage = (score / 6) * 100;
+            document.getElementById('progress-bar-section1').style.width = percentage + '%';
+            
+            // Performance message
+            let performanceMessage = "";
+            if (percentage >= 90) {
+                performanceMessage = "Excellent! You have a strong understanding of the fundamental concepts.";
+            } else if (percentage >= 70) {
+                performanceMessage = "Good job! You understand most of the concepts, but there are a few areas to review.";
+            } else if (percentage >= 50) {
+                performanceMessage = "You're on the right track, but should review the material more thoroughly.";
+            } else {
+                performanceMessage = "You should revisit the section content and try again after reviewing the material.";
+            }
+            document.getElementById('performance-message-section1').textContent = performanceMessage;
+            
+            // Show results section
+            document.getElementById('results-section1').style.display = "block";
+            
+            // Scroll to results
+            document.getElementById('results-section1').scrollIntoView({ behavior: 'smooth' });
+            
+            // Disable submit button
+            document.getElementById('submit-btn-section1').disabled = true;
+            
+            // Mark section as completed if score is sufficient
+            if (percentage >= 70) {
+                sectionProgress['section1'] = 'completed';
+                saveProgress();
+                updateProgressDisplay();
+            }
+        }
+        
+        // Check answers for Section 2
+        function checkAnswersSection2() {
+            let score = 0;
+            
+            // Question 1 (Single-select multiple choice)
+            const q1Answer = document.querySelector('input[name="s2q1"]:checked');
+            if (q1Answer) {
+                const feedbackElement = document.getElementById('feedback-s2q1');
+                if (q1Answer.value === 'a') {
+                    feedbackElement.textContent = "Correct!";
+                    feedbackElement.className = "feedback correct";
+                    score++;
+                } else {
+                    feedbackElement.textContent = "Incorrect. The correct answer is: Newton's First Law (Law of Inertia).";
+                    feedbackElement.className = "feedback incorrect";
+                }
+                feedbackElement.style.display = "block";
+                document.getElementById('explanation-s2q1').style.display = "block";
+            }
+            
+            // Question 2 (Multiple-select multiple choice)
+            const q2Answers = document.querySelectorAll('input[name="s2q2"]:checked');
+            const feedbackElement2 = document.getElementById('feedback-s2q2');
+            
+            if (q2Answers.length > 0) {
+                let q2Correct = true;
+                let selectedValues = Array.from(q2Answers).map(input => input.value);
+                
+                // Check if all correct options are selected (a, b, c, d) and no incorrect options
+                if (!selectedValues.includes('a') || !selectedValues.includes('b') || 
+                    !selectedValues.includes('c') || !selectedValues.includes('d')) {
+                    q2Correct = false;
+                }
+                
+                if (q2Correct && !selectedValues.includes('e')) {
+                    feedbackElement2.textContent = "Correct! You identified all the fundamental forces that play significant roles in astronomical phenomena.";
+                    feedbackElement2.className = "feedback correct";
+                    score++;
+                } else {
+                    feedbackElement2.textContent = "Incorrect. The correct answers are: Gravitational force, Electromagnetic force, Strong nuclear force, and Weak nuclear force.";
+                    feedbackElement2.className = "feedback incorrect";
+                }
+                feedbackElement2.style.display = "block";
+                document.getElementById('explanation-s2q2').style.display = "block";
+            }
+            
+            // Question 3 (True/False)
+            const q3Answer = document.querySelector('input[name="s2q3"]:checked');
+            if (q3Answer) {
+                const feedbackElement = document.getElementById('feedback-s2q3');
+                if (q3Answer.value === 'a') {
+                    feedbackElement.textContent = "Correct!";
+                    feedbackElement.className = "feedback correct";
+                    score++;
+                } else {
+                    feedbackElement.textContent = "Incorrect. The correct answer is: True.";
+                    feedbackElement.className = "feedback incorrect";
+                }
+                feedbackElement.style.display = "block";
+                document.getElementById('explanation-s2q3').style.display = "block";
+            }
+            
+            // Question 4 (Orbital Mechanics Calculation)
+            const q4Answer = document.getElementById('s2q4-answer').value.toLowerCase().replace(/\s+/g, '');
+            const feedbackElement4 = document.getElementById('feedback-s2q4');
+            
+            if (q4Answer) {
+                // Accept various formats and slight rounding differences
+                if (q4Answer.includes('7.67') || q4Answer.includes('7.7') || 
+                    q4Answer.includes('7.66') || q4Answer.includes('7.68')) {
+                    feedbackElement4.textContent = "Correct!";
+                    feedbackElement4.className = "feedback correct";
+                    score++;
+                } else {
+                    feedbackElement4.textContent = "Incorrect. The correct answer is: 7.67 km/s.";
+                    feedbackElement4.className = "feedback incorrect";
+                }
+                feedbackElement4.style.display = "block";
+                document.getElementById('explanation-s2q4').style.display = "block";
+            }
+            
+            // Question 5 (Gravitational Force Problem)
+            const q5Answer = document.getElementById('s2q5-answer').value.toLowerCase().replace(/\s+/g, '');
+            const feedbackElement5 = document.getElementById('feedback-s2q5');
+            
+            if (q5Answer) {
+                // Accept various formats of scientific notation
+                const normalizedAnswer = q5Answer.replace(/×/g, 'x').replace(/\^/g, '');
+                if (normalizedAnswer.includes('2.0x10^20') || 
+                    normalizedAnswer.includes('2x10^20') || 
+                    normalizedAnswer.includes('2.0e20') ||
+                    normalizedAnswer.includes('2e20')) {
+                    feedbackElement5.textContent = "Correct!";
+                    feedbackElement5.className = "feedback correct";
+                    score++;
+                } else {
+                    feedbackElement5.textContent = "Incorrect. The correct answer is: 2.0 × 10^20 N.";
+                    feedbackElement5.className = "feedback incorrect";
+                }
+                feedbackElement5.style.display = "block";
+                document.getElementById('explanation-s2q5').style.display = "block";
+            }
+            
+            // Question 6 (Scenario Analysis)
+            const q6aAnswer = document.getElementById('s2q6a-answer').value.toLowerCase();
+            const q6bAnswer = document.getElementById('s2q6b-answer').value.toLowerCase();
+            
+            const feedbackElement6 = document.getElementById('feedback-s2q6');
+            if (q6aAnswer && q6bAnswer) {
+                const q6aCorrect = q6aAnswer.includes('longer') && 
+                                  (q6aAnswer.includes('kepler') || q6aAnswer.includes('third law') || 
+                                   q6aAnswer.includes('p²') || q6aAnswer.includes('a³'));
+                                  
+                const q6bCorrect = q6bAnswer.includes('greater') || 
+                                  q6bAnswer.includes('stronger') ||
+                                  q6bAnswer.includes('more');
+                
+                if (q6aCorrect && q6bCorrect) {
+                    feedbackElement6.textContent = "Correct!";
+                    feedbackElement6.className = "feedback correct";
+                    score++;
+                } else {
+                    feedbackElement6.textContent = "Partially correct or incorrect. Review the explanation for the correct analysis of this scenario.";
+                    feedbackElement6.className = "feedback incorrect";
+                }
+                feedbackElement6.style.display = "block";
+                document.getElementById('explanation-s2q6').style.display = "block";
+            }
+            
+            // Display results
+            document.getElementById('score-section2').textContent = score;
+            const percentage = (score / 6) * 100;
+            document.getElementById('progress-bar-section2').style.width = percentage + '%';
+            
+            // Performance message
+            let performanceMessage = "";
+            if (percentage >= 90) {
+                performanceMessage = "Excellent! You have a strong understanding of classical mechanics in astronomy.";
+            } else if (percentage >= 70) {
+                performanceMessage = "Good job! You understand most of the concepts, but there are a few areas to review.";
+            } else if (percentage >= 50) {
+                performanceMessage = "You're on the right track, but should review the material more thoroughly.";
+            } else {
+                performanceMessage = "You should revisit the section content and try again after reviewing the material.";
+            }
+            document.getElementById('performance-message-section2').textContent = performanceMessage;
+            
+            // Show results section
+            document.getElementById('results-section2').style.display = "block";
+            
+            // Scroll to results
+            document.getElementById('results-section2').scrollIntoView({ behavior: 'smooth' });
+            
+            // Disable submit button
+            document.getElementById('submit-btn-section2').disabled = true;
+            
+            // Mark section as completed if score is sufficient
+            if (percentage >= 70) {
+                sectionProgress['section2'] = 'completed';
+                saveProgress();
+                updateProgressDisplay();
+            }
+        }
+        
+        // Load progress on page load
+        window.onload = function() {
+            loadProgress();
+        };
+    </script>
+</body>
+</html>
