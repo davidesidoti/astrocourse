@@ -31,9 +31,9 @@
   - [x] Scientific notation and units of measurement
 
 - [ ] Develop Advanced Mathematics Component
-  - [ ] Introduction to calculus
-  - [ ] Basic differential calculus with astronomical applications
-  - [ ] Integral calculus concepts
+  - [x] Introduction to calculus
+  - [x] Basic differential calculus with astronomical applications
+  - [x] Integral calculus concepts
   - [ ] Basic differential equations
   - [ ] Linear algebra
   - [ ] Different coordinate systems
