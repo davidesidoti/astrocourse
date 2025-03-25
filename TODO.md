@@ -25,10 +25,10 @@
   - [x] Algebra essentials
   - [x] Trigonometry basics
   - [x] Geometry fundamentals
-  - [ ] Logarithms and exponential functions
-  - [ ] Basic probability and statistics
-  - [ ] Graphing and visualization techniques
-  - [ ] Scientific notation and units of measurement
+  - [x] Logarithms and exponential functions
+  - [x] Basic probability and statistics
+  - [x] Graphing and visualization techniques
+  - [x] Scientific notation and units of measurement
 
 - [ ] Develop Advanced Mathematics Component
   - [ ] Introduction to calculus
