@@ -119,8 +119,8 @@
    - ✅ Implement Wave Propagation Visualizer interactive element (COMPLETED)
    - ✅ Create content for Sections 5-6 (Oscillations/Waves, Fluid Mechanics/Thermodynamics) (COMPLETED)
    - ✅ Implement Thermodynamics Explorer interactive element (COMPLETED)
-   - Create content for Sections 7-8 (Electromagnetism, Optics/Light)
-   - Implement Electromagnetic Field Visualizer and Relativity Demonstrator
+   - ✅ Create content for Sections 7-8 (Electromagnetism, Optics/Light) (COMPLETED)
+   - ✅ Implement Electromagnetic Field Visualizer and Relativity Demonstrator (COMPLETED)
    - Create content for Sections 9-10 (Modern Physics, Summary/Connections)
    - Review and finalize all content and interactive elements
 4. Add Math Helper sidebars for key concepts across all modules
