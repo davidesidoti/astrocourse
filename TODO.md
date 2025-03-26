@@ -39,7 +39,7 @@
   - [x] Different coordinate systems
   - [x] Statistical thinking and error analysis
   - [x] Introduction to computational approaches
-  - [ ] Numerical methods for astrophysical problems
+  - [x] Numerical methods for astrophysical problems
 
 ### Additional Astrophysics Components
 - [ ] Develop Stellar Astrophysics Module

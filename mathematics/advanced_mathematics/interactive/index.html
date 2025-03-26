@@ -125,6 +125,7 @@
             <div class="tab" onclick="openTab(event, 'coordinate-systems')">Coordinate Systems</div>
             <div class="tab" onclick="openTab(event, 'statistical-thinking')">Statistical Thinking</div>
             <div class="tab" onclick="openTab(event, 'computational-approaches')">Computational Approaches</div>
+            <div class="tab" onclick="openTab(event, 'numerical-methods')">Numerical Methods</div>
         </div>
         
         <!-- Calculus Tab -->
@@ -219,74 +220,111 @@
                 <div class="result-box">
                     <p>Approximate integral value: <span id="integral-value">0</span></p>
                     <p>Exact integral value: <span id="exact-integral">0</span></p>
-                    <p>Error: <span id="integral-error">0</span></p>
                 </div>
             </div>
         </div>
         
         <!-- Differential Equations Tab -->
         <div id="differential-equations" class="tab-content">
-            <!-- Differential Equation Solver -->
+            <!-- First Order ODE Solver -->
             <div class="interactive-element">
-                <h2>Differential Equation Solver</h2>
-                <p>Visualize solutions to differential equations and see how initial conditions affect the solution.</p>
+                <h2>First Order ODE Solver</h2>
+                <p>Explore numerical solutions to first-order ordinary differential equations.</p>
                 
                 <div class="controls">
                     <label>
-                        Equation Type:
-                        <select id="de-type">
-                            <option value="first-order">First Order (dy/dx = f(x,y))</option>
-                            <option value="second-order">Second Order (d²y/dx² = f(x,y,y'))</option>
-                        </select>
-                    </label>
-                    
-                    <label>
-                        Specific Equation:
-                        <select id="de-equation">
+                        Equation:
+                        <select id="ode-equation">
                             <option value="exponential">dy/dx = y (Exponential Growth)</option>
                             <option value="logistic">dy/dx = y(1-y) (Logistic Growth)</option>
-                            <option value="harmonic">d²y/dx² = -y (Harmonic Oscillator)</option>
-                            <option value="damped">d²y/dx² = -y - 0.5dy/dx (Damped Oscillator)</option>
+                            <option value="decay">dy/dx = -0.5y (Exponential Decay)</option>
+                            <option value="custom">dy/dx = Custom</option>
                         </select>
                     </label>
                     
-                    <div id="first-order-controls">
+                    <div id="custom-equation-container" style="display: none;">
                         <label>
-                            Initial Condition y(0):
-                            <input type="range" id="y0-first" min="-5" max="5" step="0.1" value="1">
-                            <span id="y0-first-value">1</span>
-                        </label>
-                    </div>
-                    
-                    <div id="second-order-controls" style="display: none;">
-                        <label>
-                            Initial Position y(0):
-                            <input type="range" id="y0-second" min="-5" max="5" step="0.1" value="1">
-                            <span id="y0-second-value">1</span>
-                        </label>
-                        
-                        <label>
-                            Initial Velocity y'(0):
-                            <input type="range" id="v0-second" min="-5" max="5" step="0.1" value="0">
-                            <span id="v0-second-value">0</span>
+                            Custom Equation (use 'y' as variable):
+                            <input type="text" id="custom-equation" value="y">
                         </label>
                     </div>
                     
                     <label>
-                        Solution Method:
-                        <select id="de-method">
-                            <option value="euler">Euler's Method</option>
-                            <option value="rk4">Runge-Kutta (RK4)</option>
-                            <option value="exact">Exact Solution (when available)</option>
+                        Initial Value (y₀):
+                        <input type="number" id="initial-value" min="0.1" max="10" step="0.1" value="1">
+                    </label>
+                    
+                    <label>
+                        x-range:
+                        <input type="range" id="x-range" min="1" max="10" step="0.5" value="5">
+                        <span id="x-range-value">5</span>
+                    </label>
+                    
+                    <label>
+                        Method:
+                        <select id="ode-method">
+                            <option value="euler">Euler Method</option>
+                            <option value="improved-euler">Improved Euler Method</option>
+                            <option value="rk4">Runge-Kutta 4th Order</option>
                         </select>
                     </label>
+                    
+                    <label>
+                        Step Size:
+                        <input type="range" id="step-size" min="0.01" max="0.5" step="0.01" value="0.1">
+                        <span id="step-size-value">0.1</span>
+                    </label>
+                    
+                    <button id="solve-ode">Solve ODE</button>
                 </div>
                 
-                <div id="de-visualization" class="visualization"></div>
+                <div id="ode-visualization" class="visualization"></div>
                 
                 <div class="result-box">
-                    <p>Solution at x = <span id="de-x-value">0</span>: y = <span id="de-y-value">0</span></p>
-                    <p>Error estimate: <span id="de-error">0</span></p>
+                    <p>Method: <span id="method-name">Euler Method</span></p>
+                    <p>Error Estimate: <span id="error-estimate">0</span></p>
+                </div>
+            </div>
+            
+            <!-- Second Order ODE Solver -->
+            <div class="interactive-element">
+                <h2>Second Order ODE Solver</h2>
+                <p>Explore numerical solutions to second-order ordinary differential equations, such as the simple harmonic oscillator.</p>
+                
+                <div class="controls">
+                    <label>
+                        Equation:
+                        <select id="second-ode-equation">
+                            <option value="harmonic">d²y/dx² + y = 0 (Simple Harmonic Oscillator)</option>
+                            <option value="damped">d²y/dx² + 0.5dy/dx + y = 0 (Damped Oscillator)</option>
+                            <option value="forced">d²y/dx² + 0.5dy/dx + y = sin(x) (Forced Oscillator)</option>
+                        </select>
+                    </label>
+                    
+                    <label>
+                        Initial Position (y₀):
+                        <input type="number" id="initial-position" min="-5" max="5" step="0.1" value="1">
+                    </label>
+                    
+                    <label>
+                        Initial Velocity (y'₀):
+                        <input type="number" id="initial-velocity" min="-5" max="5" step="0.1" value="0">
+                    </label>
+                    
+                    <label>
+                        x-range:
+                        <input type="range" id="second-x-range" min="1" max="20" step="0.5" value="10">
+                        <span id="second-x-range-value">10</span>
+                    </label>
+                    
+                    <button id="solve-second-ode">Solve ODE</button>
+                </div>
+                
+                <div id="second-ode-visualization" class="visualization"></div>
+                
+                <div class="result-box">
+                    <p>Maximum Amplitude: <span id="max-amplitude">0</span></p>
+                    <p>Period (if applicable): <span id="period">0</span></p>
                 </div>
             </div>
         </div>
@@ -300,76 +338,126 @@
                 
                 <div class="controls">
                     <label>
-                        Matrix Size:
-                        <select id="matrix-size">
-                            <option value="2">2×2</option>
-                            <option value="3">3×3</option>
-                            <option value="4">4×4</option>
-                        </select>
+                        Matrix A:
+                        <textarea id="matrix-a" rows="3" cols="20">1 2 3
+4 5 6
+7 8 9</textarea>
+                    </label>
+                    
+                    <label>
+                        Matrix B:
+                        <textarea id="matrix-b" rows="3" cols="20">9 8 7
+6 5 4
+3 2 1</textarea>
                     </label>
                     
                     <label>
                         Operation:
                         <select id="matrix-operation">
-                            <option value="addition">Addition</option>
-                            <option value="multiplication">Multiplication</option>
-                            <option value="determinant">Determinant</option>
-                            <option value="inverse">Inverse</option>
+                            <option value="add">A + B</option>
+                            <option value="subtract">A - B</option>
+                            <option value="multiply">A × B</option>
+                            <option value="determinant">det(A)</option>
+                            <option value="inverse">A⁻¹</option>
+                            <option value="transpose">Aᵀ</option>
                         </select>
                     </label>
                     
-                    <button id="generate-matrices">Generate Random Matrices</button>
-                    <button id="perform-operation">Perform Operation</button>
+                    <button id="calculate-matrix">Calculate</button>
                 </div>
                 
-                <div id="matrix-visualization" class="visualization"></div>
+                <div class="result-box">
+                    <p>Result:</p>
+                    <pre id="matrix-result">Result will appear here</pre>
+                </div>
+            </div>
+            
+            <!-- Eigenvalue Visualizer -->
+            <div class="interactive-element">
+                <h2>Eigenvalue and Eigenvector Visualizer</h2>
+                <p>Visualize how a 2×2 matrix transforms vectors and the special role of eigenvectors.</p>
+                
+                <div class="controls">
+                    <label>
+                        Matrix:
+                        <input type="number" id="a11" min="-5" max="5" step="0.1" value="1"> 
+                        <input type="number" id="a12" min="-5" max="5" step="0.1" value="1"><br>
+                        <input type="number" id="a21" min="-5" max="5" step="0.1" value="1"> 
+                        <input type="number" id="a22" min="-5" max="5" step="0.1" value="1">
+                    </label>
+                    
+                    <label>
+                        Show Eigenvectors:
+                        <input type="checkbox" id="show-eigenvectors" checked>
+                    </label>
+                    
+                    <label>
+                        Show Unit Circle Transformation:
+                        <input type="checkbox" id="show-unit-circle" checked>
+                    </label>
+                    
+                    <button id="calculate-eigen">Calculate & Visualize</button>
+                </div>
+                
+                <div id="eigen-visualization" class="visualization"></div>
                 
                 <div class="result-box">
-                    <p>Result: <span id="matrix-result">Perform an operation to see the result</span></p>
+                    <p>Eigenvalues: <span id="eigenvalues">λ₁ = 0, λ₂ = 0</span></p>
+                    <p>Eigenvectors: <span id="eigenvectors">v₁ = (0,0), v₂ = (0,0)</span></p>
                 </div>
             </div>
         </div>
         
         <!-- Coordinate Systems Tab -->
         <div id="coordinate-systems" class="tab-content">
-            <!-- Coordinate System Converter -->
+            <!-- Coordinate Converter -->
             <div class="interactive-element">
                 <h2>Coordinate System Converter</h2>
-                <p>Convert between different coordinate systems and visualize the relationships.</p>
+                <p>Convert between different coordinate systems: Cartesian, Polar, Cylindrical, and Spherical.</p>
                 
                 <div class="controls">
                     <label>
-                        From:
-                        <select id="from-coordinate">
+                        Input Coordinate System:
+                        <select id="input-coordinate-system">
                             <option value="cartesian">Cartesian (x,y,z)</option>
+                            <option value="polar">Polar (r,θ)</option>
                             <option value="cylindrical">Cylindrical (r,θ,z)</option>
                             <option value="spherical">Spherical (ρ,θ,φ)</option>
                         </select>
                     </label>
+                    
+                    <div id="cartesian-input" class="coordinate-input">
+                        <label>x: <input type="number" id="x-input" value="1" step="0.1"></label>
+                        <label>y: <input type="number" id="y-input" value="1" step="0.1"></label>
+                        <label>z: <input type="number" id="z-input" value="1" step="0.1"></label>
+                    </div>
+                    
+                    <div id="polar-input" class="coordinate-input" style="display: none;">
+                        <label>r: <input type="number" id="r-polar-input" value="1" min="0" step="0.1"></label>
+                        <label>θ (rad): <input type="number" id="theta-polar-input" value="0" step="0.1"></label>
+                    </div>
+                    
+                    <div id="cylindrical-input" class="coordinate-input" style="display: none;">
+                        <label>r: <input type="number" id="r-cylindrical-input" value="1" min="0" step="0.1"></label>
+                        <label>θ (rad): <input type="number" id="theta-cylindrical-input" value="0" step="0.1"></label>
+                        <label>z: <input type="number" id="z-cylindrical-input" value="1" step="0.1"></label>
+                    </div>
+                    
+                    <div id="spherical-input" class="coordinate-input" style="display: none;">
+                        <label>ρ: <input type="number" id="rho-input" value="1" min="0" step="0.1"></label>
+                        <label>θ (rad): <input type="number" id="theta-spherical-input" value="0" step="0.1"></label>
+                        <label>φ (rad): <input type="number" id="phi-input" value="0" step="0.1"></label>
+                    </div>
                     
                     <label>
-                        To:
-                        <select id="to-coordinate">
+                        Output Coordinate System:
+                        <select id="output-coordinate-system">
                             <option value="cartesian">Cartesian (x,y,z)</option>
+                            <option value="polar">Polar (r,θ)</option>
                             <option value="cylindrical">Cylindrical (r,θ,z)</option>
                             <option value="spherical">Spherical (ρ,θ,φ)</option>
                         </select>
                     </label>
-                    
-                    <div id="coordinate-inputs">
-                        <label>
-                            x:
-                            <input type="number" id="coord1" value="1" step="0.1">
-                        </label>
-                        <label>
-                            y:
-                            <input type="number" id="coord2" value="1" step="0.1">
-                        </label>
-                        <label>
-                            z:
-                            <input type="number" id="coord3" value="1" step="0.1">
-                        </label>
-                    </div>
                     
                     <button id="convert-coordinates">Convert</button>
                 </div>
@@ -377,7 +465,60 @@
                 <div id="coordinate-visualization" class="visualization"></div>
                 
                 <div class="result-box">
-                    <p>Converted coordinates: <span id="converted-coordinates">Perform a conversion to see the result</span></p>
+                    <p>Conversion Result:</p>
+                    <pre id="conversion-result">Result will appear here</pre>
+                </div>
+            </div>
+            
+            <!-- Vector Field Visualizer -->
+            <div class="interactive-element">
+                <h2>Vector Field Visualizer</h2>
+                <p>Visualize vector fields in different coordinate systems.</p>
+                
+                <div class="controls">
+                    <label>
+                        Coordinate System:
+                        <select id="vector-field-coordinate-system">
+                            <option value="cartesian">Cartesian (x,y,z)</option>
+                            <option value="cylindrical">Cylindrical (r,θ,z)</option>
+                            <option value="spherical">Spherical (ρ,θ,φ)</option>
+                        </select>
+                    </label>
+                    
+                    <label>
+                        Vector Field Type:
+                        <select id="vector-field-type">
+                            <option value="radial">Radial Field</option>
+                            <option value="rotational">Rotational Field</option>
+                            <option value="dipole">Dipole Field</option>
+                            <option value="custom">Custom Field</option>
+                        </select>
+                    </label>
+                    
+                    <div id="custom-field-container" style="display: none;">
+                        <label>
+                            Component 1:
+                            <input type="text" id="custom-field-1" value="x">
+                        </label>
+                        <label>
+                            Component 2:
+                            <input type="text" id="custom-field-2" value="y">
+                        </label>
+                        <label>
+                            Component 3:
+                            <input type="text" id="custom-field-3" value="0">
+                        </label>
+                    </div>
+                    
+                    <button id="visualize-vector-field">Visualize</button>
+                </div>
+                
+                <div id="vector-field-visualization" class="visualization"></div>
+                
+                <div class="result-box">
+                    <p>Field Properties:</p>
+                    <p>Divergence: <span id="field-divergence">0</span></p>
+                    <p>Curl: <span id="field-curl">(0,0,0)</span></p>
                 </div>
             </div>
         </div>
@@ -387,7 +528,7 @@
             <!-- Statistical Distribution Visualizer -->
             <div class="interactive-element">
                 <h2>Statistical Distribution Visualizer</h2>
-                <p>Explore common probability distributions used in astronomy and understand their properties.</p>
+                <p>Explore common probability distributions used in astronomy and their properties.</p>
                 
                 <div class="controls">
                     <label>
@@ -396,48 +537,64 @@
                             <option value="normal">Normal (Gaussian)</option>
                             <option value="poisson">Poisson</option>
                             <option value="binomial">Binomial</option>
+                            <option value="exponential">Exponential</option>
+                            <option value="chi-squared">Chi-Squared</option>
                         </select>
                     </label>
                     
-                    <div id="normal-params">
+                    <div id="normal-params" class="distribution-params">
                         <label>
                             Mean (μ):
                             <input type="number" id="normal-mean" value="0" step="0.1">
                         </label>
                         <label>
                             Standard Deviation (σ):
-                            <input type="number" id="normal-std" value="1" step="0.1" min="0.1">
+                            <input type="number" id="normal-std" value="1" min="0.1" step="0.1">
                         </label>
                     </div>
                     
-                    <div id="poisson-params" style="display: none;">
+                    <div id="poisson-params" class="distribution-params" style="display: none;">
                         <label>
-                            Lambda (λ):
-                            <input type="number" id="poisson-lambda" value="5" step="0.1" min="0.1">
+                            Rate (λ):
+                            <input type="number" id="poisson-lambda" value="5" min="0.1" step="0.1">
                         </label>
                     </div>
                     
-                    <div id="binomial-params" style="display: none;">
+                    <div id="binomial-params" class="distribution-params" style="display: none;">
                         <label>
                             Trials (n):
-                            <input type="number" id="binomial-n" value="10" step="1" min="1">
+                            <input type="number" id="binomial-n" value="10" min="1" step="1">
                         </label>
                         <label>
-                            Probability (p):
-                            <input type="number" id="binomial-p" value="0.5" step="0.05" min="0" max="1">
+                            Success Probability (p):
+                            <input type="number" id="binomial-p" value="0.5" min="0" max="1" step="0.01">
                         </label>
                     </div>
                     
-                    <button id="update-distribution">Update Distribution</button>
-                    <button id="generate-samples">Generate Samples</button>
+                    <div id="exponential-params" class="distribution-params" style="display: none;">
+                        <label>
+                            Rate (λ):
+                            <input type="number" id="exponential-lambda" value="1" min="0.1" step="0.1">
+                        </label>
+                    </div>
+                    
+                    <div id="chi-squared-params" class="distribution-params" style="display: none;">
+                        <label>
+                            Degrees of Freedom:
+                            <input type="number" id="chi-squared-df" value="3" min="1" step="1">
+                        </label>
+                    </div>
+                    
+                    <button id="update-distribution">Update</button>
                 </div>
                 
                 <div id="distribution-visualization" class="visualization"></div>
                 
                 <div class="result-box">
-                    <p>Mean: <span id="sample-mean">0</span></p>
-                    <p>Standard Deviation: <span id="sample-std">0</span></p>
-                    <p>Sample Size: <span id="sample-size">0</span></p>
+                    <p>Mean: <span id="dist-mean">0</span></p>
+                    <p>Variance: <span id="dist-variance">1</span></p>
+                    <p>Skewness: <span id="dist-skewness">0</span></p>
+                    <p>Kurtosis: <span id="dist-kurtosis">3</span></p>
                 </div>
             </div>
             
@@ -448,44 +605,126 @@
                 
                 <div class="controls">
                     <label>
-                        Function:
-                        <select id="error-function">
-                            <option value="sum">Sum (a + b)</option>
-                            <option value="difference">Difference (a - b)</option>
-                            <option value="product">Product (a × b)</option>
-                            <option value="quotient">Quotient (a ÷ b)</option>
+                        Operation:
+                        <select id="error-operation">
+                            <option value="add">Addition (a + b)</option>
+                            <option value="subtract">Subtraction (a - b)</option>
+                            <option value="multiply">Multiplication (a × b)</option>
+                            <option value="divide">Division (a ÷ b)</option>
                             <option value="power">Power (a^b)</option>
+                            <option value="custom">Custom Function</option>
                         </select>
                     </label>
                     
-                    <div id="variable-inputs">
+                    <div id="standard-error-inputs">
                         <label>
-                            a:
-                            <input type="number" id="var-a" value="10" step="0.1">
+                            Value of a:
+                            <input type="number" id="value-a" value="10" step="0.1">
                         </label>
                         <label>
-                            σₐ:
-                            <input type="number" id="error-a" value="0.5" step="0.1" min="0">
-                        </label>
-                        <br>
-                        <label>
-                            b:
-                            <input type="number" id="var-b" value="5" step="0.1">
+                            Uncertainty in a (σₐ):
+                            <input type="number" id="uncertainty-a" value="0.5" min="0" step="0.1">
                         </label>
                         <label>
-                            σᵦ:
-                            <input type="number" id="error-b" value="0.2" step="0.1" min="0">
+                            Value of b:
+                            <input type="number" id="value-b" value="5" step="0.1">
+                        </label>
+                        <label>
+                            Uncertainty in b (σᵦ):
+                            <input type="number" id="uncertainty-b" value="0.2" min="0" step="0.1">
                         </label>
                     </div>
                     
-                    <button id="calculate-error">Calculate Error</button>
+                    <div id="custom-error-function" style="display: none;">
+                        <label>
+                            Custom Function (use 'a' and 'b' as variables):
+                            <input type="text" id="custom-error-expr" value="a*sin(b)">
+                        </label>
+                    </div>
+                    
+                    <label>
+                        Correlation Coefficient (ρ):
+                        <input type="range" id="correlation" min="-1" max="1" step="0.1" value="0">
+                        <span id="correlation-value">0</span>
+                    </label>
+                    
+                    <button id="calculate-error">Calculate</button>
                 </div>
                 
                 <div id="error-visualization" class="visualization"></div>
                 
                 <div class="result-box">
-                    <p>Result: <span id="error-result">Calculate to see the result</span></p>
-                    <p>Uncertainty: <span id="error-uncertainty">Calculate to see the uncertainty</span></p>
+                    <p>Result Value: <span id="result-value">0</span></p>
+                    <p>Result Uncertainty: <span id="result-uncertainty">0</span></p>
+                    <p>Relative Uncertainty: <span id="relative-uncertainty">0%</span></p>
+                </div>
+            </div>
+            
+            <!-- Hypothesis Testing Simulator -->
+            <div class="interactive-element">
+                <h2>Hypothesis Testing Simulator</h2>
+                <p>Simulate hypothesis testing and understand p-values, significance levels, and statistical power.</p>
+                
+                <div class="controls">
+                    <label>
+                        Test Type:
+                        <select id="test-type">
+                            <option value="z-test">Z-Test (Known σ)</option>
+                            <option value="t-test">T-Test (Unknown σ)</option>
+                            <option value="chi-squared">Chi-Squared Test</option>
+                        </select>
+                    </label>
+                    
+                    <div id="z-test-params" class="test-params">
+                        <label>
+                            Null Hypothesis Mean (μ₀):
+                            <input type="number" id="null-mean" value="0" step="0.1">
+                        </label>
+                        <label>
+                            Population Standard Deviation (σ):
+                            <input type="number" id="pop-std" value="1" min="0.1" step="0.1">
+                        </label>
+                        <label>
+                            Sample Size (n):
+                            <input type="number" id="sample-size" value="30" min="1" step="1">
+                        </label>
+                        <label>
+                            True Mean (μ₁, for power calculation):
+                            <input type="number" id="true-mean" value="0.5" step="0.1">
+                        </label>
+                    </div>
+                    
+                    <label>
+                        Significance Level (α):
+                        <select id="significance-level">
+                            <option value="0.1">0.1 (10%)</option>
+                            <option value="0.05" selected>0.05 (5%)</option>
+                            <option value="0.01">0.01 (1%)</option>
+                            <option value="0.001">0.001 (0.1%)</option>
+                        </select>
+                    </label>
+                    
+                    <label>
+                        Alternative Hypothesis:
+                        <select id="alternative-hypothesis">
+                            <option value="two-sided">Two-sided (μ ≠ μ₀)</option>
+                            <option value="greater">Greater than (μ > μ₀)</option>
+                            <option value="less">Less than (μ < μ₀)</option>
+                        </select>
+                    </label>
+                    
+                    <button id="run-simulation">Run Simulation</button>
+                    <button id="generate-sample">Generate One Sample</button>
+                </div>
+                
+                <div id="hypothesis-visualization" class="visualization"></div>
+                
+                <div class="result-box">
+                    <p>Sample Mean: <span id="sample-mean">0</span></p>
+                    <p>Test Statistic: <span id="test-statistic">0</span></p>
+                    <p>P-value: <span id="p-value">0</span></p>
+                    <p>Decision: <span id="test-decision">Fail to reject H₀</span></p>
+                    <p>Statistical Power: <span id="statistical-power">0</span></p>
                 </div>
             </div>
         </div>
@@ -495,20 +734,190 @@
             <!-- N-body Simulation -->
             <div class="interactive-element">
                 <h2>N-body Simulation</h2>
+                <p>Explore gravitational interactions between multiple bodies using different integration methods.</p>
+                
+                <div class="controls">
+                    <label>
+                        Number of Bodies:
+                        <input type="number" id="comp-num-bodies" min="2" max="50" value="5">
+                    </label>
+                    
+                    <label>
+                        System Type:
+                        <select id="comp-system-type">
+                            <option value="random">Random Distribution</option>
+                            <option value="solar">Solar System-like</option>
+                            <option value="binary">Binary Star System</option>
+                            <option value="cluster">Star Cluster</option>
+                        </select>
+                    </label>
+                    
+                    <label>
+                        Integration Method:
+                        <select id="comp-integration-method">
+                            <option value="euler">Euler</option>
+                            <option value="verlet">Velocity Verlet</option>
+                            <option value="rk4">Runge-Kutta 4th Order</option>
+                        </select>
+                    </label>
+                    
+                    <label>
+                        Show Trails:
+                        <input type="checkbox" id="comp-show-trails" checked>
+                    </label>
+                    
+                    <button id="comp-step-nbody">Step Simulation</button>
+                    <button id="comp-reset-nbody">Reset</button>
+                </div>
+                
+                <div id="comp-nbody-visualization" class="visualization"></div>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <p>Kinetic Energy: <span id="comp-kinetic-energy">0</span></p>
+                    </div>
+                    <div class="stat-item">
+                        <p>Potential Energy: <span id="comp-potential-energy">0</span></p>
+                    </div>
+                    <div class="stat-item">
+                        <p>Total Energy: <span id="comp-total-energy">0</span></p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Fluid Dynamics Simulation -->
+            <div class="interactive-element">
+                <h2>Fluid Dynamics Simulation</h2>
+                <p>Visualize fluid flow and understand computational fluid dynamics methods.</p>
+                
+                <div class="controls">
+                    <label>
+                        Fluid Type:
+                        <select id="comp-fluid-type">
+                            <option value="shock">Shock Wave</option>
+                            <option value="vortex">Vortex</option>
+                            <option value="explosion">Explosion</option>
+                        </select>
+                    </label>
+                    
+                    <label>
+                        Method:
+                        <select id="comp-fluid-method">
+                            <option value="basic">Basic Advection</option>
+                            <option value="diffusion">With Diffusion</option>
+                            <option value="viscosity">With Viscosity</option>
+                            <option value="full">Full Navier-Stokes</option>
+                        </select>
+                    </label>
+                    
+                    <label>
+                        Visualization:
+                        <select id="comp-visualization-type">
+                            <option value="density">Density</option>
+                            <option value="velocity">Velocity</option>
+                            <option value="pressure">Pressure</option>
+                            <option value="temperature">Temperature</option>
+                        </select>
+                    </label>
+                    
+                    <label>
+                        Show Velocity Vectors:
+                        <input type="checkbox" id="comp-show-vectors">
+                    </label>
+                    
+                    <button id="comp-step-fluid">Step Simulation</button>
+                    <button id="comp-reset-fluid">Reset</button>
+                </div>
+                
+                <div id="comp-fluid-visualization" class="visualization"></div>
+            </div>
+            
+            <!-- Monte Carlo Radiative Transfer -->
+            <div class="interactive-element">
+                <h2>Monte Carlo Radiative Transfer</h2>
+                <p>Simulate photon transport through media using Monte Carlo methods.</p>
+                
+                <div class="controls">
+                    <label>
+                        Medium Type:
+                        <select id="comp-mc-type">
+                            <option value="cloud">Spherical Cloud</option>
+                            <option value="maze">Maze Structure</option>
+                            <option value="custom">Custom Obstacles</option>
+                        </select>
+                    </label>
+                    
+                    <label>
+                        Source Type:
+                        <select id="comp-source-type">
+                            <option value="point">Point Source (Center)</option>
+                            <option value="beam">Beam (Left Side)</option>
+                            <option value="random">Random (Boundary)</option>
+                        </select>
+                    </label>
+                    
+                    <label>
+                        Optical Depth:
+                        <input type="range" id="comp-optical-depth" min="0.1" max="10" step="0.1" value="1">
+                        <span id="comp-optical-depth-value">1.0</span>
+                    </label>
+                    
+                    <label>
+                        Batch Size:
+                        <input type="number" id="comp-batch-size" min="1" max="100" value="10">
+                    </label>
+                    
+                    <label>
+                        Show Paths:
+                        <input type="checkbox" id="comp-show-paths" checked>
+                    </label>
+                    
+                    <button id="comp-start-mc">Start Simulation</button>
+                    <button id="comp-stop-mc">Stop</button>
+                    <button id="comp-reset-mc">Reset</button>
+                </div>
+                
+                <div id="comp-mc-visualization" class="visualization"></div>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <p>Total Particles: <span id="comp-total-particles">0</span></p>
+                    </div>
+                    <div class="stat-item">
+                        <p>Escaped: <span id="comp-escaped-particles">0</span></p>
+                    </div>
+                    <div class="stat-item">
+                        <p>Absorbed: <span id="comp-absorbed-particles">0</span></p>
+                    </div>
+                    <div class="stat-item">
+                        <p>Escape Probability: <span id="comp-escape-probability">0%</span></p>
+                    </div>
+                    <div class="stat-item">
+                        <p>Avg. Scatters: <span id="comp-avg-scatters">0</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Numerical Methods Tab -->
+        <div id="numerical-methods" class="tab-content">
+            <!-- N-body Simulation -->
+            <div class="interactive-element">
+                <h2>N-body Simulation</h2>
                 <p>Explore gravitational interactions between multiple bodies using different numerical integration methods.</p>
                 
                 <div class="controls">
                     <label>
                         Number of Bodies:
-                        <input type="number" id="num-bodies" value="5" min="2" max="20" step="1">
+                        <input type="number" id="num-bodies" min="2" max="50" value="5">
                     </label>
                     
                     <label>
                         System Type:
                         <select id="system-type">
                             <option value="random">Random Distribution</option>
-                            <option value="binary">Binary System</option>
-                            <option value="solar">Solar System</option>
+                            <option value="solar">Solar System-like</option>
+                            <option value="binary">Binary Star System</option>
                         </select>
                     </label>
                     
@@ -517,30 +926,30 @@
                         <select id="integration-method">
                             <option value="euler">Euler</option>
                             <option value="verlet">Velocity Verlet</option>
-                            <option value="rk4">Runge-Kutta (RK4)</option>
+                            <option value="rk4">Runge-Kutta 4th Order</option>
                         </select>
                     </label>
                     
                     <label>
                         Show Trails:
-                        <input type="checkbox" id="show-trails">
+                        <input type="checkbox" id="show-trails" checked>
                     </label>
                     
                     <button id="step-nbody">Step Simulation</button>
-                    <button id="reset-nbody">Reset Simulation</button>
+                    <button id="reset-nbody">Reset</button>
                 </div>
                 
                 <div id="nbody-visualization" class="visualization"></div>
                 
                 <div class="stats">
                     <div class="stat-item">
-                        <strong>Kinetic Energy:</strong> <span id="kinetic-energy">0.00</span>
+                        <p>Kinetic Energy: <span id="kinetic-energy">0</span></p>
                     </div>
                     <div class="stat-item">
-                        <strong>Potential Energy:</strong> <span id="potential-energy">0.00</span>
+                        <p>Potential Energy: <span id="potential-energy">0</span></p>
                     </div>
                     <div class="stat-item">
-                        <strong>Total Energy:</strong> <span id="total-energy">0.00</span>
+                        <p>Total Energy: <span id="total-energy">0</span></p>
                     </div>
                 </div>
             </div>
@@ -548,35 +957,35 @@
             <!-- Fluid Dynamics Simulation -->
             <div class="interactive-element">
                 <h2>Fluid Dynamics Simulation</h2>
-                <p>Visualize fluid flow and understand the principles of computational fluid dynamics.</p>
+                <p>Visualize fluid flow and understand computational fluid dynamics methods used in astrophysical simulations.</p>
                 
                 <div class="controls">
                     <label>
-                        Simulation Type:
+                        Fluid Type:
                         <select id="fluid-type">
-                            <option value="shock">Shock Tube</option>
+                            <option value="shock">Shock Wave</option>
                             <option value="vortex">Vortex</option>
                             <option value="explosion">Explosion</option>
                         </select>
                     </label>
                     
                     <label>
-                        Physics Model:
+                        Method:
                         <select id="fluid-method">
                             <option value="basic">Basic Advection</option>
                             <option value="diffusion">With Diffusion</option>
                             <option value="viscosity">With Viscosity</option>
-                            <option value="full">Full Model</option>
+                            <option value="full">Full Navier-Stokes</option>
                         </select>
                     </label>
                     
                     <label>
-                        Visualize:
+                        Visualization:
                         <select id="visualization-type">
                             <option value="density">Density</option>
+                            <option value="velocity">Velocity</option>
                             <option value="pressure">Pressure</option>
                             <option value="temperature">Temperature</option>
-                            <option value="velocity">Velocity</option>
                         </select>
                     </label>
                     
@@ -586,7 +995,7 @@
                     </label>
                     
                     <button id="step-fluid">Step Simulation</button>
-                    <button id="reset-fluid">Reset Simulation</button>
+                    <button id="reset-fluid">Reset</button>
                 </div>
                 
                 <div id="fluid-visualization" class="visualization"></div>
@@ -595,11 +1004,11 @@
             <!-- Monte Carlo Radiative Transfer -->
             <div class="interactive-element">
                 <h2>Monte Carlo Radiative Transfer</h2>
-                <p>Simulate the transport of radiation through matter using Monte Carlo methods.</p>
+                <p>Simulate photon transport through media using Monte Carlo methods, essential for modeling radiation in astrophysical environments.</p>
                 
                 <div class="controls">
                     <label>
-                        Simulation Type:
+                        Medium Type:
                         <select id="mc-type">
                             <option value="cloud">Spherical Cloud</option>
                             <option value="maze">Maze Structure</option>
@@ -618,92 +1027,50 @@
                     
                     <label>
                         Optical Depth:
-                        <input type="range" id="optical-depth" min="0.1" max="10" value="5" step="0.1">
-                        <span id="optical-depth-value">5.0</span>
+                        <input type="range" id="optical-depth" min="0.1" max="10" step="0.1" value="1">
+                        <span id="optical-depth-value">1.0</span>
                     </label>
                     
                     <label>
-                        Particles per Batch:
-                        <input type="number" id="batch-size" value="10" min="1" max="100" step="1">
+                        Batch Size:
+                        <input type="number" id="batch-size" min="1" max="100" value="10">
                     </label>
                     
                     <label>
-                        Show Particle Paths:
-                        <input type="checkbox" id="show-paths">
+                        Show Paths:
+                        <input type="checkbox" id="show-paths" checked>
                     </label>
                     
                     <button id="start-mc">Start Simulation</button>
-                    <button id="stop-mc">Stop Simulation</button>
-                    <button id="reset-mc">Reset Simulation</button>
+                    <button id="stop-mc">Stop</button>
+                    <button id="reset-mc">Reset</button>
                 </div>
                 
                 <div id="mc-visualization" class="visualization"></div>
                 
                 <div class="stats">
                     <div class="stat-item">
-                        <strong>Total Particles:</strong> <span id="total-particles">0</span>
+                        <p>Total Particles: <span id="total-particles">0</span></p>
                     </div>
                     <div class="stat-item">
-                        <strong>Escaped:</strong> <span id="escaped-particles">0</span>
+                        <p>Escaped: <span id="escaped-particles">0</span></p>
                     </div>
                     <div class="stat-item">
-                        <strong>Absorbed:</strong> <span id="absorbed-particles">0</span>
+                        <p>Absorbed: <span id="absorbed-particles">0</span></p>
                     </div>
                     <div class="stat-item">
-                        <strong>Escape Probability:</strong> <span id="escape-probability">0.00%</span>
+                        <p>Escape Probability: <span id="escape-probability">0%</span></p>
                     </div>
                     <div class="stat-item">
-                        <strong>Avg. Scatters:</strong> <span id="avg-scatters">0.00</span>
+                        <p>Avg. Scatters: <span id="avg-scatters">0</span></p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
+    
     <script>
-        // Global constants
-        const CANVAS_WIDTH = 600;
-        const CANVAS_HEIGHT = 400;
-        
-        // Function to draw grid on canvas
-        function drawGrid(ctx) {
-            ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
-            ctx.lineWidth = 0.5;
-            
-            // Draw vertical lines
-            for (let x = 0; x <= CANVAS_WIDTH; x += 50) {
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, CANVAS_HEIGHT);
-                ctx.stroke();
-            }
-            
-            // Draw horizontal lines
-            for (let y = 0; y <= CANVAS_HEIGHT; y += 50) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(CANVAS_WIDTH, y);
-                ctx.stroke();
-            }
-            
-            // Draw axes
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-            ctx.lineWidth = 1;
-            
-            // x-axis
-            ctx.beginPath();
-            ctx.moveTo(0, CANVAS_HEIGHT / 2);
-            ctx.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT / 2);
-            ctx.stroke();
-            
-            // y-axis
-            ctx.beginPath();
-            ctx.moveTo(CANVAS_WIDTH / 2, 0);
-            ctx.lineTo(CANVAS_WIDTH / 2, CANVAS_HEIGHT);
-            ctx.stroke();
-        }
-        
-        // Tab switching functionality
+        // Function to switch between tabs
         function openTab(evt, tabName) {
             // Hide all tab content
             const tabContents = document.getElementsByClassName('tab-content');
@@ -727,5 +1094,6 @@
     <script src="advanced_mathematics_interactive.js"></script>
     <script src="statistical_thinking_interactive.js"></script>
     <script src="computational_approaches_interactive.js"></script>
+    <script src="numerical_methods_interactive.js"></script>
 </body>
 </html>
