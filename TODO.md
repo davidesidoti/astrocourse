@@ -56,7 +56,7 @@
 - [ ] Develop Black Hole Physics Module
   - [x] Event horizons and singularities
   - [x] Simplified mathematical models
-  - [ ] Schwarzschild solution basics
+  - [x] Schwarzschild solution basics
   - [ ] Rotating black holes and the Kerr metric
   - [ ] Black hole thermodynamics and Hawking radiation
   - [ ] Accretion disks and relativistic jets
