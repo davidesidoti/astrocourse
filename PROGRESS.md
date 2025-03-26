@@ -166,7 +166,9 @@
 
 **March 26, 2025 (Latest)**
 - Continued development of the Stellar Astrophysics Module
-- Implemented the sixth section:
+- Implemented the seventh section:
+  - Star Classification and the Hertzsprung-Russell Diagram - Covering historical development of stellar classification, spectral classification systems, physical basis of spectral features, the H-R diagram and its features, stellar populations, and observational techniques
+- Previously implemented the sixth section:
   - Energy Transport in Stellar Interiors - Covering radiative, convective, and conductive energy transport mechanisms, temperature gradients, opacity sources, energy transport in different types of stars, and observational evidence
 - Previously implemented the fifth section:
   - Nuclear Fusion - Covering nuclear physics fundamentals, hydrogen fusion processes (PP chain and CNO cycle), helium fusion and beyond, neutrino production and detection, energy transport in stellar interiors, and connection to stellar lifetimes
