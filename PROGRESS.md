@@ -165,8 +165,10 @@
 ## Recent Updates
 
 **March 26, 2025 (Latest)**
-- Started development of the Black Hole Physics Module
-- Implemented the first section:
+- Continuing development of the Black Hole Physics Module
+- Implemented the second section:
+  - Simplified Mathematical Models - Covering Newtonian approximation of gravity, escape velocity concept, gravitational redshift, effective potential approach, particle orbits, photon spheres, simplified accretion models, and pedagogical approaches to black hole physics
+- Previously implemented the first section:
   - Event Horizons and Singularities - Covering introduction to black holes, historical development, event horizons, singularities, cosmic censorship hypothesis, causal structure, mathematical descriptions, and observational evidence
 - Created comprehensive module plan and structure for the Black Hole Physics Module
 - Previously completed the Stellar Astrophysics Module with ten comprehensive sections:
@@ -183,10 +185,6 @@
 - Developed interactive elements for the stellar astrophysics sections:
   - Stellar Formation Simulator - For visualizing the process of star formation from molecular clouds
   - Stellar Structure Visualizer - For exploring the internal structure of stars with different masses, ages, and compositions
-- Each section includes detailed explanations, mathematical formulations, practice problems with solutions, and further reading recommendations
-- Updated TODO.md and PROGRESS.md to reflect completion of these sections
-    - Stellar Formation Simulator - For visualizing the process of star formation from molecular clouds
-    - Stellar Structure Visualizer - For exploring the internal structure of stars with different masses, ages, and compositions
 - Each section includes detailed explanations, mathematical formulations, practice problems with solutions, and further reading recommendations
 - Updated TODO.md and PROGRESS.md to reflect completion of these sections
 
