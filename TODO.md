@@ -49,7 +49,7 @@
   - [x] Energy transport in stellar interiors
   - [x] Star classification and the Hertzsprung-Russell diagram
   - [x] Stellar evolution
-  - [ ] Stellar atmospheres and spectroscopy
+  - [x] Stellar atmospheres and spectroscopy
   - [ ] Stellar endpoints
   - [ ] Variable stars
 
