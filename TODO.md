@@ -46,7 +46,7 @@
   - [x] Stellar formation and structure
   - [x] The interstellar medium and star-forming regions
   - [x] Nuclear fusion
-  - [ ] Energy transport in stellar interiors
+  - [x] Energy transport in stellar interiors
   - [ ] Star classification and the Hertzsprung-Russell diagram
   - [x] Stellar evolution
   - [ ] Stellar atmospheres and spectroscopy
