@@ -165,15 +165,18 @@
 ## Recent Updates
 
 **March 26, 2025 (Latest)**
-- Started development of the Stellar Astrophysics Module
-- Created comprehensive module plan and structure for the Stellar Astrophysics Module
-- Implemented the first three sections:
-  - Stellar Formation - Covering molecular clouds, gravitational collapse, accretion disks, and protostellar evolution
-  - Stellar Structure - Explaining hydrostatic equilibrium, energy transport, stellar models, and the equations of stellar structure
-  - Stellar Evolution - Detailing main sequence evolution, post-main sequence phases, nucleosynthesis, and final stages of stellar life
-- Developed interactive elements for the stellar astrophysics sections:
-  - Stellar Formation Simulator - For visualizing the process of star formation from molecular clouds
-  - Stellar Structure Visualizer - For exploring the internal structure of stars with different masses, ages, and compositions
+- Continued development of the Stellar Astrophysics Module
+- Implemented the fourth section:
+  - The Interstellar Medium and Star-Forming Regions - Covering the composition and structure of the interstellar medium, molecular clouds, star-forming regions, feedback mechanisms, and observational techniques
+- Previous accomplishments:
+  - Created comprehensive module plan and structure for the Stellar Astrophysics Module
+  - Implemented the first three sections:
+    - Stellar Formation - Covering molecular clouds, gravitational collapse, accretion disks, and protostellar evolution
+    - Stellar Structure - Explaining hydrostatic equilibrium, energy transport, stellar models, and the equations of stellar structure
+    - Stellar Evolution - Detailing main sequence evolution, post-main sequence phases, nucleosynthesis, and final stages of stellar life
+  - Developed interactive elements for the stellar astrophysics sections:
+    - Stellar Formation Simulator - For visualizing the process of star formation from molecular clouds
+    - Stellar Structure Visualizer - For exploring the internal structure of stars with different masses, ages, and compositions
 - Each section includes detailed explanations, mathematical formulations, practice problems with solutions, and further reading recommendations
 - Updated TODO.md and PROGRESS.md to reflect completion of these sections
 

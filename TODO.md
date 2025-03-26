@@ -44,7 +44,7 @@
 ### Additional Astrophysics Components
 - [ ] Develop Stellar Astrophysics Module
   - [x] Stellar formation and structure
-  - [ ] The interstellar medium and star-forming regions
+  - [x] The interstellar medium and star-forming regions
   - [ ] Nuclear fusion
   - [ ] Energy transport in stellar interiors
   - [ ] Star classification and the Hertzsprung-Russell diagram
