@@ -37,7 +37,7 @@
   - [x] Basic differential equations
   - [x] Linear algebra
   - [x] Different coordinate systems
-  - [ ] Statistical thinking and error analysis
+  - [x] Statistical thinking and error analysis
   - [ ] Introduction to computational approaches
   - [ ] Numerical methods for astrophysical problems
 

@@ -48,51 +48,48 @@
             height: 400px;
             border: 1px solid #ddd;
             margin: 15px 0;
-            background-color: white;
         }
-        .info-panel {
-            padding: 15px;
-            background-color: #f0f7ff;
-            border-left: 4px solid #3498db;
-            margin: 15px 0;
+        label {
+            display: inline-block;
+            margin-right: 15px;
+            margin-bottom: 10px;
         }
-        button, input, select {
-            padding: 8px 12px;
-            margin: 5px;
+        input[type="range"], input[type="number"], select {
+            margin-right: 15px;
+            padding: 5px;
             border: 1px solid #ddd;
             border-radius: 4px;
         }
         button {
             background-color: #3498db;
             color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
             cursor: pointer;
             transition: background-color 0.3s;
         }
         button:hover {
             background-color: #2980b9;
         }
-        input[type="range"] {
-            width: 200px;
-        }
-        .function-input {
-            width: 300px;
+        .result-box {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #e8f4f8;
+            border-radius: 4px;
+            border-left: 4px solid #3498db;
         }
         .tab-container {
-            margin-top: 20px;
+            margin-bottom: 20px;
         }
-        .tab-buttons {
-            display: flex;
-            border-bottom: 1px solid #ddd;
-        }
-        .tab-button {
+        .tab {
+            display: inline-block;
             padding: 10px 20px;
-            background-color: #f1f1f1;
-            border: none;
-            border-radius: 5px 5px 0 0;
+            background-color: #ddd;
             cursor: pointer;
-            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
         }
-        .tab-button.active {
+        .tab.active {
             background-color: #3498db;
             color: white;
         }
@@ -100,18 +97,10 @@
             display: none;
             padding: 20px;
             border: 1px solid #ddd;
-            border-top: none;
-            border-radius: 0 0 5px 5px;
+            border-radius: 0 5px 5px 5px;
         }
         .tab-content.active {
             display: block;
-        }
-        footer {
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-            color: #7f8c8d;
         }
     </style>
 </head>
@@ -120,544 +109,328 @@
         <h1>Advanced Mathematics Interactive Elements</h1>
         
         <!-- Derivative Explorer -->
-        <div class="interactive-element" id="derivative-explorer">
+        <div class="interactive-element">
             <h2>Derivative Explorer</h2>
-            <p>Visualize derivatives as rates of change and explore their geometric interpretation as slopes of tangent lines.</p>
+            <p>Explore the concept of derivatives by visualizing functions and their derivatives.</p>
             
             <div class="controls">
-                <h3>Controls</h3>
-                <div>
-                    <label for="function-select">Select a function:</label>
-                    <select id="function-select">
-                        <option value="linear">Linear: f(x) = mx + b</option>
-                        <option value="quadratic">Quadratic: f(x) = ax² + bx + c</option>
-                        <option value="cubic">Cubic: f(x) = ax³ + bx² + cx + d</option>
-                        <option value="sine">Sine: f(x) = a·sin(bx + c)</option>
-                        <option value="exponential">Exponential: f(x) = a·e^(bx)</option>
-                        <option value="logarithmic">Logarithmic: f(x) = a·ln(bx)</option>
-                        <option value="custom">Custom Function</option>
+                <label>
+                    Function:
+                    <select id="derivative-function">
+                        <option value="sin">sin(x)</option>
+                        <option value="cos">cos(x)</option>
+                        <option value="tan">tan(x)</option>
+                        <option value="x2">x²</option>
+                        <option value="x3">x³</option>
+                        <option value="exp">e^x</option>
+                        <option value="log">ln(x)</option>
                     </select>
-                </div>
+                </label>
                 
-                <div id="function-parameters">
-                    <!-- Parameters will be dynamically populated based on function selection -->
-                </div>
+                <label>
+                    Show Tangent Line:
+                    <input type="checkbox" id="show-tangent" checked>
+                </label>
                 
-                <div id="custom-function-input" style="display: none;">
-                    <label for="custom-function">Enter custom function:</label>
-                    <input type="text" id="custom-function" class="function-input" placeholder="e.g., x^2 + 3*x - 2">
-                </div>
-                
-                <div>
-                    <label for="x-value">x value:</label>
-                    <input type="range" id="x-value" min="-10" max="10" step="0.1" value="0">
-                    <span id="x-value-display">0</span>
-                </div>
-                
-                <div>
-                    <button id="show-derivative">Show Derivative Function</button>
-                    <button id="hide-derivative">Hide Derivative Function</button>
-                    <button id="show-tangent">Show Tangent Line</button>
-                    <button id="hide-tangent">Hide Tangent Line</button>
-                </div>
+                <label>
+                    x-value:
+                    <input type="range" id="tangent-x" min="-10" max="10" step="0.1" value="0">
+                    <span id="tangent-x-value">0</span>
+                </label>
             </div>
             
-            <div class="visualization" id="derivative-visualization">
-                <!-- Canvas for derivative visualization will be inserted here by JavaScript -->
-            </div>
+            <div id="derivative-visualization" class="visualization"></div>
             
-            <div class="info-panel" id="derivative-info">
-                <h3>Function Information</h3>
-                <p><strong>Function:</strong> <span id="current-function">f(x) = x²</span></p>
-                <p><strong>Derivative:</strong> <span id="current-derivative">f'(x) = 2x</span></p>
-                <p><strong>At x = <span id="info-x-value">0</span>:</strong></p>
-                <p>Function value: <span id="function-value">0</span></p>
-                <p>Derivative value (slope): <span id="derivative-value">0</span></p>
-            </div>
-            
-            <div class="tab-container">
-                <div class="tab-buttons">
-                    <button class="tab-button active" onclick="openTab('derivative-explanation')">Explanation</button>
-                    <button class="tab-button" onclick="openTab('derivative-astronomy')">Astronomical Applications</button>
-                </div>
-                
-                <div id="derivative-explanation" class="tab-content active">
-                    <h3>Understanding Derivatives</h3>
-                    <p>The derivative of a function at a point represents the rate at which the function is changing at that point. Geometrically, it's the slope of the tangent line to the function's graph at that point.</p>
-                    <p>Key concepts:</p>
-                    <ul>
-                        <li>Positive derivative: function is increasing</li>
-                        <li>Negative derivative: function is decreasing</li>
-                        <li>Zero derivative: function has a horizontal tangent (potential maximum, minimum, or inflection point)</li>
-                        <li>The derivative function f'(x) gives the slope of the original function f(x) at any point x</li>
-                    </ul>
-                </div>
-                
-                <div id="derivative-astronomy" class="tab-content">
-                    <h3>Derivatives in Astronomy</h3>
-                    <p>Derivatives are essential in astronomy for understanding how quantities change:</p>
-                    <ul>
-                        <li><strong>Orbital mechanics:</strong> The derivative of position with respect to time gives velocity, and the derivative of velocity gives acceleration. These relationships are fundamental for understanding planetary motion.</li>
-                        <li><strong>Stellar evolution:</strong> The rate at which a star's properties (temperature, luminosity, radius) change over time can be expressed as derivatives.</li>
-                        <li><strong>Cosmological expansion:</strong> The derivative of the universe's scale factor with respect to time gives the Hubble parameter, which describes the expansion rate.</li>
-                        <li><strong>Light curves:</strong> The derivative of a star's brightness over time can reveal pulsations, eclipses, or other dynamic phenomena.</li>
-                    </ul>
-                </div>
+            <div class="result-box">
+                <p>Function value at x = <span id="function-value">0</span></p>
+                <p>Derivative value at x = <span id="derivative-value">0</span></p>
             </div>
         </div>
         
         <!-- Integral Visualizer -->
-        <div class="interactive-element" id="integral-visualizer">
+        <div class="interactive-element">
             <h2>Integral Visualizer</h2>
-            <p>Explore integrals as areas under curves and understand the connection between differentiation and integration.</p>
+            <p>Visualize the concept of integrals as the area under a curve.</p>
             
             <div class="controls">
-                <h3>Controls</h3>
-                <div>
-                    <label for="integral-function-select">Select a function:</label>
-                    <select id="integral-function-select">
-                        <option value="linear">Linear: f(x) = mx + b</option>
-                        <option value="quadratic">Quadratic: f(x) = ax² + bx + c</option>
-                        <option value="sine">Sine: f(x) = a·sin(bx + c)</option>
-                        <option value="exponential">Exponential: f(x) = a·e^(bx)</option>
-                        <option value="custom-integral">Custom Function</option>
+                <label>
+                    Function:
+                    <select id="integral-function">
+                        <option value="sin">sin(x)</option>
+                        <option value="cos">cos(x)</option>
+                        <option value="x2">x²</option>
+                        <option value="x3">x³</option>
+                        <option value="exp">e^x</option>
                     </select>
-                </div>
+                </label>
                 
-                <div id="integral-function-parameters">
-                    <!-- Parameters will be dynamically populated based on function selection -->
-                </div>
+                <label>
+                    Lower Bound:
+                    <input type="range" id="lower-bound" min="-10" max="10" step="0.1" value="0">
+                    <span id="lower-bound-value">0</span>
+                </label>
                 
-                <div id="custom-integral-function-input" style="display: none;">
-                    <label for="custom-integral-function">Enter custom function:</label>
-                    <input type="text" id="custom-integral-function" class="function-input" placeholder="e.g., x^2 + 3*x - 2">
-                </div>
+                <label>
+                    Upper Bound:
+                    <input type="range" id="upper-bound" min="-10" max="10" step="0.1" value="1">
+                    <span id="upper-bound-value">1</span>
+                </label>
                 
-                <div>
-                    <label for="lower-bound">Lower bound:</label>
-                    <input type="range" id="lower-bound" min="-10" max="10" step="0.1" value="-2">
-                    <span id="lower-bound-display">-2</span>
-                </div>
-                
-                <div>
-                    <label for="upper-bound">Upper bound:</label>
-                    <input type="range" id="upper-bound" min="-10" max="10" step="0.1" value="2">
-                    <span id="upper-bound-display">2</span>
-                </div>
-                
-                <div>
-                    <label for="num-rectangles">Number of rectangles:</label>
+                <label>
+                    Number of Rectangles:
                     <input type="range" id="num-rectangles" min="1" max="100" step="1" value="10">
-                    <span id="num-rectangles-display">10</span>
-                </div>
+                    <span id="num-rectangles-value">10</span>
+                </label>
                 
-                <div>
-                    <button id="show-riemann-sum">Show Riemann Sum</button>
-                    <button id="hide-riemann-sum">Hide Riemann Sum</button>
-                    <button id="show-antiderivative">Show Antiderivative</button>
-                    <button id="hide-antiderivative">Hide Antiderivative</button>
-                </div>
+                <label>
+                    Method:
+                    <select id="integral-method">
+                        <option value="left">Left Riemann Sum</option>
+                        <option value="right">Right Riemann Sum</option>
+                        <option value="midpoint">Midpoint Rule</option>
+                        <option value="trapezoid">Trapezoid Rule</option>
+                    </select>
+                </label>
             </div>
             
-            <div class="visualization" id="integral-visualization">
-                <!-- Canvas for integral visualization will be inserted here by JavaScript -->
-            </div>
+            <div id="integral-visualization" class="visualization"></div>
             
-            <div class="info-panel" id="integral-info">
-                <h3>Integral Information</h3>
-                <p><strong>Function:</strong> <span id="integral-current-function">f(x) = x²</span></p>
-                <p><strong>Antiderivative:</strong> <span id="current-antiderivative">F(x) = x³/3</span></p>
-                <p><strong>Definite Integral:</strong> ∫<sub><span id="info-lower-bound">-2</span></sub><sup><span id="info-upper-bound">2</span></sup> <span id="integral-function-display">x²</span> dx = <span id="definite-integral-value">5.33</span></p>
-                <p><strong>Riemann Sum Approximation:</strong> <span id="riemann-sum-value">5.2</span> (using <span id="info-num-rectangles">10</span> rectangles)</p>
-            </div>
-            
-            <div class="tab-container">
-                <div class="tab-buttons">
-                    <button class="tab-button active" onclick="openTab('integral-explanation')">Explanation</button>
-                    <button class="tab-button" onclick="openTab('integral-astronomy')">Astronomical Applications</button>
-                </div>
-                
-                <div id="integral-explanation" class="tab-content active">
-                    <h3>Understanding Integrals</h3>
-                    <p>The definite integral of a function represents the accumulated value of the function over an interval. Geometrically, it's the area under the curve over that interval.</p>
-                    <p>Key concepts:</p>
-                    <ul>
-                        <li>Riemann sums approximate the area using rectangles</li>
-                        <li>As the number of rectangles increases, the approximation becomes more accurate</li>
-                        <li>The Fundamental Theorem of Calculus connects differentiation and integration</li>
-                        <li>The antiderivative F(x) of f(x) satisfies F'(x) = f(x)</li>
-                        <li>The definite integral equals the difference of the antiderivative evaluated at the bounds: ∫<sub>a</sub><sup>b</sup> f(x) dx = F(b) - F(a)</li>
-                    </ul>
-                </div>
-                
-                <div id="integral-astronomy" class="tab-content">
-                    <h3>Integrals in Astronomy</h3>
-                    <p>Integrals are crucial in astronomy for calculating total quantities:</p>
-                    <ul>
-                        <li><strong>Mass calculations:</strong> The total mass of a star or galaxy is calculated by integrating the density distribution over the volume.</li>
-                        <li><strong>Energy calculations:</strong> The total energy output of a star over time is found by integrating its luminosity function.</li>
-                        <li><strong>Orbital parameters:</strong> The period of an orbit can be calculated by integrating the time it takes to traverse each infinitesimal segment of the orbit.</li>
-                        <li><strong>Light collection:</strong> The total light received from a variable source is the integral of its brightness over time.</li>
-                        <li><strong>Statistical analysis:</strong> Probability distributions in astronomy are defined using integrals, essential for data analysis and error estimation.</li>
-                    </ul>
-                </div>
+            <div class="result-box">
+                <p>Approximate integral value: <span id="integral-value">0</span></p>
+                <p>Exact integral value: <span id="exact-integral">0</span></p>
+                <p>Error: <span id="integral-error">0</span></p>
             </div>
         </div>
         
         <!-- Differential Equation Solver -->
-        <div class="interactive-element" id="differential-equation-solver">
+        <div class="interactive-element">
             <h2>Differential Equation Solver</h2>
-            <p>Explore solutions to differential equations and understand their applications in astronomical systems.</p>
+            <p>Visualize solutions to differential equations and see how initial conditions affect the solution.</p>
             
             <div class="controls">
-                <h3>Controls</h3>
-                <div>
-                    <label for="de-select">Select a differential equation:</label>
-                    <select id="de-select">
-                        <option value="harmonic">Harmonic Oscillator: y'' + ω²y = 0</option>
-                        <option value="damped">Damped Oscillator: y'' + by' + ky = 0</option>
-                        <option value="forced">Forced Oscillator: y'' + by' + ky = F₀cos(ωt)</option>
-                        <option value="orbital">Orbital Motion: r'' - rθ'² = -GM/r²</option>
-                        <option value="population">Population Growth: dP/dt = rP(1 - P/K)</option>
+                <label>
+                    Equation Type:
+                    <select id="de-type">
+                        <option value="first-order">First Order (dy/dx = f(x,y))</option>
+                        <option value="second-order">Second Order (d²y/dx² = f(x,y,y'))</option>
                     </select>
+                </label>
+                
+                <label>
+                    Specific Equation:
+                    <select id="de-equation">
+                        <option value="exponential">dy/dx = y (Exponential Growth)</option>
+                        <option value="logistic">dy/dx = y(1-y) (Logistic Growth)</option>
+                        <option value="harmonic">d²y/dx² = -y (Harmonic Oscillator)</option>
+                        <option value="damped">d²y/dx² = -y - 0.5dy/dx (Damped Oscillator)</option>
+                    </select>
+                </label>
+                
+                <div id="first-order-controls">
+                    <label>
+                        Initial Condition y(0):
+                        <input type="range" id="y0-first" min="-5" max="5" step="0.1" value="1">
+                        <span id="y0-first-value">1</span>
+                    </label>
                 </div>
                 
-                <div id="de-parameters">
-                    <!-- Parameters will be dynamically populated based on equation selection -->
+                <div id="second-order-controls" style="display: none;">
+                    <label>
+                        Initial Position y(0):
+                        <input type="range" id="y0-second" min="-5" max="5" step="0.1" value="1">
+                        <span id="y0-second-value">1</span>
+                    </label>
+                    
+                    <label>
+                        Initial Velocity y'(0):
+                        <input type="range" id="v0-second" min="-5" max="5" step="0.1" value="0">
+                        <span id="v0-second-value">0</span>
+                    </label>
                 </div>
                 
-                <div>
-                    <label for="initial-conditions">Initial conditions:</label>
-                    <div id="initial-conditions">
-                        <!-- Initial conditions will be dynamically populated -->
-                    </div>
-                </div>
-                
-                <div>
-                    <label for="time-range">Time range:</label>
-                    <input type="range" id="time-range" min="1" max="50" step="1" value="10">
-                    <span id="time-range-display">10</span> time units
-                </div>
-                
-                <div>
-                    <button id="solve-de">Solve Differential Equation</button>
-                    <button id="reset-de">Reset</button>
-                </div>
+                <label>
+                    Solution Method:
+                    <select id="de-method">
+                        <option value="euler">Euler's Method</option>
+                        <option value="rk4">Runge-Kutta (RK4)</option>
+                        <option value="exact">Exact Solution (when available)</option>
+                    </select>
+                </label>
             </div>
             
-            <div class="visualization" id="de-visualization">
-                <!-- Canvas for differential equation visualization will be inserted here by JavaScript -->
-            </div>
+            <div id="de-visualization" class="visualization"></div>
             
-            <div class="info-panel" id="de-info">
-                <h3>Differential Equation Information</h3>
-                <p><strong>Equation:</strong> <span id="current-de">y'' + ω²y = 0</span></p>
-                <p><strong>Parameters:</strong> <span id="de-parameters-display">ω = 1</span></p>
-                <p><strong>Initial Conditions:</strong> <span id="initial-conditions-display">y(0) = 1, y'(0) = 0</span></p>
-                <p><strong>Solution Type:</strong> <span id="solution-type">Oscillatory</span></p>
-                <p><strong>Physical Interpretation:</strong> <span id="physical-interpretation">Simple harmonic motion, like a planet in a circular orbit or a pendulum with small oscillations.</span></p>
-            </div>
-            
-            <div class="tab-container">
-                <div class="tab-buttons">
-                    <button class="tab-button active" onclick="openTab('de-explanation')">Explanation</button>
-                    <button class="tab-button" onclick="openTab('de-astronomy')">Astronomical Applications</button>
-                </div>
-                
-                <div id="de-explanation" class="tab-content active">
-                    <h3>Understanding Differential Equations</h3>
-                    <p>Differential equations describe how quantities change in relation to each other. They're fundamental to modeling dynamic systems in physics and astronomy.</p>
-                    <p>Key concepts:</p>
-                    <ul>
-                        <li>First-order equations involve only first derivatives (dy/dx)</li>
-                        <li>Second-order equations involve second derivatives (d²y/dx²)</li>
-                        <li>Initial conditions are needed to find specific solutions</li>
-                        <li>Solutions can be oscillatory, exponential, or more complex</li>
-                        <li>Many physical laws are expressed as differential equations</li>
-                    </ul>
-                </div>
-                
-                <div id="de-astronomy" class="tab-content">
-                    <h3>Differential Equations in Astronomy</h3>
-                    <p>Differential equations are the language of astronomical dynamics:</p>
-                    <ul>
-                        <li><strong>Orbital motion:</strong> The paths of planets, comets, and spacecraft are governed by differential equations derived from Newton's laws.</li>
-                        <li><strong>Stellar structure:</strong> The internal structure of stars is described by differential equations relating pressure, temperature, density, and energy generation.</li>
-                        <li><strong>Stellar oscillations:</strong> The pulsations of variable stars are modeled using differential equations similar to those for damped oscillators.</li>
-                        <li><strong>Cosmological evolution:</strong> The expansion of the universe is governed by the Friedmann equations, which are differential equations relating the scale factor to energy density.</li>
-                        <li><strong>Wave phenomena:</strong> Light, gravitational waves, and plasma waves in space are all described by wave equations, which are differential equations.</li>
-                    </ul>
-                </div>
+            <div class="result-box">
+                <p>Solution at x = <span id="de-x-value">0</span>: y = <span id="de-y-value">0</span></p>
+                <p>Error estimate: <span id="de-error">0</span></p>
             </div>
         </div>
         
-        <footer>
-            <p>Advanced Mathematics Interactive Elements | AstroCourse</p>
-            <p>© 2025 AstroCourse Project</p>
-        </footer>
+        <!-- Statistical Distribution Visualizer -->
+        <div class="interactive-element">
+            <h2>Statistical Distribution Visualizer</h2>
+            <p>Explore common probability distributions used in astronomy and understand their properties.</p>
+            
+            <div class="controls">
+                <label>
+                    Distribution Type:
+                    <select id="distribution-type">
+                        <option value="gaussian">Gaussian (Normal)</option>
+                        <option value="poisson">Poisson</option>
+                        <option value="binomial">Binomial</option>
+                    </select>
+                </label>
+                
+                <div id="gaussian-controls">
+                    <label>
+                        Mean (μ):
+                        <input type="range" id="mean-value" min="-5" max="5" step="0.1" value="0">
+                        <span id="mean-value-display">0</span>
+                    </label>
+                    
+                    <label>
+                        Standard Deviation (σ):
+                        <input type="range" id="std-dev-value" min="0.1" max="3" step="0.1" value="1">
+                        <span id="std-dev-value-display">1</span>
+                    </label>
+                </div>
+                
+                <div id="poisson-controls" style="display: none;">
+                    <label>
+                        Lambda (λ):
+                        <input type="range" id="lambda-value" min="0.1" max="20" step="0.1" value="5">
+                        <span id="lambda-value-display">5</span>
+                    </label>
+                </div>
+                
+                <div id="binomial-controls" style="display: none;">
+                    <label>
+                        Number of Trials (n):
+                        <input type="range" id="n-trials" min="1" max="50" step="1" value="10">
+                        <span id="n-trials-display">10</span>
+                    </label>
+                    
+                    <label>
+                        Probability of Success (p):
+                        <input type="range" id="p-success" min="0" max="1" step="0.01" value="0.5">
+                        <span id="p-success-display">0.5</span>
+                    </label>
+                </div>
+                
+                <label>
+                    Show Confidence Intervals:
+                    <input type="checkbox" id="show-confidence" checked>
+                </label>
+            </div>
+            
+            <div id="stats-visualization" class="visualization"></div>
+            
+            <div class="result-box">
+                <p>Mean: <span id="stats-mean">0</span></p>
+                <p>Variance: <span id="stats-variance">1</span></p>
+                <p>Standard Deviation: <span id="stats-std-dev">1</span></p>
+            </div>
+        </div>
+        
+        <!-- Error Propagation Calculator -->
+        <div class="interactive-element">
+            <h2>Error Propagation Calculator</h2>
+            <p>Calculate how uncertainties propagate through mathematical operations, essential for astronomical measurements.</p>
+            
+            <div class="controls">
+                <div class="input-group">
+                    <label>
+                        x value:
+                        <input type="number" id="x-value" value="10" step="0.1">
+                    </label>
+                    
+                    <label>
+                        Uncertainty in x (σx):
+                        <input type="number" id="sigma-x" value="0.5" min="0.01" step="0.01">
+                    </label>
+                </div>
+                
+                <div class="input-group">
+                    <label>
+                        Operation:
+                        <select id="operation">
+                            <option value="add">Addition (x + y)</option>
+                            <option value="subtract">Subtraction (x - y)</option>
+                            <option value="multiply">Multiplication (x × y)</option>
+                            <option value="divide">Division (x ÷ y)</option>
+                        </select>
+                    </label>
+                </div>
+                
+                <div class="input-group">
+                    <label>
+                        y value:
+                        <input type="number" id="y-value" value="5" step="0.1">
+                    </label>
+                    
+                    <label>
+                        Uncertainty in y (σy):
+                        <input type="number" id="sigma-y" value="0.2" min="0.01" step="0.01">
+                    </label>
+                </div>
+            </div>
+            
+            <div class="result-box">
+                <h3>Result:</h3>
+                <p>Value: <span id="result-value">15.0</span></p>
+                <p>Absolute Uncertainty: <span id="result-uncertainty">0.539</span></p>
+                <p>Relative Uncertainty: <span id="result-relative">3.59%</span></p>
+            </div>
+        </div>
+        
+        <!-- Hypothesis Testing Simulator -->
+        <div class="interactive-element">
+            <h2>Hypothesis Testing Simulator</h2>
+            <p>Simulate statistical hypothesis tests to understand significance levels, p-values, and statistical decision making.</p>
+            
+            <div class="controls">
+                <div class="input-group">
+                    <label>
+                        Sample Mean:
+                        <input type="number" id="sample-mean" value="52" step="0.1">
+                    </label>
+                    
+                    <label>
+                        Sample Standard Deviation:
+                        <input type="number" id="sample-std-dev" value="10" min="0.1" step="0.1">
+                    </label>
+                    
+                    <label>
+                        Sample Size:
+                        <input type="number" id="sample-size" value="30" min="1" step="1">
+                    </label>
+                </div>
+                
+                <div class="input-group">
+                    <label>
+                        Null Hypothesis (μ₀):
+                        <input type="number" id="null-hypothesis" value="50" step="0.1">
+                    </label>
+                    
+                    <label>
+                        Significance Level (α):
+                        <input type="number" id="alpha-level" value="0.05" min="0.001" max="0.5" step="0.001">
+                    </label>
+                </div>
+            </div>
+            
+            <canvas id="hypothesis-canvas" width="800" height="400" style="border:1px solid #d3d3d3;"></canvas>
+            
+            <div class="result-box">
+                <h3>Test Results:</h3>
+                <p>Z-score: <span id="z-score">1.095</span></p>
+                <p>p-value: <span id="p-value">0.2735</span></p>
+                <p>Decision: <span id="test-result">Fail to reject null hypothesis</span></p>
+            </div>
+        </div>
     </div>
-
-    <script>
-        // Function to open tabs
-        function openTab(tabId) {
-            // Hide all tab content
-            const tabContents = document.getElementsByClassName('tab-content');
-            for (let i = 0; i < tabContents.length; i++) {
-                tabContents[i].classList.remove('active');
-            }
-            
-            // Remove active class from all tab buttons
-            const tabButtons = document.getElementsByClassName('tab-button');
-            for (let i = 0; i < tabButtons.length; i++) {
-                tabButtons[i].classList.remove('active');
-            }
-            
-            // Show the selected tab content and mark its button as active
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
-
-        // This is a placeholder for the actual JavaScript implementation
-        // In a real implementation, we would include code for:
-        // 1. Setting up the canvas for visualizations
-        // 2. Implementing the mathematical functions and their derivatives
-        // 3. Drawing functions, derivatives, tangent lines, etc.
-        // 4. Handling user interactions with controls
-        // 5. Calculating and displaying numerical values
-        // 6. Implementing the differential equation solver
-
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize the interactive elements
-            console.log('Interactive elements initialized');
-            
-            // Add event listeners for range inputs to update displays
-            document.getElementById('x-value').addEventListener('input', function() {
-                document.getElementById('x-value-display').textContent = this.value;
-            });
-            
-            document.getElementById('lower-bound').addEventListener('input', function() {
-                document.getElementById('lower-bound-display').textContent = this.value;
-            });
-            
-            document.getElementById('upper-bound').addEventListener('input', function() {
-                document.getElementById('upper-bound-display').textContent = this.value;
-            });
-            
-            document.getElementById('num-rectangles').addEventListener('input', function() {
-                document.getElementById('num-rectangles-display').textContent = this.value;
-            });
-            
-            document.getElementById('time-range').addEventListener('input', function() {
-                document.getElementById('time-range-display').textContent = this.value;
-            });
-            
-            // Function select change handlers
-            document.getElementById('function-select').addEventListener('change', function() {
-                if (this.value === 'custom') {
-                    document.getElementById('custom-function-input').style.display = 'block';
-                    document.getElementById('function-parameters').style.display = 'none';
-                } else {
-                    document.getElementById('custom-function-input').style.display = 'none';
-                    document.getElementById('function-parameters').style.display = 'block';
-                    // Update parameters based on function type
-                    updateFunctionParameters(this.value);
-                }
-            });
-            
-            document.getElementById('integral-function-select').addEventListener('change', function() {
-                if (this.value === 'custom-integral') {
-                    document.getElementById('custom-integral-function-input').style.display = 'block';
-                    document.getElementById('integral-function-parameters').style.display = 'none';
-                } else {
-                    document.getElementById('custom-integral-function-input').style.display = 'none';
-                    document.getElementById('integral-function-parameters').style.display = 'block';
-                    // Update parameters based on function type
-                    updateIntegralFunctionParameters(this.value);
-                }
-            });
-            
-            document.getElementById('de-select').addEventListener('change', function() {
-                // Update parameters based on differential equation type
-                updateDEParameters(this.value);
-            });
-            
-            // Initialize with default parameters
-            updateFunctionParameters('quadratic');
-            updateIntegralFunctionParameters('quadratic');
-            updateDEParameters('harmonic');
-        });
-
-        // Function to update parameters for derivative explorer
-        function updateFunctionParameters(functionType) {
-            const parametersDiv = document.getElementById('function-parameters');
-            parametersDiv.innerHTML = '';
-            
-            switch(functionType) {
-                case 'linear':
-                    parametersDiv.innerHTML = `
-                        <div>
-                            <label for="linear-m">m (slope):</label>
-                            <input type="range" id="linear-m" min="-5" max="5" step="0.1" value="1">
-                            <span id="linear-m-display">1</span>
-                        </div>
-                        <div>
-                            <label for="linear-b">b (y-intercept):</label>
-                            <input type="range" id="linear-b" min="-5" max="5" step="0.1" value="0">
-                            <span id="linear-b-display">0</span>
-                        </div>
-                    `;
-                    break;
-                case 'quadratic':
-                    parametersDiv.innerHTML = `
-                        <div>
-                            <label for="quadratic-a">a:</label>
-                            <input type="range" id="quadratic-a" min="-2" max="2" step="0.1" value="1">
-                            <span id="quadratic-a-display">1</span>
-                        </div>
-                        <div>
-                            <label for="quadratic-b">b:</label>
-                            <input type="range" id="quadratic-b" min="-5" max="5" step="0.1" value="0">
-                            <span id="quadratic-b-display">0</span>
-                        </div>
-                        <div>
-                            <label for="quadratic-c">c:</label>
-                            <input type="range" id="quadratic-c" min="-5" max="5" step="0.1" value="0">
-                            <span id="quadratic-c-display">0</span>
-                        </div>
-                    `;
-                    break;
-                // Add cases for other function types
-            }
-            
-            // Add event listeners for the new range inputs
-            const rangeInputs = parametersDiv.querySelectorAll('input[type="range"]');
-            rangeInputs.forEach(input => {
-                input.addEventListener('input', function() {
-                    document.getElementById(this.id + '-display').textContent = this.value;
-                });
-            });
-        }
-
-        // Function to update parameters for integral visualizer
-        function updateIntegralFunctionParameters(functionType) {
-            const parametersDiv = document.getElementById('integral-function-parameters');
-            parametersDiv.innerHTML = '';
-            
-            switch(functionType) {
-                case 'linear':
-                    parametersDiv.innerHTML = `
-                        <div>
-                            <label for="integral-linear-m">m (slope):</label>
-                            <input type="range" id="integral-linear-m" min="-5" max="5" step="0.1" value="1">
-                            <span id="integral-linear-m-display">1</span>
-                        </div>
-                        <div>
-                            <label for="integral-linear-b">b (y-intercept):</label>
-                            <input type="range" id="integral-linear-b" min="-5" max="5" step="0.1" value="0">
-                            <span id="integral-linear-b-display">0</span>
-                        </div>
-                    `;
-                    break;
-                case 'quadratic':
-                    parametersDiv.innerHTML = `
-                        <div>
-                            <label for="integral-quadratic-a">a:</label>
-                            <input type="range" id="integral-quadratic-a" min="-2" max="2" step="0.1" value="1">
-                            <span id="integral-quadratic-a-display">1</span>
-                        </div>
-                        <div>
-                            <label for="integral-quadratic-b">b:</label>
-                            <input type="range" id="integral-quadratic-b" min="-5" max="5" step="0.1" value="0">
-                            <span id="integral-quadratic-b-display">0</span>
-                        </div>
-                        <div>
-                            <label for="integral-quadratic-c">c:</label>
-                            <input type="range" id="integral-quadratic-c" min="-5" max="5" step="0.1" value="0">
-                            <span id="integral-quadratic-c-display">0</span>
-                        </div>
-                    `;
-                    break;
-                // Add cases for other function types
-            }
-            
-            // Add event listeners for the new range inputs
-            const rangeInputs = parametersDiv.querySelectorAll('input[type="range"]');
-            rangeInputs.forEach(input => {
-                input.addEventListener('input', function() {
-                    document.getElementById(this.id + '-display').textContent = this.value;
-                });
-            });
-        }
-
-        // Function to update parameters for differential equation solver
-        function updateDEParameters(equationType) {
-            const parametersDiv = document.getElementById('de-parameters');
-            const initialConditionsDiv = document.getElementById('initial-conditions');
-            
-            parametersDiv.innerHTML = '';
-            initialConditionsDiv.innerHTML = '';
-            
-            switch(equationType) {
-                case 'harmonic':
-                    parametersDiv.innerHTML = `
-                        <div>
-                            <label for="harmonic-omega">ω (angular frequency):</label>
-                            <input type="range" id="harmonic-omega" min="0.1" max="5" step="0.1" value="1">
-                            <span id="harmonic-omega-display">1</span>
-                        </div>
-                    `;
-                    
-                    initialConditionsDiv.innerHTML = `
-                        <div>
-                            <label for="harmonic-y0">y(0):</label>
-                            <input type="range" id="harmonic-y0" min="-5" max="5" step="0.1" value="1">
-                            <span id="harmonic-y0-display">1</span>
-                        </div>
-                        <div>
-                            <label for="harmonic-v0">y'(0):</label>
-                            <input type="range" id="harmonic-v0" min="-5" max="5" step="0.1" value="0">
-                            <span id="harmonic-v0-display">0</span>
-                        </div>
-                    `;
-                    break;
-                case 'damped':
-                    parametersDiv.innerHTML = `
-                        <div>
-                            <label for="damped-b">b (damping coefficient):</label>
-                            <input type="range" id="damped-b" min="0" max="5" step="0.1" value="0.5">
-                            <span id="damped-b-display">0.5</span>
-                        </div>
-                        <div>
-                            <label for="damped-k">k (spring constant):</label>
-                            <input type="range" id="damped-k" min="0.1" max="10" step="0.1" value="1">
-                            <span id="damped-k-display">1</span>
-                        </div>
-                    `;
-                    
-                    initialConditionsDiv.innerHTML = `
-                        <div>
-                            <label for="damped-y0">y(0):</label>
-                            <input type="range" id="damped-y0" min="-5" max="5" step="0.1" value="1">
-                            <span id="damped-y0-display">1</span>
-                        </div>
-                        <div>
-                            <label for="damped-v0">y'(0):</label>
-                            <input type="range" id="damped-v0" min="-5" max="5" step="0.1" value="0">
-                            <span id="damped-v0-display">0</span>
-                        </div>
-                    `;
-                    break;
-                // Add cases for other equation types
-            }
-            
-            // Add event listeners for the new range inputs
-            const rangeInputs = document.querySelectorAll('#de-parameters input[type="range"], #initial-conditions input[type="range"]');
-            rangeInputs.forEach(input => {
-                input.addEventListener('input', function() {
-                    document.getElementById(this.id + '-display').textContent = this.value;
-                });
-            });
-        }
-    </script>
+    
+    <script src="advanced_mathematics_interactive.js"></script>
+    <script src="statistical_thinking_interactive.js"></script>
 </body>
 </html>
