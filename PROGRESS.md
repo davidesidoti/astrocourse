@@ -150,7 +150,7 @@
    - ✅ Implement interactive elements for calculus sections (COMPLETED)
    - ✅ Create content for Basic Differential Equations section (COMPLETED)
    - ✅ Create content for Linear Algebra section (COMPLETED)
-   - Create content for Different Coordinate Systems section
+   - ✅ Create content for Different Coordinate Systems section (COMPLETED)
    - Create content for Statistical Thinking and Error Analysis section
    - Create content for Introduction to Computational Approaches section
    - Create content for Numerical Methods for Astrophysical Problems section
