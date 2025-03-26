@@ -54,7 +54,7 @@
   - [x] Variable stars
 
 - [ ] Develop Black Hole Physics Module
-  - [ ] Event horizons and singularities
+  - [x] Event horizons and singularities
   - [ ] Simplified mathematical models
   - [ ] Schwarzschild solution basics
   - [ ] Rotating black holes and the Kerr metric
