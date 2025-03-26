@@ -34,7 +34,7 @@
   - [x] Introduction to calculus
   - [x] Basic differential calculus with astronomical applications
   - [x] Integral calculus concepts
-  - [ ] Basic differential equations
+  - [x] Basic differential equations
   - [ ] Linear algebra
   - [ ] Different coordinate systems
   - [ ] Statistical thinking and error analysis
