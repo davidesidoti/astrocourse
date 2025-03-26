@@ -51,7 +51,7 @@
   - [x] Stellar evolution
   - [x] Stellar atmospheres and spectroscopy
   - [x] Stellar endpoints
-  - [ ] Variable stars
+  - [x] Variable stars
 
 - [ ] Develop Black Hole Physics Module
   - [ ] Event horizons and singularities
