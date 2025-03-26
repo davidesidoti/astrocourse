@@ -38,7 +38,7 @@
   - [x] Linear algebra
   - [x] Different coordinate systems
   - [x] Statistical thinking and error analysis
-  - [ ] Introduction to computational approaches
+  - [x] Introduction to computational approaches
   - [ ] Numerical methods for astrophysical problems
 
 ### Additional Astrophysics Components
