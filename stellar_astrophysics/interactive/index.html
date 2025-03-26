@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stellar Astrophysics Interactive Elements</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .interactive-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .control-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .slider-container {
+            margin-bottom: 10px;
+        }
+        
+        .slider-container label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .slider-value {
+            display: inline-block;
+            width: 60px;
+            text-align: right;
+            margin-left: 10px;
+        }
+        
+        .canvas-container {
+            width: 100%;
+            text-align: center;
+        }
+        
+        canvas {
+            border: 1px solid #ccc;
+            background-color: #fff;
+            max-width: 100%;
+        }
+        
+        .button-group {
+            margin-top: 15px;
+        }
+        
+        button {
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .tab-container {
+            margin-bottom: 20px;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab-button {
+            padding: 10px 20px;
+            background-color: #f1f1f1;
+            border: none;
+            cursor: pointer;
+            margin-right: 2px;
+        }
+        
+        .tab-button.active {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .info-box {
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stellar Astrophysics Interactive Elements</h1>
+        
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="openTab(event, 'formation-tab')">Stellar Formation</button>
+                <button class="tab-button" onclick="openTab(event, 'structure-tab')">Stellar Structure</button>
+            </div>
+            
+            <div id="formation-tab" class="tab-content active">
+                <div class="interactive-section">
+                    <h2>Stellar Formation Simulator</h2>
+                    
+                    <div class="info-box">
+                        <p>This interactive simulation demonstrates the process of stellar formation from a molecular cloud. Adjust the parameters to see how they affect the formation process.</p>
+                    </div>
+                    
+                    <div class="controls">
+                        <div class="control-group">
+                            <div class="slider-container">
+                                <label for="cloud-density">Cloud Density:</label>
+                                <input type="range" id="cloud-density" min="0.1" max="5.0" step="0.1" value="1.0">
+                                <span class="slider-value" id="density-value">1.0</span>
+                            </div>
+                            
+                            <div class="slider-container">
+                                <label for="cloud-temperature">Cloud Temperature (K):</label>
+                                <input type="range" id="cloud-temperature" min="5" max="50" step="1" value="20">
+                                <span class="slider-value" id="temperature-value">20 K</span>
+                            </div>
+                            
+                            <div class="slider-container">
+                                <label for="cloud-rotation">Cloud Rotation Rate:</label>
+                                <input type="range" id="cloud-rotation" min="0.0" max="1.0" step="0.05" value="0.1">
+                                <span class="slider-value" id="rotation-value">0.10</span>
+                            </div>
+                            
+                            <div class="button-group">
+                                <button id="start-formation">Start Simulation</button>
+                                <button id="reset-formation">Reset</button>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <p><strong>What to observe:</strong></p>
+                            <ul>
+                                <li>Higher density and lower temperature lead to faster collapse</li>
+                                <li>The red circle shows the Jeans radius - if it's smaller than the cloud, the cloud is stable</li>
+                                <li>Higher rotation rates lead to larger accretion disks</li>
+                                <li>Bipolar outflows appear when rotation is significant</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="canvas-container">
+                        <canvas id="formation-simulator-canvas" width="600" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="structure-tab" class="tab-content">
+                <div class="interactive-section">
+                    <h2>Stellar Structure Visualizer</h2>
+                    
+                    <div class="info-box">
+                        <p>This interactive visualization shows the internal structure of stars with different masses, ages, and compositions. Adjust the parameters and select different properties to visualize.</p>
+                    </div>
+                    
+                    <div class="controls">
+                        <div class="control-group">
+                            <div class="slider-container">
+                                <label for="star-mass">Stellar Mass:</label>
+                                <input type="range" id="star-mass" min="0.1" max="10.0" step="0.1" value="1.0">
+                                <span class="slider-value" id="mass-value">1.0 M☉</span>
+                            </div>
+                            
+                            <div class="slider-container">
+                                <label for="star-age">Stellar Age (Gyr):</label>
+                                <input type="range" id="star-age" min="0.1" max="10.0" step="0.1" value="4.6">
+                                <span class="slider-value" id="age-value">4.6 Gyr</span>
+                            </div>
+                            
+                            <div class="slider-container">
+                                <label for="star-metallicity">Metallicity (Z/Z☉):</label>
+                                <input type="range" id="star-metallicity" min="0.001" max="0.04" step="0.001" value="0.02">
+                                <span class="slider-value" id="metallicity-value">0.020 Z☉</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <div class="slider-container">
+                                <label for="structure-property">Property to Visualize:</label>
+                                <select id="structure-property">
+                                    <option value="temperature">Temperature</option>
+                                    <option value="density">Density</option>
+                                    <option value="pressure">Pressure</option>
+                                    <option value="convection">Energy Transport (Radiative/Convective)</option>
+                                </select>
+                            </div>
+                            
+                            <p><strong>What to observe:</strong></p>
+                            <ul>
+                                <li>Low-mass stars (<0.3 M☉) are fully convective</li>
+                                <li>Sun-like stars have radiative cores and convective envelopes</li>
+                                <li>Massive stars have convective cores and radiative envelopes</li>
+                                <li>Temperature, density, and pressure all decrease from center to surface</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="canvas-container">
+                        <canvas id="structure-visualizer-canvas" width="600" height="400"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Tab functionality
+        function openTab(evt, tabName) {
+            // Hide all tab content
+            var tabContents = document.getElementsByClassName("tab-content");
+            for (var i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove("active");
+            }
+            
+            // Remove active class from all tab buttons
+            var tabButtons = document.getElementsByClassName("tab-button");
+            for (var i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove("active");
+            }
+            
+            // Show the selected tab content and mark the button as active
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+    </script>
+    <script src="stellar_astrophysics_interactive.js"></script>
+</body>
+</html>
