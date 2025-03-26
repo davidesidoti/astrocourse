@@ -45,7 +45,7 @@
 - [ ] Develop Stellar Astrophysics Module
   - [x] Stellar formation and structure
   - [x] The interstellar medium and star-forming regions
-  - [ ] Nuclear fusion
+  - [x] Nuclear fusion
   - [ ] Energy transport in stellar interiors
   - [ ] Star classification and the Hertzsprung-Russell diagram
   - [x] Stellar evolution
