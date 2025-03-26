@@ -50,7 +50,7 @@
   - [x] Star classification and the Hertzsprung-Russell diagram
   - [x] Stellar evolution
   - [x] Stellar atmospheres and spectroscopy
-  - [ ] Stellar endpoints
+  - [x] Stellar endpoints
   - [ ] Variable stars
 
 - [ ] Develop Black Hole Physics Module

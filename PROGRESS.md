@@ -166,7 +166,9 @@
 
 **March 26, 2025 (Latest)**
 - Continued development of the Stellar Astrophysics Module
-- Implemented the eighth section:
+- Implemented the ninth section:
+  - Stellar Endpoints - Covering white dwarfs, neutron stars, black holes, supernovae, planetary nebulae, multi-messenger astronomy of stellar endpoints, and exotic compact objects
+- Previously implemented the eighth section:
   - Stellar Atmospheres and Spectroscopy - Covering structure of stellar atmospheres, radiative transfer, spectral line formation, spectroscopic analysis techniques, stellar winds and mass loss, stellar activity and magnetic fields, and spectroscopic binaries
 - Previously implemented the seventh section:
   - Star Classification and the Hertzsprung-Russell Diagram - Covering historical development of stellar classification, spectral classification systems, physical basis of spectral features, the H-R diagram and its features, stellar populations, and observational techniques
