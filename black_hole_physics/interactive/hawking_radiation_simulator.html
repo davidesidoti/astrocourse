@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hawking Radiation Simulator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+        }
+        .control-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .value-display {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .canvas-container {
+            position: relative;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            background-color: #000;
+        }
+        .info-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+        }
+        .info-panel h3 {
+            margin-top: 0;
+        }
+        .stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .stat-box {
+            flex: 1;
+            min-width: 150px;
+            padding: 10px;
+            background-color: #e9e9e9;
+            border-radius: 5px;
+        }
+        .stat-box h4 {
+            margin-top: 0;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #555;
+        }
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .button-group {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hawking Radiation Simulator</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="mass">Black Hole Mass (Solar Masses)</label>
+                <input type="range" id="mass" min="1" max="100000000" value="10" step="1">
+                <div class="value-display">Current: <span id="massValue">10</span> M☉</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="timeScale">Simulation Speed</label>
+                <input type="range" id="timeScale" min="1" max="1000000000" value="1000000" step="1000">
+                <div class="value-display">Current: <span id="timeScaleValue">1,000,000</span>× real time</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="particleDensity">Particle Density</label>
+                <input type="range" id="particleDensity" min="10" max="500" value="100" step="10">
+                <div class="value-display">Current: <span id="particleDensityValue">100</span> particles</div>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button id="startBtn">Start Simulation</button>
+            <button id="pauseBtn">Pause</button>
+            <button id="resetBtn">Reset</button>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="simulationCanvas" width="960" height="500"></canvas>
+        </div>
+        
+        <div class="info-panel">
+            <h3>Simulation Statistics</h3>
+            <div class="stats">
+                <div class="stat-box">
+                    <h4>Black Hole Temperature</h4>
+                    <div class="stat-value" id="temperatureValue">0 K</div>
+                </div>
+                <div class="stat-box">
+                    <h4>Radiation Power</h4>
+                    <div class="stat-value" id="powerValue">0 W</div>
+                </div>
+                <div class="stat-box">
+                    <h4>Evaporation Time</h4>
+                    <div class="stat-value" id="evaporationTimeValue">0 years</div>
+                </div>
+                <div class="stat-box">
+                    <h4>Elapsed Time</h4>
+                    <div class="stat-value" id="elapsedTimeValue">0 years</div>
+                </div>
+            </div>
+            
+            <h3>About Hawking Radiation</h3>
+            <p>
+                Hawking radiation is a theoretical prediction that black holes emit radiation due to quantum effects near the event horizon.
+                Virtual particle pairs are constantly being created and destroyed in empty space. Near a black hole's event horizon, one particle
+                may fall in while the other escapes, appearing as radiation coming from the black hole.
+            </p>
+            <p>
+                This process causes the black hole to lose mass over time, eventually evaporating completely. The temperature of the radiation
+                is inversely proportional to the black hole's mass, meaning smaller black holes are hotter and evaporate faster.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Constants
+        const SOLAR_MASS = 1.989e30; // kg
+        const G = 6.674e-11; // Gravitational constant (m^3 kg^-1 s^-2)
+        const c = 299792458; // Speed of light (m/s)
+        const hbar = 1.054571817e-34; // Reduced Planck constant (J·s)
+        const k_B = 1.380649e-23; // Boltzmann constant (J/K)
+        const YEAR_IN_SECONDS = 31557600; // Seconds in a year
+
+        // Canvas and context
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // UI elements
+        const massSlider = document.getElementById('mass');
+        const massValue = document.getElementById('massValue');
+        const timeScaleSlider = document.getElementById('timeScale');
+        const timeScaleValue = document.getElementById('timeScaleValue');
+        const particleDensitySlider = document.getElementById('particleDensity');
+        const particleDensityValue = document.getElementById('particleDensityValue');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        
+        // Stats elements
+        const temperatureValue = document.getElementById('temperatureValue');
+        const powerValue = document.getElementById('powerValue');
+        const evaporationTimeValue = document.getElementById('evaporationTimeValue');
+        const elapsedTimeValue = document.getElementById('elapsedTimeValue');
+        
+        // Simulation variables
+        let blackHoleMass = parseFloat(massSlider.value) * SOLAR_MASS;
+        let timeScale = parseFloat(timeScaleSlider.value);
+        let particleDensity = parseInt(particleDensitySlider.value);
+        let particles = [];
+        let isRunning = false;
+        let elapsedTime = 0;
+        let lastTimestamp = 0;
+        
+        // Initialize the simulation
+        function initSimulation() {
+            blackHoleMass = parseFloat(massSlider.value) * SOLAR_MASS;
+            timeScale = parseFloat(timeScaleSlider.value);
+            particleDensity = parseInt(particleDensitySlider.value);
+            elapsedTime = 0;
+            
+            // Create particles
+            particles = [];
+            for (let i = 0; i < particleDensity; i++) {
+                createParticle();
+            }
+            
+            updateStats();
+            drawSimulation();
+        }
+        
+        // Create a new particle
+        function createParticle() {
+            // Calculate Schwarzschild radius
+            const r_s = 2 * G * blackHoleMass / (c * c);
+            
+            // Random position near the event horizon
+            const distance = r_s * (1 + Math.random() * 0.5);
+            const angle = Math.random() * Math.PI * 2;
+            
+            // Particle properties
+            const particle = {
+                x: 0,
+                y: 0,
+                distance: distance,
+                angle: angle,
+                speed: 0.1 + Math.random() * 0.2,
+                size: 1 + Math.random() * 2,
+                color: getParticleColor(blackHoleMass),
+                type: Math.random() > 0.5 ? 'escaping' : 'infalling',
+                lifetime: 0
+            };
+            
+            // Set position
+            updateParticlePosition(particle);
+            
+            particles.push(particle);
+        }
+        
+        // Update particle position
+        function updateParticlePosition(particle) {
+            // Convert polar to cartesian coordinates
+            // Center the black hole in the canvas
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // Scale factor to make visualization appropriate for canvas
+            const scaleFactor = 50;
+            
+            particle.x = centerX + particle.distance * Math.cos(particle.angle) * scaleFactor;
+            particle.y = centerY + particle.distance * Math.sin(particle.angle) * scaleFactor;
+        }
+        
+        // Get particle color based on black hole temperature
+        function getParticleColor(mass) {
+            // Calculate temperature
+            const temperature = getBlackHoleTemperature(mass);
+            
+            // Map temperature to color (blue for cold, red for hot)
+            let r, g, b;
+            
+            if (temperature < 1e-7) {
+                // Very cold - blue
+                r = 0;
+                g = 100;
+                b = 255;
+            } else if (temperature < 1e-6) {
+                // Cold - cyan
+                r = 0;
+                g = 200;
+                b = 255;
+            } else if (temperature < 1e-5) {
+                // Moderate - green
+                r = 100;
+                g = 255;
+                b = 100;
+            } else if (temperature < 1e-4) {
+                // Warm - yellow
+                r = 255;
+                g = 255;
+                b = 0;
+            } else {
+                // Hot - red
+                r = 255;
+                g = 50;
+                b = 0;
+            }
+            
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+        
+        // Calculate black hole temperature (in Kelvin)
+        function getBlackHoleTemperature(mass) {
+            return (hbar * c * c * c) / (8 * Math.PI * G * mass * k_B);
+        }
+        
+        // Calculate radiation power (in Watts)
+        function getRadiationPower(mass) {
+            // Stefan-Boltzmann law adapted for black holes
+            const area = 4 * Math.PI * (2 * G * mass / (c * c)) * (2 * G * mass / (c * c));
+            const temperature = getBlackHoleTemperature(mass);
+            const stefanBoltzmann = 5.670374419e-8; // W m^-2 K^-4
+            
+            return stefanBoltzmann * area * Math.pow(temperature, 4);
+        }
+        
+        // Calculate evaporation time (in seconds)
+        function getEvaporationTime(mass) {
+            // Approximate formula: t_evap ≈ 5120 * π * G^2 * M^3 / (hbar * c^4)
+            return 5120 * Math.PI * G * G * Math.pow(mass, 3) / (hbar * c * c * c * c);
+        }
+        
+        // Update simulation statistics
+        function updateStats() {
+            const temperature = getBlackHoleTemperature(blackHoleMass);
+            const power = getRadiationPower(blackHoleMass);
+            const evaporationTime = getEvaporationTime(blackHoleMass);
+            
+            // Format values for display
+            temperatureValue.textContent = formatScientific(temperature) + ' K';
+            powerValue.textContent = formatScientific(power) + ' W';
+            evaporationTimeValue.textContent = formatTime(evaporationTime);
+            elapsedTimeValue.textContent = formatTime(elapsedTime);
+            
+            // Update particle colors based on new temperature
+            const newColor = getParticleColor(blackHoleMass);
+            particles.forEach(p => {
+                p.color = newColor;
+            });
+        }
+        
+        // Format scientific notation
+        function formatScientific(value) {
+            if (value === 0) return '0';
+            
+            const exponent = Math.floor(Math.log10(Math.abs(value)));
+            const mantissa = value / Math.pow(10, exponent);
+            
+            if (exponent < 3 && exponent > -3) {
+                return value.toFixed(2);
+            } else {
+                return mantissa.toFixed(2) + '×10^' + exponent;
+            }
+        }
+        
+        // Format time in appropriate units
+        function formatTime(seconds) {
+            if (seconds < 60) {
+                return seconds.toFixed(2) + ' seconds';
+            } else if (seconds < 3600) {
+                return (seconds / 60).toFixed(2) + ' minutes';
+            } else if (seconds < 86400) {
+                return (seconds / 3600).toFixed(2) + ' hours';
+            } else if (seconds < YEAR_IN_SECONDS) {
+                return (seconds / 86400).toFixed(2) + ' days';
+            } else if (seconds < YEAR_IN_SECONDS * 1000) {
+                return (seconds / YEAR_IN_SECONDS).toFixed(2) + ' years';
+            } else if (seconds < YEAR_IN_SECONDS * 1e6) {
+                return (seconds / (YEAR_IN_SECONDS * 1e3)).toFixed(2) + ' thousand years';
+            } else if (seconds < YEAR_IN_SECONDS * 1e9) {
+                return (seconds / (YEAR_IN_SECONDS * 1e6)).toFixed(2) + ' million years';
+            } else if (seconds < YEAR_IN_SECONDS * 1e12) {
+                return (seconds / (YEAR_IN_SECONDS * 1e9)).toFixed(2) + ' billion years';
+            } else {
+                return (seconds / (YEAR_IN_SECONDS * 1e12)).toFixed(2) + ' trillion years';
+            }
+        }
+        
+        // Draw the simulation
+        function drawSimulation() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw stars
+            ctx.fillStyle = 'white';
+            for (let i = 0; i < 200; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 1.5;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Calculate Schwarzschild radius
+            const r_s = 2 * G * blackHoleMass / (c * c);
+            const scaleFactor = 50;
+            const radiusOnCanvas = r_s * scaleFactor;
+            
+            // Draw black hole
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, radiusOnCanvas, 0, Math.PI * 2);
+            ctx.fillStyle = 'black';
+            ctx.fill();
+            
+            // Draw event horizon
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, radiusOnCanvas, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Draw particles
+            particles.forEach(particle => {
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fillStyle = particle.color;
+                ctx.fill();
+            });
+        }
+        
+        // Update simulation
+        function updateSimulation(timestamp) {
+            if (!isRunning) return;
+            
+            // Calculate time delta
+            const delta = timestamp - lastTimestamp;
+            lastTimestamp = timestamp;
+            
+            // Skip first frame
+            if (delta > 1000) {
+                requestAnimationFrame(updateSimulation);
+                return;
+            }
+            
+            // Update elapsed time
+            const realTimeDelta = delta / 1000; // Convert ms to seconds
+            const simulatedTimeDelta = realTimeDelta * timeScale;
+            elapsedTime += simulatedTimeDelta;
+            
+            // Calculate mass loss due to Hawking radiation
+            const power = getRadiationPower(blackHoleMass);
+            const energyLoss = power * simulatedTimeDelta; // Energy in Joules
+            const massLoss = energyLoss / (c * c); // E = mc²
+            
+            // Update black hole mass
+            blackHoleMass = Math.max(0, blackHoleMass - massLoss);
+            
+            // If black hole has evaporated, stop simulation
+            if (blackHoleMass <= 0) {
+                isRunning = false;
+                alert("Black hole has completely evaporated!");
+                return;
+            }
+            
+            // Calculate Schwarzschild radius
+            const r_s = 2 * G * blackHoleMass / (c * c);
+            
+            // Update particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const particle = particles[i];
+                
+                // Update particle lifetime
+                particle.lifetime += simulatedTimeDelta;
+                
+                // Update particle position
+                if (particle.type === 'escaping') {
+                    // Escaping particles move outward
+                    particle.distance += particle.speed * simulatedTimeDelta;
+                    
+                    // Remove particles that have moved too far
+                    if (particle.distance > r_s * 10) {
+                        particles.splice(i, 1);
+                        createParticle();
+                    }
+                } else {
+                    // Infalling particles move inward
+                    particle.distance -= particle.speed * simulatedTimeDelta;
+                    
+                    // Remove particles that have crossed the event horizon
+                    if (particle.distance < r_s) {
+                        particles.splice(i, 1);
+                        createParticle();
+                    }
+                }
+                
+                // Update particle position
+                updateParticlePosition(particle);
+            }
+            
+            // Ensure we maintain the desired particle density
+            while (particles.length < particleDensity) {
+                createParticle();
+            }
+            
+            // Update stats
+            updateStats();
+            
+            // Draw simulation
+            drawSimulation();
+            
+            // Continue animation loop
+            requestAnimationFrame(updateSimulation);
+        }
+        
+        // Event listeners
+        startBtn.addEventListener('click', () => {
+            if (!isRunning) {
+                isRunning = true;
+                lastTimestamp = performance.now();
+                requestAnimationFrame(updateSimulation);
+            }
+        });
+        
+        pauseBtn.addEventListener('click', () => {
+            isRunning = false;
+        });
+        
+        resetBtn.addEventListener('click', () => {
+            isRunning = false;
+            initSimulation();
+        });
+        
+        massSlider.addEventListener('input', () => {
+            massValue.textContent = massSlider.value;
+            blackHoleMass = parseFloat(massSlider.value) * SOLAR_MASS;
+            updateStats();
+            drawSimulation();
+        });
+        
+        timeScaleSlider.addEventListener('input', () => {
+            timeScale = parseFloat(timeScaleSlider.value);
+            timeScaleValue.textContent = timeScale.toLocaleString();
+        });
+        
+        particleDensitySlider.addEventListener('input', () => {
+            particleDensity = parseInt(particleDensitySlider.value);
+            particleDensityValue.textContent = particleDensity;
+            
+            // Adjust particle count
+            if (particles.length > particleDensity) {
+                particles = particles.slice(0, particleDensity);
+            } else {
+                while (particles.length < particleDensity) {
+                    createParticle();
+                }
+            }
+            
+            drawSimulation();
+        });
+        
+        // Initialize simulation
+        initSimulation();
+        
+        // Format initial values
+        massValue.textContent = massSlider.value;
+        timeScaleValue.textContent = timeScale.toLocaleString();
+        particleDensityValue.textContent = particleDensity;
+    </script>
+</body>
+</html>

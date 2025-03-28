@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kerr Black Hole Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            font-family: Arial, sans-serif;
+        }
+        #canvas { 
+            width: 100%; 
+            height: 100vh; 
+            display: block; 
+        }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 300px;
+        }
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .slider-container {
+            margin: 10px 0;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+        }
+        button {
+            margin: 5px;
+            padding: 5px 10px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h2>Kerr Black Hole</h2>
+        <p>This visualization shows a rotating (Kerr) black hole with its ergosphere and event horizon.</p>
+        <p>Use mouse to rotate, scroll to zoom, and controls below to adjust parameters.</p>
+        <p id="stats">
+            Mass: 1.0 M☉<br>
+            Spin (a/M): 0.5<br>
+            Event Horizon Radius (equatorial): 1.87 units<br>
+            Ergosphere Radius (equatorial): 2.0 units
+        </p>
+    </div>
+    
+    <div id="controls">
+        <div class="slider-container">
+            <label for="mass">Black Hole Mass:</label>
+            <input type="range" id="mass" min="1" max="10" value="1" step="0.1">
+            <span id="massValue">1.0</span> M☉
+        </div>
+        <div class="slider-container">
+            <label for="spin">Spin Parameter (a/M):</label>
+            <input type="range" id="spin" min="0" max="0.999" value="0.5" step="0.001">
+            <span id="spinValue">0.5</span>
+        </div>
+        <div>
+            <button id="toggleErgosphereBtn">Hide Ergosphere</button>
+            <button id="toggleAccretionDiskBtn">Show Accretion Disk</button>
+            <button id="toggleFrameDraggingBtn">Show Frame Dragging</button>
+            <button id="resetBtn">Reset View</button>
+        </div>
+    </div>
+    
+    <canvas id="canvas"></canvas>
+
+    <script>
+        // Initialize Three.js scene
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        
+        // Add ambient light
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        scene.add(ambientLight);
+        
+        // Add directional light
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 3, 5);
+        scene.add(directionalLight);
+        
+        // Add orbit controls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        
+        // Set initial camera position
+        camera.position.set(10, 5, 10);
+        camera.lookAt(0, 0, 0);
+        
+        // Create starfield background
+        function createStarfield() {
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            
+            for (let i = 0; i < 5000; i++) {
+                const r = 400;
+                const theta = 2 * Math.PI * Math.random();
+                const phi = Math.acos(2 * Math.random() - 1);
+                
+                const x = r * Math.sin(phi) * Math.cos(theta);
+                const y = r * Math.sin(phi) * Math.sin(theta);
+                const z = r * Math.cos(phi);
+                
+                vertices.push(x, y, z);
+            }
+            
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            
+            const material = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 1,
+                sizeAttenuation: true
+            });
+            
+            const stars = new THREE.Points(geometry, material);
+            scene.add(stars);
+        }
+        
+        createStarfield();
+        
+        // Black hole parameters
+        let blackHoleMass = 1.0;
+        let spinParameter = 0.5; // a/M
+        
+        // Create black hole objects
+        const blackHole = new THREE.Group();
+        scene.add(blackHole);
+        
+        // Event horizon
+        let eventHorizon;
+        
+        // Ergosphere
+        let ergosphere;
+        
+        // Accretion disk
+        let accretionDisk;
+        
+        // Frame dragging visualization
+        let frameDragging;
+        
+        // Calculate Kerr metric parameters
+        function calculateKerrParameters() {
+            // Event horizon radius (equatorial)
+            const rPlus = blackHoleMass * (1 + Math.sqrt(1 - Math.pow(spinParameter, 2)));
+            
+            // Ergosphere radius (equatorial)
+            const rErgosphere = 2 * blackHoleMass;
+            
+            return {
+                eventHorizonRadius: rPlus,
+                ergosphereRadius: rErgosphere
+            };
+        }
+        
+        // Create oblate spheroid geometry for Kerr black hole
+        function createOblateSpheroid(equatorialRadius, polarRadius, segments) {
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            const indices = [];
+            
+            // Create vertices
+            for (let i = 0; i <= segments; i++) {
+                const theta = i * Math.PI / segments;
+                const sinTheta = Math.sin(theta);
+                const cosTheta = Math.cos(theta);
+                
+                for (let j = 0; j <= segments; j++) {
+                    const phi = j * 2 * Math.PI / segments;
+                    const sinPhi = Math.sin(phi);
+                    const cosPhi = Math.cos(phi);
+                    
+                    const x = equatorialRadius * sinTheta * cosPhi;
+                    const y = polarRadius * cosTheta;
+                    const z = equatorialRadius * sinTheta * sinPhi;
+                    
+                    vertices.push(x, y, z);
+                }
+            }
+            
+            // Create indices
+            for (let i = 0; i < segments; i++) {
+                for (let j = 0; j < segments; j++) {
+                    const a = i * (segments + 1) + j;
+                    const b = i * (segments + 1) + j + 1;
+                    const c = (i + 1) * (segments + 1) + j;
+                    const d = (i + 1) * (segments + 1) + j + 1;
+                    
+                    indices.push(a, b, c);
+                    indices.push(b, d, c);
+                }
+            }
+            
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            geometry.setIndex(indices);
+            geometry.computeVertexNormals();
+            
+            return geometry;
+        }
+        
+        // Create event horizon
+        function createEventHorizon() {
+            const params = calculateKerrParameters();
+            const equatorialRadius = params.eventHorizonRadius;
+            const polarRadius = equatorialRadius * Math.sqrt(1 - Math.pow(spinParameter, 2));
+            
+            const geometry = createOblateSpheroid(equatorialRadius, polarRadius, 32);
+            const material = new THREE.MeshBasicMaterial({
+                color: 0x000000,
+                transparent: true,
+                opacity: 0.9
+            });
+            
+            if (eventHorizon) {
+                blackHole.remove(eventHorizon);
+            }
+            
+            eventHorizon = new THREE.Mesh(geometry, material);
+            blackHole.add(eventHorizon);
+        }
+        
+        // Create ergosphere
+        function createErgosphere() {
+            const params = calculateKerrParameters();
+            const equatorialRadius = params.ergosphereRadius;
+            const polarRadius = equatorialRadius * Math.sqrt(1 - Math.pow(spinParameter, 2));
+            
+            const geometry = createOblateSpheroid(equatorialRadius, polarRadius, 32);
+            const material = new THREE.MeshBasicMaterial({
+                color: 0x8800ff,
+                transparent: true,
+                opacity: 0.3,
+                wireframe: true
+            });
+            
+            if (ergosphere) {
+                blackHole.remove(ergosphere);
+            }
+            
+            ergosphere = new THREE.Mesh(geometry, material);
+            blackHole.add(ergosphere);
+        }
+        
+        // Create accretion disk
+        function createAccretionDisk() {
+            const params = calculateKerrParameters();
+            const innerRadius = params.eventHorizonRadius * 1.5;
+            const outerRadius = params.eventHorizonRadius * 8;
+            
+            const geometry = new THREE.RingGeometry(innerRadius, outerRadius, 64, 8);
+            const material = new THREE.MeshStandardMaterial({
+                color: 0xff6600,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.7,
+                emissive: 0xff3300,
+                emissiveIntensity: 0.5
+            });
+            
+            if (accretionDisk) {
+                blackHole.remove(accretionDisk);
+            }
+            
+            accretionDisk = new THREE.Mesh(geometry, material);
+            accretionDisk.rotation.x = Math.PI / 2;
+            accretionDisk.visible = false;
+            blackHole.add(accretionDisk);
+        }
+        
+        // Create frame dragging visualization
+        function createFrameDragging() {
+            if (frameDragging) {
+                blackHole.remove(frameDragging);
+            }
+            
+            frameDragging = new THREE.Group();
+            blackHole.add(frameDragging);
+            frameDragging.visible = false;
+            
+            const params = calculateKerrParameters();
+            const baseRadius = params.ergosphereRadius * 1.5;
+            
+            // Create arrows showing frame dragging effect
+            const arrowCount = 16;
+            const arrowLength = 0.5;
+            const arrowRadius = 0.05;
+            const arrowHeadLength = 0.2;
+            const arrowHeadRadius = 0.1;
+            
+            for (let i = 0; i < arrowCount; i++) {
+                const angle = (i / arrowCount) * Math.PI * 2;
+                const x = baseRadius * Math.cos(angle);
+                const z = baseRadius * Math.sin(angle);
+                
+                // Arrow direction based on spin
+                const direction = new THREE.Vector3(-z, 0, x).normalize();
+                
+                // Create arrow
+                const arrowGeometry = new THREE.CylinderGeometry(arrowRadius, arrowRadius, arrowLength, 8);
+                const arrowMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+                const arrow = new THREE.Mesh(arrowGeometry, arrowMaterial);
+                
+                // Position and orient arrow
+                arrow.position.set(x, 0, z);
+                arrow.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
+                arrow.translateOnAxis(new THREE.Vector3(0, 1, 0), -arrowLength/2);
+                
+                // Create arrow head
+                const headGeometry = new THREE.ConeGeometry(arrowHeadRadius, arrowHeadLength, 8);
+                const headMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+                const head = new THREE.Mesh(headGeometry, headMaterial);
+                
+                // Position and orient head
+                head.position.copy(arrow.position);
+                head.quaternion.copy(arrow.quaternion);
+                head.translateOnAxis(new THREE.Vector3(0, 1, 0), arrowLength/2 + arrowHeadLength/2);
+                
+                frameDragging.add(arrow);
+                frameDragging.add(head);
+            }
+        }
+        
+        // Initialize black hole components
+        function initBlackHole() {
+            createEventHorizon();
+            createErgosphere();
+            createAccretionDisk();
+            createFrameDragging();
+            updateStats();
+        }
+        
+        // Update black hole parameters
+        function updateBlackHole() {
+            createEventHorizon();
+            createErgosphere();
+            createAccretionDisk();
+            createFrameDragging();
+            updateStats();
+        }
+        
+        // Update stats display
+        function updateStats() {
+            const params = calculateKerrParameters();
+            document.getElementById('stats').innerHTML = 
+                `Mass: ${blackHoleMass.toFixed(1)} M☉<br>` +
+                `Spin (a/M): ${spinParameter.toFixed(3)}<br>` +
+                `Event Horizon Radius (equatorial): ${params.eventHorizonRadius.toFixed(2)} units<br>` +
+                `Ergosphere Radius (equatorial): ${params.ergosphereRadius.toFixed(2)} units`;
+        }
+        
+        // Initialize
+        initBlackHole();
+        
+        // UI Controls
+        document.getElementById('mass').addEventListener('input', function(e) {
+            blackHoleMass = parseFloat(e.target.value);
+            document.getElementById('massValue').textContent = blackHoleMass.toFixed(1);
+            updateBlackHole();
+        });
+        
+        document.getElementById('spin').addEventListener('input', function(e) {
+            spinParameter = parseFloat(e.target.value);
+            document.getElementById('spinValue').textContent = spinParameter.toFixed(3);
+            updateBlackHole();
+        });
+        
+        document.getElementById('toggleErgosphereBtn').addEventListener('click', function() {
+            ergosphere.visible = !ergosphere.visible;
+            this.textContent = ergosphere.visible ? 'Hide Ergosphere' : 'Show Ergosphere';
+        });
+        
+        document.getElementById('toggleAccretionDiskBtn').addEventListener('click', function() {
+            accretionDisk.visible = !accretionDisk.visible;
+            this.textContent = accretionDisk.visible ? 'Hide Accretion Disk' : 'Show Accretion Disk';
+        });
+        
+        document.getElementById('toggleFrameDraggingBtn').addEventListener('click', function() {
+            frameDragging.visible = !frameDragging.visible;
+            this.textContent = frameDragging.visible ? 'Hide Frame Dragging' : 'Show Frame Dragging';
+        });
+        
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            camera.position.set(10, 5, 10);
+            camera.lookAt(0, 0, 0);
+            controls.reset();
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Rotate frame dragging visualization
+            if (frameDragging && frameDragging.visible) {
+                frameDragging.rotation.y += 0.005 * spinParameter;
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+    </script>
+</body>
+</html>
